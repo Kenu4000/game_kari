@@ -11,7 +11,7 @@ public static class BattleUICreator
     [MenuItem("Tools/Create Battle UI")]
     public static void CreateBattleUI()
     {
-        Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        Canvas canvas = Object.FindAnyObjectByType<Canvas>();
         if (canvas == null)
         {
             Debug.LogError("Canvas was not found. Please create a Canvas first.");

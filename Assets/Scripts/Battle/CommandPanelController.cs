@@ -7,13 +7,6 @@ using UnityEngine.UI;
 
 namespace GameKari.Battle
 {
-    public enum CommandViewMode
-    {
-        Main,
-        Skills,
-        Swap,
-        Items
-    }
 
     public class CommandPanelController : MonoBehaviour
     {
@@ -28,10 +21,16 @@ namespace GameKari.Battle
         [SerializeField] private GameObject swapListPanel;
         [SerializeField] private GameObject itemListPanel;
 
-        [Header("Runtime Content")]
-        [SerializeField] private Transform skillListRoot;
-        [SerializeField] private Transform sideListRoot;
-        [SerializeField] private Button simpleButtonPrefab;
+        [Header("Fixed Skill Buttons")]
+        [SerializeField] private Button[] skillButtons = new Button[4];
+
+        [Header("Fixed Swap Buttons")]
+        [SerializeField] private Button[] swapButtons = new Button[4];
+
+        [Header("Fixed Item Buttons")]
+        [SerializeField] private Button[] itemButtons = new Button[1];
+
+        [Header("Description")]
         [SerializeField] private TMP_Text descriptionText;
 
         public Action<SkillData> OnSkillClicked;
@@ -42,11 +41,11 @@ namespace GameKari.Battle
 
         private BattleUnit _activeUnit;
         private List<BattleUnit> _reserves;
-        private CommandViewMode _mode;
 
         private void Awake()
         {
             HookRootButtons();
+            BindFixedItemButtons();
         }
 
         private void Start()
@@ -58,6 +57,11 @@ namespace GameKari.Battle
         {
             _activeUnit = activeUnit;
             _reserves = reserves;
+
+            BindSkillButtons();
+            BindSwapButtons();
+            BindFixedItemButtons();
+
             ShowSkills();
         }
 
@@ -76,17 +80,17 @@ namespace GameKari.Battle
 
         public void ShowSkills()
         {
-            OpenSkills();
+            SetPanelStates(true, true, false, false);
         }
 
         public void ShowSwap()
         {
-            OpenSwap();
+            SetPanelStates(true, false, true, false);
         }
 
         public void ShowItems()
         {
-            OpenItems();
+            SetPanelStates(true, false, false, true);
         }
 
         private void HookRootButtons()
@@ -110,34 +114,43 @@ namespace GameKari.Battle
             }
         }
 
-        public void OpenSkills()
+        private void BindSkillButtons()
         {
-            _mode = CommandViewMode.Skills;
-            SetPanelStates(true, true, false, false);
-            ClearChildren(skillListRoot);
-            ClearChildren(sideListRoot);
-
-            if (_activeUnit == null || _activeUnit.Skills == null || skillListRoot == null || simpleButtonPrefab == null)
+            if (skillButtons == null)
             {
                 return;
             }
 
-            foreach (SkillData skill in _activeUnit.Skills)
+            for (int i = 0; i < skillButtons.Length; i++)
             {
-                Button btn = Instantiate(simpleButtonPrefab, skillListRoot);
-
-                TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
-                if (btnText != null)
+                Button button = skillButtons[i];
+                if (button == null)
                 {
-                    btnText.text = skill.SkillName;
+                    continue;
                 }
 
-                btn.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
+                button.onClick.RemoveAllListeners();
+                RemoveHoverEvents(button.gameObject);
 
-                EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
+                SkillData skill = GetSkillAt(i);
+                if (skill == null)
+                {
+                    SetButtonLabel(button, $"Skill {i + 1}");
+                    button.interactable = false;
+                    button.gameObject.SetActive(true);
+                    continue;
+                }
+
+                button.gameObject.SetActive(true);
+                button.interactable = true;
+                SetButtonLabel(button, skill.SkillName);
+
+                button.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
+
+                EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
                 if (trigger == null)
                 {
-                    trigger = btn.gameObject.AddComponent<EventTrigger>();
+                    trigger = button.gameObject.AddComponent<EventTrigger>();
                 }
 
                 AddHoverEvent(trigger, EventTriggerType.PointerEnter, () =>
@@ -150,101 +163,119 @@ namespace GameKari.Battle
                     OnSkillHovered?.Invoke(skill);
                 });
 
-                AddHoverEvent(trigger, EventTriggerType.PointerExit, () => OnHoverExit?.Invoke());
+                AddHoverEvent(trigger, EventTriggerType.PointerExit, () =>
+                {
+                    OnHoverExit?.Invoke();
+                });
             }
         }
 
-        private void OpenSwap()
+        private void BindSwapButtons()
         {
-            _mode = CommandViewMode.Swap;
-            SetPanelStates(true, false, true, false);
-            ClearChildren(skillListRoot);
-            ClearChildren(sideListRoot);
-
-            if (descriptionText != null)
-            {
-                descriptionText.text = "控えを選択して即交代（行動権消費なし）";
-            }
-
-            if (_reserves == null || sideListRoot == null || simpleButtonPrefab == null)
+            if (swapButtons == null)
             {
                 return;
             }
 
-            foreach (BattleUnit reserve in _reserves)
+            for (int i = 0; i < swapButtons.Length; i++)
             {
-                Button btn = Instantiate(simpleButtonPrefab, sideListRoot);
-
-                TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
-                if (btnText != null)
+                Button button = swapButtons[i];
+                if (button == null)
                 {
-                    btnText.text = $"{reserve.Name} HP:{reserve.CurrentHP} MP:{reserve.CurrentMP}";
+                    continue;
                 }
 
-                btn.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
+                button.onClick.RemoveAllListeners();
+
+                BattleUnit reserve = GetReserveAt(i);
+                if (reserve == null)
+                {
+                    SetButtonLabel(button, "-");
+                    button.interactable = false;
+                    button.gameObject.SetActive(true);
+                    continue;
+                }
+
+                button.gameObject.SetActive(true);
+                button.interactable = true;
+                SetButtonLabel(button, $"{reserve.Name} HP:{reserve.CurrentHP} MP:{reserve.CurrentMP}");
+
+                button.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
             }
         }
 
-        private void OpenItems()
+        private void BindFixedItemButtons()
         {
-            _mode = CommandViewMode.Items;
-            SetPanelStates(true, false, false, true);
-            ClearChildren(skillListRoot);
-            ClearChildren(sideListRoot);
-
-            if (descriptionText != null)
-            {
-                descriptionText.text = "前方マスの味方に回復アイテムを使用";
-            }
-
-            if (sideListRoot == null || simpleButtonPrefab == null)
+            if (itemButtons == null)
             {
                 return;
             }
 
-            Button btn = Instantiate(simpleButtonPrefab, sideListRoot);
-
-            TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
-            if (btnText != null)
+            for (int i = 0; i < itemButtons.Length; i++)
             {
-                btnText.text = "Potion (仮)";
-            }
+                Button button = itemButtons[i];
+                if (button == null)
+                {
+                    continue;
+                }
 
-            btn.onClick.AddListener(() => OnItemClicked?.Invoke("Potion"));
+                button.onClick.RemoveAllListeners();
+
+                if (i == 0)
+                {
+                    button.gameObject.SetActive(true);
+                    button.interactable = true;
+                    SetButtonLabel(button, "Potion");
+                    button.onClick.AddListener(() => OnItemClicked?.Invoke("Potion"));
+                }
+                else
+                {
+                    button.gameObject.SetActive(true);
+                    button.interactable = false;
+                    SetButtonLabel(button, "-");
+                }
+            }
         }
 
         public void SetInteractable(bool interactable)
         {
-            if (fightButton != null)
+            SetButtonInteractable(fightButton, interactable);
+            SetButtonInteractable(swapButton, interactable);
+            SetButtonInteractable(itemButton, interactable);
+
+            SetButtonArrayInteractable(skillButtons, interactable);
+            SetButtonArrayInteractable(swapButtons, interactable);
+            SetButtonArrayInteractable(itemButtons, interactable);
+        }
+
+        private SkillData GetSkillAt(int index)
+        {
+            if (_activeUnit == null || _activeUnit.Skills == null)
             {
-                fightButton.interactable = interactable;
+                return null;
             }
 
-            if (swapButton != null)
+            if (index < 0 || index >= _activeUnit.Skills.Count)
             {
-                swapButton.interactable = interactable;
+                return null;
             }
 
-            if (itemButton != null)
+            return _activeUnit.Skills[index];
+        }
+
+        private BattleUnit GetReserveAt(int index)
+        {
+            if (_reserves == null)
             {
-                itemButton.interactable = interactable;
+                return null;
             }
 
-            if (skillListRoot != null)
+            if (index < 0 || index >= _reserves.Count)
             {
-                foreach (Button btn in skillListRoot.GetComponentsInChildren<Button>())
-                {
-                    btn.interactable = interactable;
-                }
+                return null;
             }
 
-            if (sideListRoot != null)
-            {
-                foreach (Button btn in sideListRoot.GetComponentsInChildren<Button>())
-                {
-                    btn.interactable = interactable;
-                }
-            }
+            return _reserves[index];
         }
 
         private void SetPanelStates(bool showMain, bool showSkills, bool showSwap, bool showItems)
@@ -263,16 +294,52 @@ namespace GameKari.Battle
             }
         }
 
-        private static void ClearChildren(Transform root)
+        private static void SetButtonLabel(Button button, string text)
         {
-            if (root == null)
+            if (button == null)
             {
                 return;
             }
 
-            for (int i = root.childCount - 1; i >= 0; i--)
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
             {
-                Destroy(root.GetChild(i).gameObject);
+                label.text = text;
+            }
+        }
+
+        private static void SetButtonInteractable(Button button, bool interactable)
+        {
+            if (button != null)
+            {
+                button.interactable = interactable;
+            }
+        }
+
+        private static void SetButtonArrayInteractable(Button[] buttons, bool interactable)
+        {
+            if (buttons == null)
+            {
+                return;
+            }
+
+            foreach (Button button in buttons)
+            {
+                SetButtonInteractable(button, interactable);
+            }
+        }
+
+        private static void RemoveHoverEvents(GameObject target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            EventTrigger trigger = target.GetComponent<EventTrigger>();
+            if (trigger != null)
+            {
+                trigger.triggers.Clear();
             }
         }
 
