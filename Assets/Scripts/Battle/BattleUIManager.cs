@@ -45,16 +45,17 @@ namespace GameKari.Battle
         private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
+        private SkillData _hoveredSkill;
 
         private static readonly Color NormalStatusColor = new Color(0.9f, 0.93f, 0.96f, 1f);
         private static readonly Color ActiveStatusColor = new Color(0.7f, 0.85f, 1f, 1f);
         private static readonly Color NormalCellColor = new Color(0.95f, 0.96f, 0.98f, 1f);
         private static readonly Color ActiveCellColor = new Color(0.7f, 0.88f, 1f, 1f);
+        private static readonly Color TargetPreviewCellColor = new Color(1f, 0.92f, 0.55f, 1f);
 
         private const float EnemyStatusPanelVerticalPadding = 24f;
         private const float EnemyStatusSlotHeight = 135f;
         private const float EnemyStatusSlotSpacing = 16f;
-
         private const float EnemyStatusSlotWidth = 240f;
 
         private void Start()
@@ -189,17 +190,47 @@ namespace GameKari.Battle
 
         private void HandleSkillHover(SkillData skill)
         {
-            ClearTargetPreview();
-            if (skill.TargetPattern is SkillTargetPattern.FrontTopEnemy or SkillTargetPattern.BothFrontEnemies or SkillTargetPattern.AllEnemies)
-                enemyFTHighlight.enabled = true;
-            if (skill.TargetPattern is SkillTargetPattern.FrontBottomEnemy or SkillTargetPattern.BothFrontEnemies or SkillTargetPattern.AllEnemies)
-                enemyFBHighlight.enabled = true;
+            _hoveredSkill = skill;
+            RedrawTargetPreview();
+        }
+
+        private void RedrawTargetPreview()
+        {
+            ResetEnemyBoardHighlights();
+
+            if (_hoveredSkill == null)
+            {
+                return;
+            }
+
+            switch (_hoveredSkill.TargetPattern)
+            {
+                case SkillTargetPattern.FrontTopEnemy:
+                    SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
+                    break;
+
+                case SkillTargetPattern.FrontBottomEnemy:
+                    SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
+                    break;
+
+                case SkillTargetPattern.BothFrontEnemies:
+                    SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
+                    SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
+                    break;
+
+                case SkillTargetPattern.AllEnemies:
+                    SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
+                    SetEnemyBoardCellColor(GridPos.BackTop, TargetPreviewCellColor);
+                    SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
+                    SetEnemyBoardCellColor(GridPos.BackBottom, TargetPreviewCellColor);
+                    break;
+            }
         }
 
         private void ClearTargetPreview()
         {
-            enemyFTHighlight.enabled = false;
-            enemyFBHighlight.enabled = false;
+            _hoveredSkill = null;
+            ResetEnemyBoardHighlights();
         }
 
         private void HandleSwap(BattleUnit reserve)
@@ -419,6 +450,7 @@ namespace GameKari.Battle
 
             RedrawStatusPanels();
             RedrawActiveHighlights();
+            RedrawTargetPreview();
         }
 
         private void RedrawStatusPanels()
@@ -460,6 +492,33 @@ namespace GameKari.Battle
             SetCellImageColor(allyBackTop, NormalCellColor);
             SetCellImageColor(allyFrontBottom, NormalCellColor);
             SetCellImageColor(allyBackBottom, NormalCellColor);
+        }
+
+        private void ResetEnemyBoardHighlights()
+        {
+            SetCellImageColor(enemyFrontTop, NormalCellColor);
+            SetCellImageColor(enemyBackTop, NormalCellColor);
+            SetCellImageColor(enemyFrontBottom, NormalCellColor);
+            SetCellImageColor(enemyBackBottom, NormalCellColor);
+        }
+
+        private void SetEnemyBoardCellColor(GridPos pos, Color color)
+        {
+            switch (pos)
+            {
+                case GridPos.FrontTop:
+                    SetCellImageColor(enemyFrontTop, color);
+                    break;
+                case GridPos.BackTop:
+                    SetCellImageColor(enemyBackTop, color);
+                    break;
+                case GridPos.FrontBottom:
+                    SetCellImageColor(enemyFrontBottom, color);
+                    break;
+                case GridPos.BackBottom:
+                    SetCellImageColor(enemyBackBottom, color);
+                    break;
+            }
         }
 
         private void ResetAllyStatusHighlights()
