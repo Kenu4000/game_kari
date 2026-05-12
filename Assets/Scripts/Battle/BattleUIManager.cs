@@ -317,22 +317,35 @@ namespace GameKari.Battle
 
         private void AdvanceToNextActor()
         {
-            BattleUnit nextAlly = FindNextUnactedAlly();
-            if (nextAlly != null)
+            while (true)
             {
-                _active = nextAlly;
-                commandPanel.Setup(_active, _reserves);
-                RedrawBoard();
-                Debug.Log($"[Turn] Next active ally: {_active.Name}");
-                return;
-            }
+                BattleUnit nextUnit = FindNextUnactedUnit();
 
-            if (ProcessEnemyTurnsUntilNextAlly())
-            {
-                return;
-            }
+                if (nextUnit == null)
+                {
+                    StartNextTurn();
+                    return;
+                }
 
-            StartNextTurn();
+                if (_allies.Contains(nextUnit))
+                {
+                    _active = nextUnit;
+                    commandPanel.Setup(_active, _reserves);
+                    RedrawBoard();
+                    Debug.Log($"[Turn] Next active ally: {_active.Name}");
+                    return;
+                }
+
+                if (_enemies.Contains(nextUnit))
+                {
+                    _actedUnits.Add(nextUnit);
+                    ApplyDummyEnemyAction(nextUnit);
+                    RedrawBoard();
+                    continue;
+                }
+
+                _actedUnits.Add(nextUnit);
+            }
         }
 
         private BattleUnit FindNextUnactedAlly()
@@ -361,6 +374,43 @@ namespace GameKari.Battle
             return null;
         }
 
+        private BattleUnit FindNextUnactedUnit()
+        {
+            if (_turnOrder == null)
+            {
+                return null;
+            }
+
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+            for (int i = 0; i < order.Count; i++)
+            {
+                BattleUnit unit = order[i];
+
+                if (unit == null || unit.IsDead || _actedUnits.Contains(unit))
+                {
+                    continue;
+                }
+
+                return unit;
+            }
+
+            return null;
+        }
+
+        private BattleUnit FindFirstAliveAlly()
+        {
+            for (int i = 0; i < _allies.Count; i++)
+            {
+                BattleUnit ally = _allies[i];
+                if (ally != null && !ally.IsDead)
+                {
+                    return ally;
+                }
+            }
+
+            return null;
+        }
+
         private bool ProcessEnemyTurnsUntilNextAlly()
         {
             if (_turnOrder == null)
@@ -381,8 +431,8 @@ namespace GameKari.Battle
                 if (_enemies.Contains(unit))
                 {
                     _actedUnits.Add(unit);
-                    Debug.Log($"[Enemy] Dummy enemy action: {unit.Name}");
-                    RedrawStatusPanels();
+                    ApplyDummyEnemyAction(unit);
+                    RedrawBoard();
 
                     BattleUnit nextAlly = FindNextUnactedAlly();
                     if (nextAlly != null)
@@ -397,6 +447,38 @@ namespace GameKari.Battle
             }
 
             return false;
+        }
+
+        private void ApplyDummyEnemyAction(BattleUnit enemy)
+        {
+            if (enemy == null || enemy.IsDead)
+            {
+                return;
+            }
+
+            BattleUnit target = _active;
+            if (target == null || target.IsDead)
+            {
+                target = FindFirstAliveAlly();
+            }
+
+            if (target == null)
+            {
+                Debug.Log($"[Enemy] {enemy.Name} has no ally target.");
+                return;
+            }
+
+            const int damage = 10;
+
+            target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
+
+            Debug.Log($"[Enemy] Dummy enemy action: {enemy.Name} -> {target.Name} took {damage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
+
+            if (target.CurrentHP <= 0)
+            {
+                target.IsDead = true;
+                Debug.Log($"[KO] {target.Name} is defeated.");
+            }
         }
 
         private void StartNextTurn()
