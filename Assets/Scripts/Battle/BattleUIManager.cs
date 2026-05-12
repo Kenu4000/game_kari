@@ -119,10 +119,65 @@ namespace GameKari.Battle
         private void HandleSkillClicked(SkillData skill)
         {
             ShowActionOverlay(skill.SkillName, _active.Name);
-            Debug.Log($"[Action] Skill used (dummy): {skill.SkillName} by {_active.Name}");
+
+            ApplySkillDamage(skill);
+
+            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}");
 
             MarkActiveAsActed();
+            RedrawBoard();
             AdvanceToNextActor();
+        }
+
+        private void ApplySkillDamage(SkillData skill)
+        {
+            if (skill == null)
+            {
+                return;
+            }
+
+            switch (skill.TargetPattern)
+            {
+                case SkillTargetPattern.FrontTopEnemy:
+                    DamageEnemyAt(GridPos.FrontTop, 20);
+                    break;
+
+                case SkillTargetPattern.FrontBottomEnemy:
+                    DamageEnemyAt(GridPos.FrontBottom, 20);
+                    break;
+
+                case SkillTargetPattern.BothFrontEnemies:
+                    DamageEnemyAt(GridPos.FrontTop, 15);
+                    DamageEnemyAt(GridPos.FrontBottom, 15);
+                    break;
+
+                case SkillTargetPattern.AllEnemies:
+                    DamageEnemyAt(GridPos.FrontTop, 10);
+                    DamageEnemyAt(GridPos.BackTop, 10);
+                    DamageEnemyAt(GridPos.FrontBottom, 10);
+                    DamageEnemyAt(GridPos.BackBottom, 10);
+                    break;
+            }
+        }
+
+        private void DamageEnemyAt(GridPos pos, int damage)
+        {
+            BattleUnit target = _grid.GetUnit(false, pos);
+            if (target == null || target.IsDead)
+            {
+                Debug.Log($"[Damage] Missed empty enemy cell: {pos}");
+                return;
+            }
+
+            target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
+
+            Debug.Log($"[Damage] {target.Name} took {damage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
+
+            if (target.CurrentHP <= 0)
+            {
+                target.IsDead = true;
+                Debug.Log($"[KO] {target.Name} is defeated.");
+            }
         }
 
         private void HandleSkillHover(SkillData skill)
@@ -515,7 +570,7 @@ namespace GameKari.Battle
 
         private string GetTurnOrderText(BattleUnit unit)
         {
-            if (unit == null)
+            if (unit == null || unit.IsDead)
             {
                 return "";
             }
@@ -573,8 +628,15 @@ namespace GameKari.Battle
             }
         }
 
-        private static string SafeName(BattleUnit unit) => unit == null ? "-" : unit.Name;
+        private static string SafeName(BattleUnit unit)
+        {
+            if (unit == null)
+            {
+                return "-";
+            }
 
+            return unit.IsDead ? $"{unit.Name} KO" : unit.Name;
+        }
         private static BattleUnit CreateUnit(string name, int hp, int mp, int speed)
         {
             var data = new CharacterData
