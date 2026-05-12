@@ -44,28 +44,34 @@ namespace GameKari.Battle
         private List<BattleUnit> _reserves;
         private CommandViewMode _mode;
 
+        private void Awake()
+        {
+            HookRootButtons();
+        }
+
+        private void Start()
+        {
+            ShowSkills();
+        }
+
         public void Setup(BattleUnit activeUnit, List<BattleUnit> reserves)
         {
             _activeUnit = activeUnit;
             _reserves = reserves;
-            HookRootButtons();
-            ShowMain();
+            ShowSkills();
         }
 
         private void Update()
         {
             if (Input.GetMouseButtonDown(1))
             {
-                ShowMain();
+                ShowSkills();
             }
         }
 
         public void ShowMain()
         {
-            _mode = CommandViewMode.Main;
-            SetPanelStates(true, false, false, false);
-            ClearChildren(skillListRoot);
-            ClearChildren(sideListRoot);
+            ShowSkills();
         }
 
         public void ShowSkills()
@@ -85,13 +91,23 @@ namespace GameKari.Battle
 
         private void HookRootButtons()
         {
-            fightButton.onClick.RemoveAllListeners();
-            swapButton.onClick.RemoveAllListeners();
-            itemButton.onClick.RemoveAllListeners();
+            if (fightButton != null)
+            {
+                fightButton.onClick.RemoveListener(ShowSkills);
+                fightButton.onClick.AddListener(ShowSkills);
+            }
 
-            fightButton.onClick.AddListener(ShowSkills);
-            swapButton.onClick.AddListener(ShowSwap);
-            itemButton.onClick.AddListener(ShowItems);
+            if (swapButton != null)
+            {
+                swapButton.onClick.RemoveListener(ShowSwap);
+                swapButton.onClick.AddListener(ShowSwap);
+            }
+
+            if (itemButton != null)
+            {
+                itemButton.onClick.RemoveListener(ShowItems);
+                itemButton.onClick.AddListener(ShowItems);
+            }
         }
 
         public void OpenSkills()
@@ -101,23 +117,39 @@ namespace GameKari.Battle
             ClearChildren(skillListRoot);
             ClearChildren(sideListRoot);
 
-            if (_activeUnit == null || _activeUnit.Skills == null) return;
+            if (_activeUnit == null || _activeUnit.Skills == null || skillListRoot == null || simpleButtonPrefab == null)
+            {
+                return;
+            }
 
             foreach (SkillData skill in _activeUnit.Skills)
             {
                 Button btn = Instantiate(simpleButtonPrefab, skillListRoot);
-                btn.GetComponentInChildren<TMP_Text>().text = skill.SkillName;
+
+                TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
+                if (btnText != null)
+                {
+                    btnText.text = skill.SkillName;
+                }
+
                 btn.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
 
-                EventTrigger trigger = btn.gameObject.AddComponent<EventTrigger>();
+                EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
+                if (trigger == null)
+                {
+                    trigger = btn.gameObject.AddComponent<EventTrigger>();
+                }
+
                 AddHoverEvent(trigger, EventTriggerType.PointerEnter, () =>
                 {
                     if (descriptionText != null)
                     {
                         descriptionText.text = skill.Description;
                     }
+
                     OnSkillHovered?.Invoke(skill);
                 });
+
                 AddHoverEvent(trigger, EventTriggerType.PointerExit, () => OnHoverExit?.Invoke());
             }
         }
@@ -129,17 +161,27 @@ namespace GameKari.Battle
             ClearChildren(skillListRoot);
             ClearChildren(sideListRoot);
 
-            if (_reserves == null) return;
+            if (descriptionText != null)
+            {
+                descriptionText.text = "控えを選択して即交代（行動権消費なし）";
+            }
+
+            if (_reserves == null || sideListRoot == null || simpleButtonPrefab == null)
+            {
+                return;
+            }
 
             foreach (BattleUnit reserve in _reserves)
             {
                 Button btn = Instantiate(simpleButtonPrefab, sideListRoot);
-                btn.GetComponentInChildren<TMP_Text>().text = $"{reserve.Name} HP:{reserve.CurrentHP} MP:{reserve.CurrentMP}";
+
+                TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
+                if (btnText != null)
+                {
+                    btnText.text = $"{reserve.Name} HP:{reserve.CurrentHP} MP:{reserve.CurrentMP}";
+                }
+
                 btn.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
-            }
-            if (descriptionText != null)
-            {
-                descriptionText.text = "控えを選択して即交代（行動権消費なし）";
             }
         }
 
@@ -150,22 +192,59 @@ namespace GameKari.Battle
             ClearChildren(skillListRoot);
             ClearChildren(sideListRoot);
 
-            Button btn = Instantiate(simpleButtonPrefab, sideListRoot);
-            btn.GetComponentInChildren<TMP_Text>().text = "Potion (仮)";
-            btn.onClick.AddListener(() => OnItemClicked?.Invoke("Potion"));
             if (descriptionText != null)
             {
                 descriptionText.text = "前方マスの味方に回復アイテムを使用";
             }
+
+            if (sideListRoot == null || simpleButtonPrefab == null)
+            {
+                return;
+            }
+
+            Button btn = Instantiate(simpleButtonPrefab, sideListRoot);
+
+            TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
+            if (btnText != null)
+            {
+                btnText.text = "Potion (仮)";
+            }
+
+            btn.onClick.AddListener(() => OnItemClicked?.Invoke("Potion"));
         }
 
         public void SetInteractable(bool interactable)
         {
-            fightButton.interactable = interactable;
-            swapButton.interactable = interactable;
-            itemButton.interactable = interactable;
-            foreach (Button btn in skillListRoot.GetComponentsInChildren<Button>()) btn.interactable = interactable;
-            foreach (Button btn in sideListRoot.GetComponentsInChildren<Button>()) btn.interactable = interactable;
+            if (fightButton != null)
+            {
+                fightButton.interactable = interactable;
+            }
+
+            if (swapButton != null)
+            {
+                swapButton.interactable = interactable;
+            }
+
+            if (itemButton != null)
+            {
+                itemButton.interactable = interactable;
+            }
+
+            if (skillListRoot != null)
+            {
+                foreach (Button btn in skillListRoot.GetComponentsInChildren<Button>())
+                {
+                    btn.interactable = interactable;
+                }
+            }
+
+            if (sideListRoot != null)
+            {
+                foreach (Button btn in sideListRoot.GetComponentsInChildren<Button>())
+                {
+                    btn.interactable = interactable;
+                }
+            }
         }
 
         private void SetPanelStates(bool showMain, bool showSkills, bool showSwap, bool showItems)
@@ -186,13 +265,25 @@ namespace GameKari.Battle
 
         private static void ClearChildren(Transform root)
         {
-            if (root == null) return;
-            for (int i = root.childCount - 1; i >= 0; i--) Destroy(root.GetChild(i).gameObject);
+            if (root == null)
+            {
+                return;
+            }
+
+            for (int i = root.childCount - 1; i >= 0; i--)
+            {
+                Destroy(root.GetChild(i).gameObject);
+            }
         }
 
         private static void AddHoverEvent(EventTrigger trigger, EventTriggerType type, Action callback)
         {
-            var entry = new EventTrigger.Entry { eventID = type };
+            if (trigger == null || callback == null)
+            {
+                return;
+            }
+
+            EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
             entry.callback.AddListener(_ => callback());
             trigger.triggers.Add(entry);
         }
