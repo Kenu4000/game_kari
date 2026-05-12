@@ -17,8 +17,9 @@ The battle UI direction has changed from a bottom turn-order bar to symmetric en
 
 - The number is based on the order counted from the top of the turn.
 - The number does not change during the turn, even after commands advance.
-- KO units display `×`.
-- Units that have already acted lose their number display.
+- Units before acting display their turn-order number.
+- Units that have already acted hide their number and become slightly dimmed.
+- KO units display `×` and are greyed out.
 - Empty / unassigned status slots display blank.
 
 ## Current acting unit highlight
@@ -27,12 +28,19 @@ The battle UI direction has changed from a bottom turn-order bar to symmetric en
 - The corresponding status frame is highlighted with a blue border.
 - The turn-order number `1` is also emphasized.
 
+## Command UI states
+
+- Normal state displays the main commands: Fight / Swap / Item.
+- Fight state displays Skill 1-4.
+- Swap state displays the reserve character list.
+- Item state displays the item list.
+
 ## Enemy status content
 
 Enemy status slots should include:
 
 - Enemy type icon
-- Small HP bar
+- HP bar only; enemies do not show MP.
 - Turn-order number
 - Current acting highlight
 - Buff/debuff icon area
