@@ -96,8 +96,8 @@ namespace GameKari.Battle
             _grid.SetUnit(false, GridPos.FrontBottom, enemyC);
             _grid.SetUnit(false, GridPos.BackBottom, enemyD);
 
-        RebuildTurnOrder();
-        _active = FindNextUnactedAlly() ?? heroA;
+            RebuildTurnOrder();
+            _active = FindNextUnactedAlly() ?? heroA;
         }
 
         private void BindUI()
@@ -197,13 +197,13 @@ namespace GameKari.Battle
                 return;
             }
 
-        target.CurrentHP = Mathf.Min(target.CurrentHP + 20, target.Data.MaxHP);
-        ShowActionOverlay(itemId, _active.Name);
-        Debug.Log($"[Action] Item used (dummy): {itemId} -> {target.Name}");
+            target.CurrentHP = Mathf.Min(target.CurrentHP + 20, target.Data.MaxHP);
+            ShowActionOverlay(itemId, _active.Name);
+            Debug.Log($"[Action] Item used (dummy): {itemId} -> {target.Name}");
 
-        MarkActiveAsActed();
-        RedrawBoard();
-        AdvanceToNextActor();
+            MarkActiveAsActed();
+            RedrawBoard();
+            AdvanceToNextActor();
         }
 
         private void MarkActiveAsActed()
