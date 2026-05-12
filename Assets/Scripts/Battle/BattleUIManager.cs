@@ -30,10 +30,16 @@ namespace GameKari.Battle
         [SerializeField] private Image enemyFTHighlight;
         [SerializeField] private Image enemyFBHighlight;
 
+        [Header("Status Panels")]
+        [SerializeField] private Transform enemyStatusPanel;
+        [SerializeField] private Transform allyStatusPanel;
+
         private BattleGrid _grid;
         private FormationController _formation;
         private TurnOrderManager _turnOrder;
 
+        private readonly List<BattleUnit> _allies = new();
+        private readonly List<BattleUnit> _enemies = new();
         private readonly List<BattleUnit> _reserves = new();
         private BattleUnit _active;
 
@@ -60,12 +66,32 @@ namespace GameKari.Battle
             _grid.SetUnit(true, GridPos.BackTop, heroB);
             _grid.SetUnit(true, GridPos.FrontBottom, heroC);
             _grid.SetUnit(true, GridPos.BackBottom, heroD);
+
+            _allies.Clear();
+            _enemies.Clear();
+            _reserves.Clear();
+
+            _allies.Add(heroA);
+            _allies.Add(heroB);
+            _allies.Add(heroC);
+            _allies.Add(heroD);
+
             _reserves.Add(reserve);
 
-            _grid.SetUnit(false, GridPos.FrontTop, CreateUnit("Goblin A", 70, 0, 10));
-            _grid.SetUnit(false, GridPos.BackTop, CreateUnit("Archer", 60, 0, 13));
-            _grid.SetUnit(false, GridPos.FrontBottom, CreateUnit("Goblin B", 70, 0, 8));
-            _grid.SetUnit(false, GridPos.BackBottom, CreateUnit("Shaman", 55, 20, 7));
+            BattleUnit enemyA = CreateUnit("Goblin A", 70, 0, 10);
+            BattleUnit enemyB = CreateUnit("Archer", 60, 0, 13);
+            BattleUnit enemyC = CreateUnit("Goblin B", 70, 0, 8);
+            BattleUnit enemyD = CreateUnit("Shaman", 55, 20, 7);
+
+            _enemies.Add(enemyA);
+            _enemies.Add(enemyB);
+            _enemies.Add(enemyC);
+            _enemies.Add(enemyD);
+
+            _grid.SetUnit(false, GridPos.FrontTop, enemyA);
+            _grid.SetUnit(false, GridPos.BackTop, enemyB);
+            _grid.SetUnit(false, GridPos.FrontBottom, enemyC);
+            _grid.SetUnit(false, GridPos.BackBottom, enemyD);
 
             _active = heroA;
             RebuildTurnOrder();
@@ -105,12 +131,24 @@ namespace GameKari.Battle
 
         private void HandleSwap(BattleUnit reserve)
         {
-            _formation.SwapActiveWithReserve(_active, reserve);
+            BattleUnit previousActive = _active;
+
+            _formation.SwapActiveWithReserve(previousActive, reserve);
+
+            int allyIndex = _allies.IndexOf(previousActive);
+            if (allyIndex >= 0)
+            {
+                _allies[allyIndex] = reserve;
+            }
+
             _reserves.Remove(reserve);
-            _reserves.Add(_active);
+            _reserves.Add(previousActive);
+
             _active = reserve;
+
             commandPanel.Setup(_active, _reserves);
             RedrawBoard();
+
             Debug.Log("[Action] Swapped active unit with reserve (no action consumption). ");
         }
 
@@ -143,6 +181,7 @@ namespace GameKari.Battle
         {
             _formation.RotateAlliesClockwise();
             RedrawBoard();
+
         }
 
         private void ShowActionOverlay(string skillName, string userName)
@@ -164,6 +203,94 @@ namespace GameKari.Battle
             allyBackBottom.text = SafeName(_grid.GetUnit(true, GridPos.BackBottom));
 
             RebuildTurnOrder();
+            RedrawStatusPanels();
+        }
+
+        private void RedrawStatusPanels()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                RedrawEnemyStatusSlot(i + 1, GetUnitAt(_enemies, i));
+                RedrawAllyStatusSlot(i + 1, GetUnitAt(_allies, i));
+            }
+        }
+
+        private void RedrawEnemyStatusSlot(int slotNumber, BattleUnit unit)
+        {
+            Transform slot = enemyStatusPanel == null
+                ? null
+                : enemyStatusPanel.Find($"EnemyStatus_{slotNumber}");
+
+            if (slot == null)
+            {
+                return;
+            }
+
+            SetLabel(slot, "Name", unit == null ? "-" : unit.Name);
+            SetLabel(slot, "TurnNumber", unit == null ? "" : slotNumber.ToString());
+
+            int currentHp = unit == null ? 0 : unit.CurrentHP;
+            int maxHp = unit == null ? 1 : unit.Data.MaxHP;
+            SetBarFill(slot, "HPBar", currentHp, maxHp);
+        }
+
+        private void RedrawAllyStatusSlot(int slotNumber, BattleUnit unit)
+        {
+            Transform slot = allyStatusPanel == null
+                ? null
+                : allyStatusPanel.Find($"AllyStatus_{slotNumber}");
+
+            if (slot == null)
+            {
+                return;
+            }
+
+            SetLabel(slot, "Name", unit == null ? "-" : unit.Name);
+            SetLabel(slot, "TurnNumber", unit == null ? "" : slotNumber.ToString());
+
+            int currentHp = unit == null ? 0 : unit.CurrentHP;
+            int maxHp = unit == null ? 1 : unit.Data.MaxHP;
+            int currentMp = unit == null ? 0 : unit.CurrentMP;
+            int maxMp = unit == null ? 1 : unit.Data.MaxMP;
+
+            SetBarFill(slot, "HPBar", currentHp, maxHp);
+            SetBarFill(slot, "MPBar", currentMp, maxMp);
+        }
+
+        private static BattleUnit GetUnitAt(List<BattleUnit> units, int index)
+        {
+            if (units == null)
+            {
+                return null;
+            }
+
+            if (index < 0 || index >= units.Count)
+            {
+                return null;
+            }
+
+            return units[index];
+        }
+
+        private static void SetLabel(Transform root, string childName, string text)
+        {
+            TMP_Text label = root.Find(childName)?.GetComponent<TMP_Text>();
+            if (label != null)
+            {
+                label.text = text;
+            }
+        }
+
+        private static void SetBarFill(Transform root, string barName, int current, int max)
+        {
+            Transform fill = root.Find($"{barName}/Fill");
+            if (fill == null)
+            {
+                return;
+            }
+
+            float rate = max <= 0 ? 0f : Mathf.Clamp01((float)current / max);
+            fill.localScale = new Vector3(rate, 1f, 1f);
         }
 
         private void RebuildTurnOrder()
