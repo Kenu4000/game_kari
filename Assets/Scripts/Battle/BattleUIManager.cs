@@ -43,6 +43,7 @@ namespace GameKari.Battle
         private readonly List<BattleUnit> _reserves = new();
 
         private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
+        private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
 
         private void Start()
@@ -114,6 +115,7 @@ namespace GameKari.Battle
         {
             ShowActionOverlay(skill.SkillName, _active.Name);
             Debug.Log($"[Action] Skill used (dummy): {skill.SkillName} by {_active.Name}");
+            MarkActiveAsActed();
         }
 
         private void HandleSkillHover(SkillData skill)
@@ -137,6 +139,7 @@ namespace GameKari.Battle
 
             _formation.SwapActiveWithReserve(previousActive, reserve);
             TransferTurnNumber(previousActive, reserve);
+            TransferActedState(previousActive, reserve);
 
             int allyIndex = _allies.IndexOf(previousActive);
             if (allyIndex >= 0)
@@ -169,6 +172,20 @@ namespace GameKari.Battle
             }
         }
 
+        private void TransferActedState(BattleUnit from, BattleUnit to)
+        {
+            if (from == null || to == null)
+            {
+                return;
+            }
+
+            if (_actedUnits.Contains(from))
+            {
+                _actedUnits.Remove(from);
+                _actedUnits.Add(to);
+            }
+        }
+
         private void HandleItemClicked(string itemId)
         {
             BattleUnit target = TryGetForwardAlly(_active);
@@ -181,7 +198,19 @@ namespace GameKari.Battle
             target.CurrentHP = Mathf.Min(target.CurrentHP + 20, target.Data.MaxHP);
             ShowActionOverlay(itemId, _active.Name);
             Debug.Log($"[Action] Item used (dummy): {itemId} -> {target.Name}");
+            MarkActiveAsActed();
             RedrawBoard();
+        }
+
+        private void MarkActiveAsActed()
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            _actedUnits.Add(_active);
+            RedrawStatusPanels();
         }
 
         private BattleUnit TryGetForwardAlly(BattleUnit user)
@@ -198,7 +227,6 @@ namespace GameKari.Battle
         {
             _formation.RotateAlliesClockwise();
             RedrawBoard();
-
         }
 
         private void ShowActionOverlay(string skillName, string userName)
@@ -295,6 +323,11 @@ namespace GameKari.Battle
                 return "";
             }
 
+            if (_actedUnits.Contains(unit))
+            {
+                return "";
+            }
+
             return _turnNumbers.TryGetValue(unit, out int number)
                 ? number.ToString()
                 : "";
@@ -323,6 +356,8 @@ namespace GameKari.Battle
 
         private void RebuildTurnOrder()
         {
+            _actedUnits.Clear();
+
             var all = new List<BattleUnit>();
             all.AddRange(_grid.AllyGrid.Values);
             all.AddRange(_grid.EnemyGrid.Values);
@@ -340,6 +375,7 @@ namespace GameKari.Battle
                 _turnNumbers[order[i]] = i + 1;
             }
         }
+
         private static string SafeName(BattleUnit unit) => unit == null ? "-" : unit.Name;
 
         private static BattleUnit CreateUnit(string name, int hp, int mp, int speed)
