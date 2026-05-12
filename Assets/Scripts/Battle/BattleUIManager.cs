@@ -51,6 +51,12 @@ namespace GameKari.Battle
         private static readonly Color NormalCellColor = new Color(0.95f, 0.96f, 0.98f, 1f);
         private static readonly Color ActiveCellColor = new Color(0.7f, 0.88f, 1f, 1f);
 
+        private const float EnemyStatusPanelVerticalPadding = 24f;
+        private const float EnemyStatusSlotHeight = 135f;
+        private const float EnemyStatusSlotSpacing = 16f;
+
+        private const float EnemyStatusSlotWidth = 240f;
+
         private void Start()
         {
             BootstrapDummyBattle();
@@ -418,12 +424,15 @@ namespace GameKari.Battle
         private void RedrawStatusPanels()
         {
             List<BattleUnit> aliveEnemies = GetAliveEnemies();
+            ResizeEnemyStatusPanel(aliveEnemies.Count);
 
             for (int i = 0; i < 4; i++)
             {
                 RedrawEnemyStatusSlot(i + 1, GetUnitAt(aliveEnemies, i));
                 RedrawAllyStatusSlot(i + 1, GetUnitAt(_allies, i));
             }
+
+            LayoutEnemyStatusSlots(aliveEnemies.Count);
         }
 
         private void RedrawActiveHighlights()
@@ -514,6 +523,77 @@ namespace GameKari.Battle
             }
         }
 
+        private void ResizeEnemyStatusPanel(int visibleEnemyCount)
+        {
+            if (enemyStatusPanel == null)
+            {
+                return;
+            }
+
+            enemyStatusPanel.gameObject.SetActive(visibleEnemyCount > 0);
+
+            RectTransform rect = enemyStatusPanel as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+
+            if (visibleEnemyCount <= 0)
+            {
+                return;
+            }
+
+            float newHeight =
+                EnemyStatusPanelVerticalPadding * 2f
+                + visibleEnemyCount * EnemyStatusSlotHeight
+                + Mathf.Max(0, visibleEnemyCount - 1) * EnemyStatusSlotSpacing;
+
+            rect.sizeDelta = new Vector2(rect.sizeDelta.x, newHeight);
+        }
+
+        private void LayoutEnemyStatusSlots(int visibleEnemyCount)
+        {
+            if (enemyStatusPanel == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                Transform slot = enemyStatusPanel.Find($"EnemyStatus_{i + 1}");
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                RectTransform rect = slot as RectTransform;
+                if (rect == null)
+                {
+                    continue;
+                }
+
+                rect.anchorMin = new Vector2(0.5f, 1f);
+                rect.anchorMax = new Vector2(0.5f, 1f);
+                rect.pivot = new Vector2(0.5f, 1f);
+                rect.sizeDelta = new Vector2(EnemyStatusSlotWidth, EnemyStatusSlotHeight);
+
+                if (i >= visibleEnemyCount)
+                {
+                    continue;
+                }
+
+                float y =
+                    -EnemyStatusPanelVerticalPadding
+                    - i * (EnemyStatusSlotHeight + EnemyStatusSlotSpacing);
+
+                rect.anchoredPosition = new Vector2(0f, y);
+            }
+        }
+
         private void RedrawEnemyStatusSlot(int slotNumber, BattleUnit unit)
         {
             Transform slot = enemyStatusPanel == null
@@ -525,11 +605,18 @@ namespace GameKari.Battle
                 return;
             }
 
-            SetLabel(slot, "Name", unit == null ? "-" : unit.Name);
+            slot.gameObject.SetActive(unit != null);
+
+            if (unit == null)
+            {
+                return;
+            }
+
+            SetLabel(slot, "Name", unit.Name);
             SetLabel(slot, "TurnNumber", GetTurnOrderText(unit));
 
-            int currentHp = unit == null ? 0 : unit.CurrentHP;
-            int maxHp = unit == null ? 1 : unit.Data.MaxHP;
+            int currentHp = unit.CurrentHP;
+            int maxHp = unit.Data.MaxHP;
             SetBarFill(slot, "HPBar", currentHp, maxHp);
         }
 
