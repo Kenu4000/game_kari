@@ -1448,6 +1448,64 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 228264912}
   m_CullTransparentMesh: 1
+--- !u!1 &234214468
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 234214470}
+  - component: {fileID: 234214469}
+  m_Layer: 0
+  m_Name: BattleUIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &234214469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234214468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce60114a78548a4893285d4c4c457a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.BattleUIManager
+  commandPanel: {fileID: 108107264}
+  rotateButton: {fileID: 256837347}
+  enemyFrontTop: {fileID: 1066169938}
+  enemyBackTop: {fileID: 38346541}
+  enemyFrontBottom: {fileID: 334583052}
+  enemyBackBottom: {fileID: 1266978116}
+  allyFrontTop: {fileID: 389885116}
+  allyBackTop: {fileID: 931639550}
+  allyFrontBottom: {fileID: 1089152053}
+  allyBackBottom: {fileID: 1330291957}
+  actionSkillName: {fileID: 908580131}
+  actionUserName: {fileID: 1849731653}
+  enemyFTHighlight: {fileID: 299903591}
+  enemyFBHighlight: {fileID: 891433078}
+--- !u!4 &234214470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234214468}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 775.6268, y: 489.42853, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &240494972
 GameObject:
   m_ObjectHideFlags: 0
@@ -14084,3 +14142,4 @@ SceneRoots:
   - {fileID: 706556166}
   - {fileID: 1673163912}
   - {fileID: 2035875876}
+  - {fileID: 234214470}

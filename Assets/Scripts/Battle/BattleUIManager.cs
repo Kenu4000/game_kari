@@ -143,7 +143,6 @@ namespace GameKari.Battle
         {
             _formation.RotateAlliesClockwise();
             RedrawBoard();
-            commandPanel.Setup(_active, _reserves);
         }
 
         private void ShowActionOverlay(string skillName, string userName)
