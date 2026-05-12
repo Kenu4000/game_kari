@@ -41,6 +41,8 @@ namespace GameKari.Battle
         private readonly List<BattleUnit> _allies = new();
         private readonly List<BattleUnit> _enemies = new();
         private readonly List<BattleUnit> _reserves = new();
+
+        private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
         private BattleUnit _active;
 
         private void Start()
@@ -134,6 +136,7 @@ namespace GameKari.Battle
             BattleUnit previousActive = _active;
 
             _formation.SwapActiveWithReserve(previousActive, reserve);
+            TransferTurnNumber(previousActive, reserve);
 
             int allyIndex = _allies.IndexOf(previousActive);
             if (allyIndex >= 0)
@@ -150,6 +153,20 @@ namespace GameKari.Battle
             RedrawBoard();
 
             Debug.Log("[Action] Swapped active unit with reserve (no action consumption). ");
+        }
+
+        private void TransferTurnNumber(BattleUnit from, BattleUnit to)
+        {
+            if (from == null || to == null)
+            {
+                return;
+            }
+
+            if (_turnNumbers.TryGetValue(from, out int number))
+            {
+                _turnNumbers.Remove(from);
+                _turnNumbers[to] = number;
+            }
         }
 
         private void HandleItemClicked(string itemId)
@@ -202,7 +219,6 @@ namespace GameKari.Battle
             allyFrontBottom.text = SafeName(_grid.GetUnit(true, GridPos.FrontBottom));
             allyBackBottom.text = SafeName(_grid.GetUnit(true, GridPos.BackBottom));
 
-            RebuildTurnOrder();
             RedrawStatusPanels();
         }
 
@@ -227,7 +243,7 @@ namespace GameKari.Battle
             }
 
             SetLabel(slot, "Name", unit == null ? "-" : unit.Name);
-            SetLabel(slot, "TurnNumber", unit == null ? "" : slotNumber.ToString());
+            SetLabel(slot, "TurnNumber", GetTurnOrderText(unit));
 
             int currentHp = unit == null ? 0 : unit.CurrentHP;
             int maxHp = unit == null ? 1 : unit.Data.MaxHP;
@@ -246,7 +262,7 @@ namespace GameKari.Battle
             }
 
             SetLabel(slot, "Name", unit == null ? "-" : unit.Name);
-            SetLabel(slot, "TurnNumber", unit == null ? "" : slotNumber.ToString());
+            SetLabel(slot, "TurnNumber", GetTurnOrderText(unit));
 
             int currentHp = unit == null ? 0 : unit.CurrentHP;
             int maxHp = unit == null ? 1 : unit.Data.MaxHP;
@@ -270,6 +286,18 @@ namespace GameKari.Battle
             }
 
             return units[index];
+        }
+
+        private string GetTurnOrderText(BattleUnit unit)
+        {
+            if (unit == null)
+            {
+                return "";
+            }
+
+            return _turnNumbers.TryGetValue(unit, out int number)
+                ? number.ToString()
+                : "";
         }
 
         private static void SetLabel(Transform root, string childName, string text)
@@ -299,8 +327,19 @@ namespace GameKari.Battle
             all.AddRange(_grid.AllyGrid.Values);
             all.AddRange(_grid.EnemyGrid.Values);
             _turnOrder.RebuildTurnOrder(all);
+            RebuildTurnNumbersFromCurrentOrder();
         }
 
+        private void RebuildTurnNumbersFromCurrentOrder()
+        {
+            _turnNumbers.Clear();
+
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+            for (int i = 0; i < order.Count; i++)
+            {
+                _turnNumbers[order[i]] = i + 1;
+            }
+        }
         private static string SafeName(BattleUnit unit) => unit == null ? "-" : unit.Name;
 
         private static BattleUnit CreateUnit(string name, int hp, int mp, int speed)
