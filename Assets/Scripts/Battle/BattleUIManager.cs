@@ -96,8 +96,8 @@ namespace GameKari.Battle
             _grid.SetUnit(false, GridPos.FrontBottom, enemyC);
             _grid.SetUnit(false, GridPos.BackBottom, enemyD);
 
-            _active = heroA;
-            RebuildTurnOrder();
+        RebuildTurnOrder();
+        _active = FindNextUnactedAlly() ?? heroA;
         }
 
         private void BindUI()
@@ -115,7 +115,9 @@ namespace GameKari.Battle
         {
             ShowActionOverlay(skill.SkillName, _active.Name);
             Debug.Log($"[Action] Skill used (dummy): {skill.SkillName} by {_active.Name}");
+
             MarkActiveAsActed();
+            AdvanceToNextActor();
         }
 
         private void HandleSkillHover(SkillData skill)
@@ -195,11 +197,13 @@ namespace GameKari.Battle
                 return;
             }
 
-            target.CurrentHP = Mathf.Min(target.CurrentHP + 20, target.Data.MaxHP);
-            ShowActionOverlay(itemId, _active.Name);
-            Debug.Log($"[Action] Item used (dummy): {itemId} -> {target.Name}");
-            MarkActiveAsActed();
-            RedrawBoard();
+        target.CurrentHP = Mathf.Min(target.CurrentHP + 20, target.Data.MaxHP);
+        ShowActionOverlay(itemId, _active.Name);
+        Debug.Log($"[Action] Item used (dummy): {itemId} -> {target.Name}");
+
+        MarkActiveAsActed();
+        RedrawBoard();
+        AdvanceToNextActor();
         }
 
         private void MarkActiveAsActed()
@@ -211,6 +215,105 @@ namespace GameKari.Battle
 
             _actedUnits.Add(_active);
             RedrawStatusPanels();
+        }
+
+        private void AdvanceToNextActor()
+        {
+            BattleUnit nextAlly = FindNextUnactedAlly();
+            if (nextAlly != null)
+            {
+                _active = nextAlly;
+                commandPanel.Setup(_active, _reserves);
+                RedrawBoard();
+                Debug.Log($"[Turn] Next active ally: {_active.Name}");
+                return;
+            }
+
+            if (ProcessEnemyTurnsUntilNextAlly())
+            {
+                return;
+            }
+
+            StartNextTurn();
+        }
+
+        private BattleUnit FindNextUnactedAlly()
+        {
+            if (_turnOrder == null)
+            {
+                return null;
+            }
+
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+            for (int i = 0; i < order.Count; i++)
+            {
+                BattleUnit unit = order[i];
+
+                if (unit == null || unit.IsDead || _actedUnits.Contains(unit))
+                {
+                    continue;
+                }
+
+                if (_allies.Contains(unit))
+                {
+                    return unit;
+                }
+            }
+
+            return null;
+        }
+
+        private bool ProcessEnemyTurnsUntilNextAlly()
+        {
+            if (_turnOrder == null)
+            {
+                return false;
+            }
+
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+            for (int i = 0; i < order.Count; i++)
+            {
+                BattleUnit unit = order[i];
+
+                if (unit == null || unit.IsDead || _actedUnits.Contains(unit))
+                {
+                    continue;
+                }
+
+                if (_enemies.Contains(unit))
+                {
+                    _actedUnits.Add(unit);
+                    Debug.Log($"[Enemy] Dummy enemy action: {unit.Name}");
+                    RedrawStatusPanels();
+
+                    BattleUnit nextAlly = FindNextUnactedAlly();
+                    if (nextAlly != null)
+                    {
+                        _active = nextAlly;
+                        commandPanel.Setup(_active, _reserves);
+                        RedrawBoard();
+                        Debug.Log($"[Turn] Next active ally: {_active.Name}");
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private void StartNextTurn()
+        {
+            RebuildTurnOrder();
+
+            BattleUnit nextAlly = FindNextUnactedAlly();
+            if (nextAlly != null)
+            {
+                _active = nextAlly;
+                commandPanel.Setup(_active, _reserves);
+            }
+
+            RedrawBoard();
+            Debug.Log("[Turn] New turn started.");
         }
 
         private BattleUnit TryGetForwardAlly(BattleUnit user)
