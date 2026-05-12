@@ -176,7 +176,8 @@ namespace GameKari.Battle
             if (target.CurrentHP <= 0)
             {
                 target.IsDead = true;
-                Debug.Log($"[KO] {target.Name} is defeated.");
+                _grid.SetUnit(false, pos, null);
+                Debug.Log($"[KO] {target.Name} is defeated and removed from grid.");
             }
         }
 
@@ -416,9 +417,11 @@ namespace GameKari.Battle
 
         private void RedrawStatusPanels()
         {
+            List<BattleUnit> aliveEnemies = GetAliveEnemies();
+
             for (int i = 0; i < 4; i++)
             {
-                RedrawEnemyStatusSlot(i + 1, GetUnitAt(_enemies, i));
+                RedrawEnemyStatusSlot(i + 1, GetUnitAt(aliveEnemies, i));
                 RedrawAllyStatusSlot(i + 1, GetUnitAt(_allies, i));
             }
         }
@@ -553,6 +556,22 @@ namespace GameKari.Battle
             SetBarFill(slot, "MPBar", currentMp, maxMp);
         }
 
+        private List<BattleUnit> GetAliveEnemies()
+        {
+            var aliveEnemies = new List<BattleUnit>();
+
+            for (int i = 0; i < _enemies.Count; i++)
+            {
+                BattleUnit enemy = _enemies[i];
+                if (enemy != null && !enemy.IsDead)
+                {
+                    aliveEnemies.Add(enemy);
+                }
+            }
+
+            return aliveEnemies;
+        }
+
         private static BattleUnit GetUnitAt(List<BattleUnit> units, int index)
         {
             if (units == null)
@@ -637,6 +656,7 @@ namespace GameKari.Battle
 
             return unit.IsDead ? $"{unit.Name} KO" : unit.Name;
         }
+
         private static BattleUnit CreateUnit(string name, int hp, int mp, int speed)
         {
             var data = new CharacterData
