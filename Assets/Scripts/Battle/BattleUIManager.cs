@@ -46,6 +46,11 @@ namespace GameKari.Battle
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
 
+        private static readonly Color NormalStatusColor = new Color(0.9f, 0.93f, 0.96f, 1f);
+        private static readonly Color ActiveStatusColor = new Color(0.7f, 0.85f, 1f, 1f);
+        private static readonly Color NormalCellColor = new Color(0.95f, 0.96f, 0.98f, 1f);
+        private static readonly Color ActiveCellColor = new Color(0.7f, 0.88f, 1f, 1f);
+
         private void Start()
         {
             BootstrapDummyBattle();
@@ -351,6 +356,7 @@ namespace GameKari.Battle
             allyBackBottom.text = SafeName(_grid.GetUnit(true, GridPos.BackBottom));
 
             RedrawStatusPanels();
+            RedrawActiveHighlights();
         }
 
         private void RedrawStatusPanels()
@@ -359,6 +365,94 @@ namespace GameKari.Battle
             {
                 RedrawEnemyStatusSlot(i + 1, GetUnitAt(_enemies, i));
                 RedrawAllyStatusSlot(i + 1, GetUnitAt(_allies, i));
+            }
+        }
+
+        private void RedrawActiveHighlights()
+        {
+            ResetAllyBoardHighlights();
+            ResetAllyStatusHighlights();
+
+            if (_active == null)
+            {
+                return;
+            }
+
+            SetAllyBoardCellColor(_active.GridPos, ActiveCellColor);
+
+            int allyIndex = _allies.IndexOf(_active);
+            if (allyIndex >= 0)
+            {
+                SetStatusSlotColor(allyStatusPanel, $"AllyStatus_{allyIndex + 1}", ActiveStatusColor);
+            }
+        }
+
+        private void ResetAllyBoardHighlights()
+        {
+            SetCellImageColor(allyFrontTop, NormalCellColor);
+            SetCellImageColor(allyBackTop, NormalCellColor);
+            SetCellImageColor(allyFrontBottom, NormalCellColor);
+            SetCellImageColor(allyBackBottom, NormalCellColor);
+        }
+
+        private void ResetAllyStatusHighlights()
+        {
+            for (int i = 1; i <= 4; i++)
+            {
+                SetStatusSlotColor(allyStatusPanel, $"AllyStatus_{i}", NormalStatusColor);
+            }
+        }
+
+        private void SetAllyBoardCellColor(GridPos pos, Color color)
+        {
+            switch (pos)
+            {
+                case GridPos.FrontTop:
+                    SetCellImageColor(allyFrontTop, color);
+                    break;
+                case GridPos.BackTop:
+                    SetCellImageColor(allyBackTop, color);
+                    break;
+                case GridPos.FrontBottom:
+                    SetCellImageColor(allyFrontBottom, color);
+                    break;
+                case GridPos.BackBottom:
+                    SetCellImageColor(allyBackBottom, color);
+                    break;
+            }
+        }
+
+        private static void SetCellImageColor(TMP_Text cellLabel, Color color)
+        {
+            if (cellLabel == null || cellLabel.transform.parent == null)
+            {
+                return;
+            }
+
+            Image image = cellLabel.transform.parent.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = color;
+            }
+        }
+
+        private static void SetStatusSlotColor(Transform statusPanel, string slotName, Color color)
+        {
+            if (statusPanel == null)
+            {
+                return;
+            }
+
+            Transform slot = statusPanel.Find(slotName);
+            if (slot == null)
+            {
+                return;
+            }
+
+            Image image = slot.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = color;
             }
         }
 
