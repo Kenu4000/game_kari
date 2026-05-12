@@ -70,9 +70,103 @@ Confirmed behavior:
 - Swap 後、出撃中 status は `Knight` から `Reserve` に更新される。
 - Swap list 側には控えに戻った `Knight` が表示される。
 
-Unconfirmed / pending:
+## Turn order and active unit behavior
 
-- HP bar の減少確認は未実施。現状はダミー戦闘で被ダメージ処理がまだないため。
+Turn number display was connected to the actual mixed ally/enemy turn order.
+
+Confirmed behavior:
+
+- Initial `TurnNumber` values are based on speed order, not fixed UI slot order.
+- Turn order is calculated at turn start and remains fixed during the turn.
+- Rotate does not recalculate turn numbers.
+- Swap does not recalculate turn numbers.
+- On swap, the reserve inherits the previous active unit's turn number.
+- Skill use and successful item use mark the active unit as acted.
+- Acted units have their `TurnNumber` hidden.
+- Item failure does not mark the unit as acted.
+- After an ally action, the system advances through the mixed turn order.
+- Enemy turns are processed automatically as dummy enemy actions.
+- When all units have acted, a new turn starts.
+
+## Active unit highlight
+
+Current active unit highlighting was added.
+
+Confirmed behavior:
+
+- The active ally board cell is highlighted.
+- The active ally status slot is highlighted.
+- The highlight moves after skill use when the next active ally is selected.
+- The highlight follows the active unit after swap.
+- The highlight follows the active unit after rotate.
+- Item failure does not change the active highlight.
+
+## Skill damage and enemy KO behavior
+
+Dummy skill damage was connected to enemy HP.
+
+Confirmed behavior:
+
+- `Slash` damages Enemy FrontTop.
+- `Pierce` damages Enemy FrontBottom.
+- `TwinHit` damages Enemy FrontTop and Enemy FrontBottom.
+- `Wave` damages all four enemy grid positions.
+- Enemy HP bars update after damage.
+- When enemy HP reaches 0, the enemy is marked dead.
+- KO enemies are removed from the enemy grid using `SetUnit(false, pos, null)`.
+- Attacking an empty enemy grid position logs a miss.
+- KO enemies do not receive turn numbers.
+- KO enemies do not perform dummy enemy actions.
+
+## Enemy status list behavior
+
+Enemy status UI was changed from fixed original slots to a live enemy list.
+
+Confirmed behavior:
+
+- Enemy status slots show only alive enemies.
+- KO enemies disappear from the status list.
+- Alive enemies are packed upward in the EnemyStatusPanel.
+- Empty enemy status slots are hidden.
+- EnemyStatusPanel resizes based on the visible enemy count.
+- EnemyStatusPanel is hidden when there are no visible enemies.
+
+Design note:
+
+- This prepares for a future enemy reserve system. Later, when a 5th or later enemy exists, KO can free a grid cell and a reserve enemy can enter that cell.
+
+## Skill target preview
+
+Skill target preview was changed to board-cell highlighting.
+
+Confirmed behavior:
+
+- Hovering `Slash` highlights Enemy FrontTop.
+- Hovering `Pierce` highlights Enemy FrontBottom.
+- Hovering `TwinHit` highlights Enemy FrontTop and Enemy FrontBottom.
+- Hovering `Wave` highlights all enemy cells.
+- Empty target cells still highlight, so the player can see where the attack will land even if it will miss.
+- Target preview is cleared when the cursor leaves the skill button.
+- Target preview is re-applied after actor change if the cursor remains on the same skill button.
+
+## Enemy dummy action behavior
+
+Enemy dummy actions now deal damage to allies.
+
+Confirmed behavior:
+
+- Enemy dummy action occurs at the correct speed-order position.
+- The enemy action damages the current active ally by 10.
+- Ally HP bars update after dummy enemy damage.
+- If the current active ally is dead, the enemy targets the first alive ally.
+- Ally HP reaching 0 marks that ally as dead.
+- Dead allies are skipped by next-active selection.
+
+Known limitation:
+
+- Ally KO does not yet trigger automatic reserve replacement.
+- Ally KO does not yet remove or hide the ally status slot.
+- Enemy action targeting is still dummy behavior, not proper AI targeting.
 
 ## BattleUICreator status
 
@@ -102,6 +196,7 @@ Codex は今回の作業で以下の問題を繰り返した。
 - 手元で手動反映する。
 - Unity で Console / Play 確認する。
 - GitHub Desktop で変更ファイルを確認してから push する。
+- ChatGPT から GitHub へ直接書き込むのは、docs など Scene 参照に影響しないファイルに限定する。
 
 ## Current confirmed state
 
@@ -115,6 +210,15 @@ Codex は今回の作業で以下の問題を繰り返した。
 - Swap panel persistence during rotate: OK.
 - Status names: OK.
 - Status update after swap: OK.
+- Turn numbers based on speed order: OK.
+- Turn numbers remain fixed during a turn: OK.
+- Active unit progression through turn order: OK.
+- Enemy dummy actions in turn order: OK.
+- Skill damage to enemies: OK.
+- Enemy KO removal from grid: OK.
+- Enemy status list packing and resizing: OK.
+- Skill target cell preview: OK.
+- Enemy dummy damage to allies: OK.
 
 ## Next recommended task
 
@@ -122,11 +226,11 @@ Next task should be small and isolated.
 
 Candidate:
 
-- Implement real turn order number reflection on Status UI.
+- Implement ally KO handling and reserve replacement.
 
 Expected direction:
 
-- Use `TurnOrderManager` result to set `TurnNumber` in `EnemyStatus_*` / `AllyStatus_*`.
-- Turn order numbers should represent mixed enemy/ally speed order from the start of the turn.
-- Rotating grid should not reorder status slots.
-- Acting state handling can be deferred until later.
+- When an ally reaches 0 HP, mark it dead.
+- If reserves exist, automatically replace the KO ally in the same grid position.
+- Update `_allies`, `_reserves`, turn number inheritance, and status display consistently.
+- Keep this separate from full enemy AI targeting.
