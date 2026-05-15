@@ -10,7 +10,7 @@ Unityで制作中の戦闘特化型RPG。マップ探索は作らず、以下の
 
 主軸は、戦闘UIと4vs4の陣形型コマンドバトル。
 
-現時点では、ゲーム全体の完成よりも `BattleTest` Scene 上で戦闘UI・行動順・交代・KO・控え補充の基礎を固める段階。
+現時点では、ゲーム全体の完成よりも `BattleTest` Scene 上で戦闘UI・行動順・交代・KO・控え補充・勝敗判定の基礎を固める段階。
 
 ## 2. Repository / workflow
 
@@ -40,6 +40,7 @@ push
 - Scene参照やInspector参照を含む作業は、Unity上で動作確認してからcommitする。
 - GitHub上の安定版に戻したい場合は、GitHub Desktopで該当ファイルをDiscardし、必要ならFetch/Pullする。
 - ChatGPTからGitHubへ直接書き込むのは、原則として `docs` などScene参照に影響しないファイルに限定する。
+- `BattleUIManager.cs` の大きな全文置換は避ける。必要な場合はメソッド単位で手動差し替えする。
 
 ## 3. Unity / display policy
 
@@ -76,20 +77,24 @@ Assets/Scenes/BattleTest.unity
 - Skill / Item成功で行動済み化。
 - Item失敗 / Swap / Rotateでは行動終了しない。
 - 次activeへの進行OK。
-- 敵dummy行動OK。
 - active強調表示OK。
 - Skill対象マスPreview OK。
 - 敵HPダメージ処理OK。
 - 敵KO時の盤面除去OK。
-- 敵Statusの生存敵リスト化・上詰め・Panel縮小OK。
-- 敵dummy行動による味方HP減少OK。
+- 敵Statusの生存敵リスト化・上詰めOK。
+- EnemyStatusPanelは全滅時のみ非表示。高さ縮小は一旦行わない。
+- 敵dummy行動は位置ベース攻撃。
+- 敵dummyダメージは60を現行値とする。
 - 味方KO時の控え自動補充OK。
 - 敵KO時の控え自動補充OK。
+- 控えなし味方KO時は味方盤面マスを空にする。
+- 勝利判定OK。
+- 敗北判定は実装済みだが、通常確認ではまだ確認しづらい。
 
 直近の次候補:
 
 ```text
-勝利 / 敗北判定の最小実装
+味方StatusのKO/空枠表示整理
 ```
 
 ## 5. Battle system overview
@@ -253,8 +258,9 @@ Wave    → 10 each
 - KO済み敵はStatusから消える。
 - 生存している出撃中敵だけを上から詰めて表示する。
 - 空Statusスロットは非表示。
-- 生存敵数に応じてEnemyStatusPanelを縮小する。
+- EnemyStatusPanel本体の高さ変更は一旦行わない。全滅時のみPanel全体を非表示にする。
 - EnemyStatusPanelのAnchor / Pivotはコードで上書きしない。Scene側RectTransform設定を尊重する。
+- 子スロットはPanel高さをもとに上端寄せで配置する。
 
 ### AllyStatusPanel
 
@@ -307,7 +313,8 @@ Wave    → 10 each
 - `_allies` をKO味方から控えに差し替える。
 - `_reserves` から出撃控えを削除する。
 - KO味方のTurnNumber / acted stateは `RemoveTurnState()` で消す。
-- 控えがいない場合、KO味方はKO扱いのまま残る。専用UI表示は今後整理。
+- 控えがいない場合、KO味方は盤面から消え、そのGridPosは空マスになる。
+- 控えがいないKO時のAllyStatus専用表示は今後整理。
 
 敵KO:
 
@@ -321,26 +328,32 @@ Wave    → 10 each
 
 ## 17. Enemy dummy action / targeting policy
 
-現在の敵行動は仮実装。
+現在の敵dummy行動は位置ベース攻撃。
 
-- 敵dummy行動はSpeed順の正しい位置で発生する。
-- 現在はcurrent active allyに10ダメージを与える。
-- current active allyがdeadなら、最初のalive allyを狙う。
+```text
+Enemy FrontTop    → Ally FrontTop
+Enemy BackTop     → Ally BackTop
+Enemy FrontBottom → Ally FrontBottom
+Enemy BackBottom  → Ally BackBottom
+```
+
+- 対象マスに味方がいない / KO済みの場合、`missed unavailable ally cell` を出してMiss。
+- 敵dummyダメージは現行値 `60`。
 - まだ本格AIではない。
 
 次以降の候補:
 
 ```text
-正面マスの味方を攻撃
-いなければMiss
-または前列優先ターゲット
+敵ごとのスキル選択
+正面対象以外の攻撃パターン
+前列優先ターゲット
 ```
 
 ## 18. Battle end policy
 
-未実装。次の自然な実装候補。
+実装済み。
 
-最小仕様案:
+最小仕様:
 
 ```text
 出撃中の生存敵が0
@@ -356,9 +369,10 @@ Wave    → 10 each
 
 戦闘終了後:
 
-- `_battleEnded` のようなflagを立てる。
+- `_battleEnded` flagを立てる。
 - `commandPanel.SetInteractable(false)` で入力停止する。
 - 以後ターン進行しない。
+- 上部表示は `Victory / Battle End` または `Defeat / Battle End`。
 
 ## 19. Boss UI policy
 
@@ -491,11 +505,11 @@ Codexを使う場合は、必ず以下を指定する。
 
 ## 27. Immediate next tasks
 
-1. 勝利 / 敗北判定の最小実装。
-2. 戦闘終了時にCommand UIを操作不能にする。
-3. 敵dummy行動の対象を位置ベースに変更する。
-4. 味方KO時、控えがいない場合のAllyStatus表示を整理する。
-5. バトルデータをdummy生成から外部データ/ScriptableObject寄りに分離する。
+1. 味方StatusのKO/空枠表示整理。
+2. 敗北判定の実動作確認。
+3. バトルデータをdummy生成から外部データ/ScriptableObject寄りに分離する。
+4. 敵ごとのスキル/ターゲットパターンを導入する。
+5. 戦闘終了時の結果UIを仮実装する。
 
 ## 28. Work log
 
@@ -532,11 +546,15 @@ Codexを使う場合は、必ず以下を指定する。
 - active allyの盤面セル・Status枠の強調表示を追加。
 - Skill使用時の敵HP減少とHPバー反映を追加。
 - 敵KO時に盤面から除去し、空マス攻撃をMissにする処理を追加。
-- EnemyStatusを生存敵リスト化し、KOで上詰め・空スロット非表示・Panel縮小する処理を追加。
+- EnemyStatusを生存敵リスト化し、KOで上詰め・空スロット非表示にする処理を追加。
+- EnemyStatusPanel高さ縮小は表示ずれが出たため一旦停止し、全滅時のみ非表示に変更。
 - Skill hover時の対象マスPreviewを追加。
 - Skill hover中にactorが変わってもPreviewを再適用する処理を追加。
 - 敵dummy行動で味方HPを減らす処理を追加。
 - 味方KO時の控え自動補充を追加。
 - 敵KO時の控え自動補充を追加。
 - KO補充は敵味方ともに行動権を引き継がない仕様に確定。
-- EnemyStatusPanelのAnchor/Pivotをコードから上書きして表示が崩れた問題を確認し、コード側の上書きを削除する方針に修正。
+- 勝利判定を実装し、Victory / Battle End表示とCommand UI停止を確認。
+- 敵dummy行動を位置ベース攻撃に変更。
+- 敵dummyダメージは60を現行値に変更。
+- 控えなし味方KO時、味方盤面マスを空にする処理を追加。
