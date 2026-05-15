@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -48,6 +48,7 @@ namespace GameKari.Battle
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
         private SkillData _hoveredSkill;
+        private bool _battleEnded;
 
         private static readonly Color NormalStatusColor = new Color(0.9f, 0.93f, 0.96f, 1f);
         private static readonly Color ActiveStatusColor = new Color(0.7f, 0.85f, 1f, 1f);
@@ -69,6 +70,7 @@ namespace GameKari.Battle
 
         private void BootstrapDummyBattle()
         {
+            _battleEnded = false;
             _grid = new BattleGrid();
             _formation = new FormationController(_grid);
             _turnOrder = new TurnOrderManager();
@@ -130,11 +132,21 @@ namespace GameKari.Battle
 
         private void HandleSkillClicked(SkillData skill)
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             ShowActionOverlay(skill.SkillName, _active.Name);
+            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}");
 
             ApplySkillDamage(skill);
 
-            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}");
+            if (_battleEnded)
+            {
+                RedrawBoard();
+                return;
+            }
 
             MarkActiveAsActed();
             RedrawBoard();
@@ -174,6 +186,11 @@ namespace GameKari.Battle
 
         private void DamageEnemyAt(GridPos pos, int damage)
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             BattleUnit target = _grid.GetUnit(false, pos);
             if (target == null || target.IsDead)
             {
@@ -208,6 +225,7 @@ namespace GameKari.Battle
             if (replacement == null)
             {
                 Debug.Log($"[KO] No enemy reserve available for {defeatedEnemy.Name}.");
+                CheckBattleEnd();
                 return;
             }
 
@@ -225,14 +243,19 @@ namespace GameKari.Battle
 
             _enemyReserves.Remove(replacement);
 
-            // Replacement enters this turn, but cannot act until the next turn.
             _actedUnits.Add(replacement);
 
             Debug.Log($"[KO] {replacement.Name} replaced {defeatedEnemy.Name} at {position}. Replacement cannot act this turn.");
+            CheckBattleEnd();
         }
 
         private void HandleSkillHover(SkillData skill)
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             _hoveredSkill = skill;
             RedrawTargetPreview();
         }
@@ -278,6 +301,11 @@ namespace GameKari.Battle
 
         private void HandleSwap(BattleUnit reserve)
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             BattleUnit previousActive = _active;
 
             _formation.SwapActiveWithReserve(previousActive, reserve);
@@ -342,6 +370,11 @@ namespace GameKari.Battle
 
         private void HandleItemClicked(string itemId)
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             BattleUnit target = TryGetForwardAlly(_active);
             if (target == null)
             {
@@ -360,7 +393,7 @@ namespace GameKari.Battle
 
         private void MarkActiveAsActed()
         {
-            if (_active == null)
+            if (_active == null || _battleEnded)
             {
                 return;
             }
@@ -371,6 +404,11 @@ namespace GameKari.Battle
 
         private void AdvanceToNextActor()
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             while (true)
             {
                 BattleUnit nextUnit = FindNextUnactedUnit();
@@ -395,6 +433,12 @@ namespace GameKari.Battle
                     _actedUnits.Add(nextUnit);
                     ApplyDummyEnemyAction(nextUnit);
                     RedrawBoard();
+
+                    if (_battleEnded)
+                    {
+                        return;
+                    }
+
                     continue;
                 }
 
@@ -468,7 +512,7 @@ namespace GameKari.Battle
 
         private void ApplyDummyEnemyAction(BattleUnit enemy)
         {
-            if (enemy == null || enemy.IsDead)
+            if (enemy == null || enemy.IsDead || _battleEnded)
             {
                 return;
             }
@@ -482,6 +526,7 @@ namespace GameKari.Battle
             if (target == null)
             {
                 Debug.Log($"[Enemy] {enemy.Name} has no ally target.");
+                CheckBattleEnd();
                 return;
             }
 
@@ -511,6 +556,7 @@ namespace GameKari.Battle
             if (replacement == null)
             {
                 Debug.Log($"[KO] No reserve available for {defeatedAlly.Name}.");
+                CheckBattleEnd();
                 return;
             }
 
@@ -525,10 +571,8 @@ namespace GameKari.Battle
             }
 
             _reserves.Remove(replacement);
-
             RemoveTurnState(defeatedAlly);
 
-            // Replacement enters this turn, but cannot act until the next turn.
             _actedUnits.Add(replacement);
 
             if (_active == defeatedAlly)
@@ -538,6 +582,7 @@ namespace GameKari.Battle
             }
 
             Debug.Log($"[KO] {replacement.Name} replaced {defeatedAlly.Name} at {position}. Replacement cannot act this turn.");
+            CheckBattleEnd();
         }
 
         private BattleUnit GetNextReserve()
@@ -568,8 +613,101 @@ namespace GameKari.Battle
             return null;
         }
 
+        private void CheckBattleEnd()
+        {
+            if (_battleEnded)
+            {
+                return;
+            }
+
+            if (!HasAliveActiveEnemies() && !HasAliveEnemyReserves())
+            {
+                EndBattle("Victory");
+                return;
+            }
+
+            if (!HasAliveActiveAllies() && !HasAliveAllyReserves())
+            {
+                EndBattle("Defeat");
+            }
+        }
+
+        private void EndBattle(string result)
+        {
+            _battleEnded = true;
+            ClearTargetPreview();
+
+            if (commandPanel != null)
+            {
+                commandPanel.SetInteractable(false);
+            }
+
+            ShowActionOverlay(result, "Battle End");
+            Debug.Log($"[Battle] {result}");
+        }
+
+        private bool HasAliveActiveEnemies()
+        {
+            for (int i = 0; i < _enemies.Count; i++)
+            {
+                BattleUnit enemy = _enemies[i];
+                if (enemy != null && !enemy.IsDead)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasAliveEnemyReserves()
+        {
+            for (int i = 0; i < _enemyReserves.Count; i++)
+            {
+                BattleUnit enemy = _enemyReserves[i];
+                if (enemy != null && !enemy.IsDead)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasAliveActiveAllies()
+        {
+            for (int i = 0; i < _allies.Count; i++)
+            {
+                BattleUnit ally = _allies[i];
+                if (ally != null && !ally.IsDead)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasAliveAllyReserves()
+        {
+            for (int i = 0; i < _reserves.Count; i++)
+            {
+                BattleUnit ally = _reserves[i];
+                if (ally != null && !ally.IsDead)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
         private void StartNextTurn()
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             RebuildTurnOrder();
 
             BattleUnit nextAlly = FindNextUnactedAlly();
@@ -595,6 +733,11 @@ namespace GameKari.Battle
 
         private void HandleRotateClicked()
         {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             _formation.RotateAlliesClockwise();
             RedrawBoard();
         }
@@ -626,15 +769,13 @@ namespace GameKari.Battle
         {
             List<BattleUnit> aliveEnemies = GetAliveEnemies();
 
-
-            ResizeEnemyStatusPanel(aliveEnemies.Count);
-
             for (int i = 0; i < 4; i++)
             {
                 RedrawEnemyStatusSlot(i + 1, GetUnitAt(aliveEnemies, i));
                 RedrawAllyStatusSlot(i + 1, GetUnitAt(_allies, i));
             }
 
+            ResizeEnemyStatusPanel(aliveEnemies.Count);
             LayoutEnemyStatusSlots(aliveEnemies.Count);
         }
 
@@ -761,32 +902,21 @@ namespace GameKari.Battle
             }
 
             enemyStatusPanel.gameObject.SetActive(visibleEnemyCount > 0);
-
-            RectTransform rect = enemyStatusPanel as RectTransform;
-            if (rect == null)
-            {
-                return;
-            }
-
-            if (visibleEnemyCount <= 0)
-            {
-                return;
-            }
-
-            float newHeight =
-                EnemyStatusPanelVerticalPadding * 2f
-                + visibleEnemyCount * EnemyStatusSlotHeight
-                + Mathf.Max(0, visibleEnemyCount - 1) * EnemyStatusSlotSpacing;
-
-            rect.sizeDelta = new Vector2(rect.sizeDelta.x, newHeight);
         }
-
         private void LayoutEnemyStatusSlots(int visibleEnemyCount)
         {
             if (enemyStatusPanel == null)
             {
                 return;
             }
+
+            RectTransform panelRect = enemyStatusPanel as RectTransform;
+            if (panelRect == null)
+            {
+                return;
+            }
+
+            float panelHeight = panelRect.rect.height;
 
             for (int i = 0; i < 4; i++)
             {
@@ -796,30 +926,31 @@ namespace GameKari.Battle
                     continue;
                 }
 
+                bool visible = i < visibleEnemyCount;
+                slot.gameObject.SetActive(visible);
+
                 RectTransform rect = slot as RectTransform;
                 if (rect == null)
                 {
                     continue;
                 }
 
-                rect.anchorMin = new Vector2(0.5f, 1f);
-                rect.anchorMax = new Vector2(0.5f, 1f);
-                rect.pivot = new Vector2(0.5f, 1f);
-                rect.sizeDelta = new Vector2(EnemyStatusSlotWidth, EnemyStatusSlotHeight);
-
-                if (i >= visibleEnemyCount)
+                if (!visible)
                 {
                     continue;
                 }
 
+                // Do not change parent panel anchor / pivot here.
+                // Place each slot from the top edge of the panel.
                 float y =
-                    -EnemyStatusPanelVerticalPadding
+                    (panelHeight * 0.5f)
+                    - EnemyStatusPanelVerticalPadding
+                    - (EnemyStatusSlotHeight * 0.5f)
                     - i * (EnemyStatusSlotHeight + EnemyStatusSlotSpacing);
 
-                rect.anchoredPosition = new Vector2(0f, y);
+                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
             }
         }
-
         private void RedrawEnemyStatusSlot(int slotNumber, BattleUnit unit)
         {
             Transform slot = enemyStatusPanel == null
@@ -982,11 +1113,15 @@ namespace GameKari.Battle
             };
 
             var unit = new BattleUnit(data);
-            unit.Skills.Add(new SkillData { SkillId = "s1", SkillName = "Slash", Description = "単体前列上を攻撃", TargetPattern = SkillTargetPattern.FrontTopEnemy });
-            unit.Skills.Add(new SkillData { SkillId = "s2", SkillName = "Pierce", Description = "単体前列下を攻撃", TargetPattern = SkillTargetPattern.FrontBottomEnemy });
-            unit.Skills.Add(new SkillData { SkillId = "s3", SkillName = "TwinHit", Description = "前列2体を攻撃", TargetPattern = SkillTargetPattern.BothFrontEnemies });
-            unit.Skills.Add(new SkillData { SkillId = "s4", SkillName = "Wave", Description = "全体攻撃", TargetPattern = SkillTargetPattern.AllEnemies });
+            unit.Skills.Add(new SkillData { SkillId = "s1", SkillName = "Slash", Description = "Attack enemy front top.", TargetPattern = SkillTargetPattern.FrontTopEnemy });
+            unit.Skills.Add(new SkillData { SkillId = "s2", SkillName = "Pierce", Description = "Attack enemy front bottom.", TargetPattern = SkillTargetPattern.FrontBottomEnemy });
+            unit.Skills.Add(new SkillData { SkillId = "s3", SkillName = "TwinHit", Description = "Attack both front enemies.", TargetPattern = SkillTargetPattern.BothFrontEnemies });
+            unit.Skills.Add(new SkillData { SkillId = "s4", SkillName = "Wave", Description = "Attack all enemies.", TargetPattern = SkillTargetPattern.AllEnemies });
             return unit;
         }
     }
 }
+
+
+
+
