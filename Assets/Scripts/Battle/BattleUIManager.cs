@@ -522,7 +522,7 @@ namespace GameKari.Battle
 
             if (target == null || target.IsDead)
             {
-                Debug.Log($"[Enemy] Dummy enemy action: {enemy.Name} missed empty ally cell: {targetPosition}");
+                Debug.Log($"[Enemy] Dummy enemy action: {enemy.Name} missed unavailable ally cell: {targetPosition}");
                 CheckBattleEnd();
                 return;
             }
