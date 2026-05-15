@@ -162,10 +162,33 @@ Confirmed behavior:
 - Ally HP reaching 0 marks that ally as dead.
 - Dead allies are skipped by next-active selection.
 
+## Ally KO and reserve replacement behavior
+
+Ally KO handling now supports automatic reserve replacement.
+
+Confirmed behavior:
+
+- When enemy dummy damage reduces an ally to 0 HP, `HandleAllyDefeated()` is called.
+- KO ally is marked dead.
+- If an alive reserve exists, it is placed into the defeated ally's same `GridPos`.
+- `_allies` is updated from the defeated ally to the replacement reserve.
+- The replacement reserve is removed from `_reserves`.
+- The defeated ally's turn number and acted state are cleared by `RemoveTurnState()`.
+- The replacement is added to `_actedUnits`, so it cannot act during the turn it enters.
+- The replacement has no `TurnNumber` during the entry turn.
+- On the next turn, the replacement joins the speed-based turn order normally.
+- EnemyStatusPanel anchor/pivot is no longer overwritten from code during resize; Scene-side RectTransform settings are preserved.
+- Damage test value was restored to `const int damage = 10`.
+
+Design decision:
+
+- KO replacement does not inherit action rights. This preserves the value of defeating an unacted unit before it can act.
+- This rule should later be applied symmetrically to enemy reserve replacement as well.
+
 Known limitation:
 
-- Ally KO does not yet trigger automatic reserve replacement.
-- Ally KO does not yet remove or hide the ally status slot.
+- Ally KO without reserve keeps the KO unit in the ally side state for now.
+- Ally status UI does not yet have a dedicated KO visual style beyond current HP / turn-number behavior.
 - Enemy action targeting is still dummy behavior, not proper AI targeting.
 
 ## BattleUICreator status
@@ -219,6 +242,9 @@ Codex は今回の作業で以下の問題を繰り返した。
 - Enemy status list packing and resizing: OK.
 - Skill target cell preview: OK.
 - Enemy dummy damage to allies: OK.
+- Ally KO automatic reserve replacement: OK.
+- Replacement reserve cannot act on the turn it enters: OK.
+- Replacement reserve joins speed order from the next turn: OK.
 
 ## Next recommended task
 
@@ -226,11 +252,13 @@ Next task should be small and isolated.
 
 Candidate:
 
-- Implement ally KO handling and reserve replacement.
+- Implement enemy reserve replacement using the same no-action-inheritance rule.
 
 Expected direction:
 
-- When an ally reaches 0 HP, mark it dead.
-- If reserves exist, automatically replace the KO ally in the same grid position.
-- Update `_allies`, `_reserves`, turn number inheritance, and status display consistently.
+- Add enemy reserves separately from active enemies.
+- When an enemy reaches 0 HP, remove it from the grid.
+- If an enemy reserve exists, place it into the defeated enemy's same grid position.
+- Do not inherit the defeated enemy's action right.
+- The replacement enemy should join speed-based turn order from the next turn.
 - Keep this separate from full enemy AI targeting.
