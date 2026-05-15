@@ -517,15 +517,12 @@ namespace GameKari.Battle
                 return;
             }
 
-            BattleUnit target = _active;
+            GridPos targetPosition = enemy.GridPos;
+            BattleUnit target = _grid.GetUnit(true, targetPosition);
+
             if (target == null || target.IsDead)
             {
-                target = FindFirstAliveAlly();
-            }
-
-            if (target == null)
-            {
-                Debug.Log($"[Enemy] {enemy.Name} has no ally target.");
+                Debug.Log($"[Enemy] Dummy enemy action: {enemy.Name} missed empty ally cell: {targetPosition}");
                 CheckBattleEnd();
                 return;
             }
