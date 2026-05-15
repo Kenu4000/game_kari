@@ -90,10 +90,32 @@ namespace GameKari.Battle
         private void BootstrapDummyBattle()
         {
             _battleEnded = false;
+            _formationSettling = false;
+            _hoveredSkill = null;
+
             _grid = new BattleGrid();
             _formation = new FormationController(_grid);
             _turnOrder = new TurnOrderManager();
 
+            ClearBattleLists();
+
+            BattleUnit fallbackActive = SetupDummyAllies();
+            SetupDummyEnemies();
+            SetupInitialTurnState(fallbackActive);
+        }
+
+        private void ClearBattleLists()
+        {
+            _allies.Clear();
+            _enemies.Clear();
+            _reserves.Clear();
+            _enemyReserves.Clear();
+            _turnNumbers.Clear();
+            _actedUnits.Clear();
+        }
+
+        private BattleUnit SetupDummyAllies()
+        {
             BattleUnit heroA = CreateUnit("Knight", 130, 20, 12);
             BattleUnit heroB = CreateUnit("Mage", 80, 60, 15);
             BattleUnit heroC = CreateUnit("Cleric", 90, 50, 9);
@@ -105,11 +127,6 @@ namespace GameKari.Battle
             _grid.SetUnit(true, GridPos.FrontBottom, heroC);
             _grid.SetUnit(true, GridPos.BackBottom, heroD);
 
-            _allies.Clear();
-            _enemies.Clear();
-            _reserves.Clear();
-            _enemyReserves.Clear();
-
             _allies.Add(heroA);
             _allies.Add(heroB);
             _allies.Add(heroC);
@@ -117,6 +134,11 @@ namespace GameKari.Battle
 
             _reserves.Add(reserve);
 
+            return heroA;
+        }
+
+        private void SetupDummyEnemies()
+        {
             BattleUnit enemyA = CreateUnit("Goblin A", 70, 0, 10);
             BattleUnit enemyB = CreateUnit("Archer", 60, 0, 13);
             BattleUnit enemyC = CreateUnit("Goblin B", 70, 0, 8);
@@ -127,15 +149,19 @@ namespace GameKari.Battle
             _enemies.Add(enemyB);
             _enemies.Add(enemyC);
             _enemies.Add(enemyD);
+
             _enemyReserves.Add(enemyReserve);
 
             _grid.SetUnit(false, GridPos.FrontTop, enemyA);
             _grid.SetUnit(false, GridPos.BackTop, enemyB);
             _grid.SetUnit(false, GridPos.FrontBottom, enemyC);
             _grid.SetUnit(false, GridPos.BackBottom, enemyD);
+        }
 
+        private void SetupInitialTurnState(BattleUnit fallbackActive)
+        {
             RebuildTurnOrder();
-            _active = FindNextUnactedAlly() ?? heroA;
+            _active = FindNextUnactedAlly() ?? fallbackActive;
         }
 
         private void BindUI()
