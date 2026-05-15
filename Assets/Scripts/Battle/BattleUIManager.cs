@@ -514,7 +514,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            const int damage = 60;
+            const int damage = 10;
 
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
 
@@ -977,13 +977,24 @@ namespace GameKari.Battle
                 return;
             }
 
-            SetLabel(slot, "Name", unit == null ? "-" : unit.Name);
+            slot.gameObject.SetActive(unit != null);
+
+            if (unit == null)
+            {
+                return;
+            }
+
+            string displayName = unit.IsDead
+                ? $"{unit.Name} KO"
+                : unit.Name;
+
+            SetLabel(slot, "Name", displayName);
             SetLabel(slot, "TurnNumber", GetTurnOrderText(unit));
 
-            int currentHp = unit == null ? 0 : unit.CurrentHP;
-            int maxHp = unit == null ? 1 : unit.Data.MaxHP;
-            int currentMp = unit == null ? 0 : unit.CurrentMP;
-            int maxMp = unit == null ? 1 : unit.Data.MaxMP;
+            int currentHp = unit.IsDead ? 0 : unit.CurrentHP;
+            int maxHp = unit.Data.MaxHP;
+            int currentMp = unit.CurrentMP;
+            int maxMp = unit.Data.MaxMP;
 
             SetBarFill(slot, "HPBar", currentHp, maxHp);
             SetBarFill(slot, "MPBar", currentMp, maxMp);
