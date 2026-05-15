@@ -42,6 +42,8 @@ namespace GameKari.Battle
         private readonly List<BattleUnit> _enemies = new();
         private readonly List<BattleUnit> _reserves = new();
 
+        private readonly List<BattleUnit> _enemyReserves = new();
+
         private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
@@ -85,6 +87,7 @@ namespace GameKari.Battle
             _allies.Clear();
             _enemies.Clear();
             _reserves.Clear();
+            _enemyReserves.Clear();
 
             _allies.Add(heroA);
             _allies.Add(heroB);
@@ -97,11 +100,13 @@ namespace GameKari.Battle
             BattleUnit enemyB = CreateUnit("Archer", 60, 0, 13);
             BattleUnit enemyC = CreateUnit("Goblin B", 70, 0, 8);
             BattleUnit enemyD = CreateUnit("Shaman", 55, 20, 7);
+            BattleUnit enemyReserve = CreateUnit("Enemy Reserve", 65, 0, 11);
 
             _enemies.Add(enemyA);
             _enemies.Add(enemyB);
             _enemies.Add(enemyC);
             _enemies.Add(enemyD);
+            _enemyReserves.Add(enemyReserve);
 
             _grid.SetUnit(false, GridPos.FrontTop, enemyA);
             _grid.SetUnit(false, GridPos.BackTop, enemyB);
@@ -182,10 +187,48 @@ namespace GameKari.Battle
 
             if (target.CurrentHP <= 0)
             {
-                target.IsDead = true;
-                _grid.SetUnit(false, pos, null);
-                Debug.Log($"[KO] {target.Name} is defeated and removed from grid.");
+                HandleEnemyDefeated(target, pos);
             }
+        }
+
+        private void HandleEnemyDefeated(BattleUnit defeatedEnemy, GridPos position)
+        {
+            if (defeatedEnemy == null || defeatedEnemy.IsDead)
+            {
+                return;
+            }
+
+            defeatedEnemy.IsDead = true;
+            _grid.SetUnit(false, position, null);
+            RemoveTurnState(defeatedEnemy);
+
+            Debug.Log($"[KO] {defeatedEnemy.Name} is defeated and removed from grid.");
+
+            BattleUnit replacement = GetNextEnemyReserve();
+            if (replacement == null)
+            {
+                Debug.Log($"[KO] No enemy reserve available for {defeatedEnemy.Name}.");
+                return;
+            }
+
+            _grid.SetUnit(false, position, replacement);
+
+            int enemyIndex = _enemies.IndexOf(defeatedEnemy);
+            if (enemyIndex >= 0)
+            {
+                _enemies[enemyIndex] = replacement;
+            }
+            else
+            {
+                _enemies.Add(replacement);
+            }
+
+            _enemyReserves.Remove(replacement);
+
+            // Replacement enters this turn, but cannot act until the next turn.
+            _actedUnits.Add(replacement);
+
+            Debug.Log($"[KO] {replacement.Name} replaced {defeatedEnemy.Name} at {position}. Replacement cannot act this turn.");
         }
 
         private void HandleSkillHover(SkillData skill)
@@ -502,6 +545,20 @@ namespace GameKari.Battle
             for (int i = 0; i < _reserves.Count; i++)
             {
                 BattleUnit reserve = _reserves[i];
+                if (reserve != null && !reserve.IsDead)
+                {
+                    return reserve;
+                }
+            }
+
+            return null;
+        }
+
+        private BattleUnit GetNextEnemyReserve()
+        {
+            for (int i = 0; i < _enemyReserves.Count; i++)
+            {
+                BattleUnit reserve = _enemyReserves[i];
                 if (reserve != null && !reserve.IsDead)
                 {
                     return reserve;
