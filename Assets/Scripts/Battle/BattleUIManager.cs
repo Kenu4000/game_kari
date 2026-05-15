@@ -49,6 +49,10 @@ namespace GameKari.Battle
         private BattleUnit _active;
         private SkillData _hoveredSkill;
         private bool _battleEnded;
+        [SerializeField] private float rotationSettleSeconds = 0.5f;
+
+        private bool _formationSettling;
+        private float _lastRotateTime;
 
         private static readonly Color NormalStatusColor = new Color(0.9f, 0.93f, 0.96f, 1f);
         private static readonly Color ActiveStatusColor = new Color(0.7f, 0.85f, 1f, 1f);
@@ -66,6 +70,21 @@ namespace GameKari.Battle
             BootstrapDummyBattle();
             BindUI();
             RedrawBoard();
+        }
+
+        private void Update()
+        {
+            if (!_formationSettling)
+            {
+                return;
+            }
+
+            if (Time.time - _lastRotateTime < rotationSettleSeconds)
+            {
+                return;
+            }
+
+            ConfirmFormation();
         }
 
         private void BootstrapDummyBattle()
@@ -132,11 +151,10 @@ namespace GameKari.Battle
 
         private void HandleSkillClicked(SkillData skill)
         {
-            if (_battleEnded)
+            if (_battleEnded || _formationSettling)
             {
                 return;
             }
-
             ShowActionOverlay(skill.SkillName, _active.Name);
             Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}");
 
@@ -301,7 +319,7 @@ namespace GameKari.Battle
 
         private void HandleSwap(BattleUnit reserve)
         {
-            if (_battleEnded)
+            if (_battleEnded || _formationSettling)
             {
                 return;
             }
@@ -370,7 +388,7 @@ namespace GameKari.Battle
 
         private void HandleItemClicked(string itemId)
         {
-            if (_battleEnded)
+            if (_battleEnded || _formationSettling)
             {
                 return;
             }
@@ -514,7 +532,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            const int damage = 10;
+            const int damage = 80;
 
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
 
@@ -697,6 +715,8 @@ namespace GameKari.Battle
                 return;
             }
 
+            CompactFrontlineIfEmpty(true);
+
             RebuildTurnOrder();
 
             BattleUnit nextAlly = FindNextUnactedAlly();
@@ -728,7 +748,76 @@ namespace GameKari.Battle
             }
 
             _formation.RotateAlliesClockwise();
+
+            _formationSettling = true;
+            _lastRotateTime = Time.time;
+
+            if (commandPanel != null)
+            {
+                commandPanel.SetInteractable(false);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.interactable = true;
+            }
+
             RedrawBoard();
+        }
+
+        private void ConfirmFormation()
+        {
+            _formationSettling = false;
+
+            CompactFrontlineIfEmpty(true);
+
+            RedrawBoard();
+
+            if (!_battleEnded && commandPanel != null)
+            {
+                commandPanel.SetInteractable(true);
+            }
+
+            Debug.Log("[Formation] Formation confirmed.");
+        }
+
+        private void CompactFrontlineIfEmpty(bool isAlly)
+        {
+            BattleUnit frontTop = _grid.GetUnit(isAlly, GridPos.FrontTop);
+            BattleUnit frontBottom = _grid.GetUnit(isAlly, GridPos.FrontBottom);
+
+            bool hasFrontTop = frontTop != null && !frontTop.IsDead;
+            bool hasFrontBottom = frontBottom != null && !frontBottom.IsDead;
+
+            if (hasFrontTop || hasFrontBottom)
+            {
+                return;
+            }
+
+            BattleUnit backTop = _grid.GetUnit(isAlly, GridPos.BackTop);
+            BattleUnit backBottom = _grid.GetUnit(isAlly, GridPos.BackBottom);
+
+            bool hasBackTop = backTop != null && !backTop.IsDead;
+            bool hasBackBottom = backBottom != null && !backBottom.IsDead;
+
+            if (!hasBackTop && !hasBackBottom)
+            {
+                return;
+            }
+
+            if (hasBackTop)
+            {
+                _grid.SetUnit(isAlly, GridPos.BackTop, null);
+                _grid.SetUnit(isAlly, GridPos.FrontTop, backTop);
+            }
+
+            if (hasBackBottom)
+            {
+                _grid.SetUnit(isAlly, GridPos.BackBottom, null);
+                _grid.SetUnit(isAlly, GridPos.FrontBottom, backBottom);
+            }
+
+            Debug.Log($"[Formation] Compacted {(isAlly ? "ally" : "enemy")} frontline.");
         }
 
         private void ShowActionOverlay(string skillName, string userName)
