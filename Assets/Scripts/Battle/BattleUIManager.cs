@@ -495,19 +495,6 @@ namespace GameKari.Battle
             return null;
         }
 
-        private BattleUnit FindFirstAliveAlly()
-        {
-            for (int i = 0; i < _allies.Count; i++)
-            {
-                BattleUnit ally = _allies[i];
-                if (ally != null && !ally.IsDead)
-                {
-                    return ally;
-                }
-            }
-
-            return null;
-        }
 
 
         private void ApplyDummyEnemyAction(BattleUnit enemy)
@@ -527,7 +514,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            const int damage = 10;
+            const int damage = 60;
 
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
 
@@ -549,15 +536,20 @@ namespace GameKari.Battle
             defeatedAlly.IsDead = true;
             Debug.Log($"[KO] {defeatedAlly.Name} is defeated.");
 
+            GridPos position = defeatedAlly.GridPos;
+
             BattleUnit replacement = GetNextReserve();
             if (replacement == null)
             {
-                Debug.Log($"[KO] No reserve available for {defeatedAlly.Name}.");
+                _grid.SetUnit(true, position, null);
+                RemoveTurnState(defeatedAlly);
+
+                Debug.Log($"[KO] No reserve available for {defeatedAlly.Name}. Ally grid cell is now empty: {position}");
+
                 CheckBattleEnd();
+                RedrawBoard();
                 return;
             }
-
-            GridPos position = defeatedAlly.GridPos;
 
             _grid.SetUnit(true, position, replacement);
 
