@@ -411,43 +411,6 @@ namespace GameKari.Battle
             return null;
         }
 
-        private bool ProcessEnemyTurnsUntilNextAlly()
-        {
-            if (_turnOrder == null)
-            {
-                return false;
-            }
-
-            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
-            for (int i = 0; i < order.Count; i++)
-            {
-                BattleUnit unit = order[i];
-
-                if (unit == null || unit.IsDead || _actedUnits.Contains(unit))
-                {
-                    continue;
-                }
-
-                if (_enemies.Contains(unit))
-                {
-                    _actedUnits.Add(unit);
-                    ApplyDummyEnemyAction(unit);
-                    RedrawBoard();
-
-                    BattleUnit nextAlly = FindNextUnactedAlly();
-                    if (nextAlly != null)
-                    {
-                        _active = nextAlly;
-                        commandPanel.Setup(_active, _reserves);
-                        RedrawBoard();
-                        Debug.Log($"[Turn] Next active ally: {_active.Name}");
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
 
         private void ApplyDummyEnemyAction(BattleUnit enemy)
         {
