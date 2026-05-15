@@ -272,6 +272,17 @@ namespace GameKari.Battle
             }
         }
 
+        private void RemoveTurnState(BattleUnit unit)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            _turnNumbers.Remove(unit);
+            _actedUnits.Remove(unit);
+        }
+
         private void TransferActedState(BattleUnit from, BattleUnit to)
         {
             if (from == null || to == null)
@@ -439,9 +450,65 @@ namespace GameKari.Battle
 
             if (target.CurrentHP <= 0)
             {
-                target.IsDead = true;
-                Debug.Log($"[KO] {target.Name} is defeated.");
+                HandleAllyDefeated(target);
             }
+        }
+
+        private void HandleAllyDefeated(BattleUnit defeatedAlly)
+        {
+            if (defeatedAlly == null || defeatedAlly.IsDead)
+            {
+                return;
+            }
+
+            defeatedAlly.IsDead = true;
+            Debug.Log($"[KO] {defeatedAlly.Name} is defeated.");
+
+            BattleUnit replacement = GetNextReserve();
+            if (replacement == null)
+            {
+                Debug.Log($"[KO] No reserve available for {defeatedAlly.Name}.");
+                return;
+            }
+
+            GridPos position = defeatedAlly.GridPos;
+
+            _grid.SetUnit(true, position, replacement);
+
+            int allyIndex = _allies.IndexOf(defeatedAlly);
+            if (allyIndex >= 0)
+            {
+                _allies[allyIndex] = replacement;
+            }
+
+            _reserves.Remove(replacement);
+
+            RemoveTurnState(defeatedAlly);
+
+            // Replacement enters this turn, but cannot act until the next turn.
+            _actedUnits.Add(replacement);
+
+            if (_active == defeatedAlly)
+            {
+                _active = replacement;
+                commandPanel.Setup(_active, _reserves);
+            }
+
+            Debug.Log($"[KO] {replacement.Name} replaced {defeatedAlly.Name} at {position}. Replacement cannot act this turn.");
+        }
+
+        private BattleUnit GetNextReserve()
+        {
+            for (int i = 0; i < _reserves.Count; i++)
+            {
+                BattleUnit reserve = _reserves[i];
+                if (reserve != null && !reserve.IsDead)
+                {
+                    return reserve;
+                }
+            }
+
+            return null;
         }
 
         private void StartNextTurn()
@@ -501,6 +568,8 @@ namespace GameKari.Battle
         private void RedrawStatusPanels()
         {
             List<BattleUnit> aliveEnemies = GetAliveEnemies();
+
+
             ResizeEnemyStatusPanel(aliveEnemies.Count);
 
             for (int i = 0; i < 4; i++)
@@ -641,10 +710,6 @@ namespace GameKari.Battle
             {
                 return;
             }
-
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0.5f, 1f);
 
             if (visibleEnemyCount <= 0)
             {
