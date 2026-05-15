@@ -131,10 +131,6 @@ Confirmed behavior:
 - EnemyStatusPanel resizes based on the visible enemy count.
 - EnemyStatusPanel is hidden when there are no visible enemies.
 
-Design note:
-
-- This prepares for a future enemy reserve system. Later, when a 5th or later enemy exists, KO can free a grid cell and a reserve enemy can enter that cell.
-
 ## Skill target preview
 
 Skill target preview was changed to board-cell highlighting.
@@ -185,11 +181,36 @@ Design decision:
 - KO replacement does not inherit action rights. This preserves the value of defeating an unacted unit before it can act.
 - This rule should later be applied symmetrically to enemy reserve replacement as well.
 
+## Enemy reserve replacement behavior
+
+Enemy reserve replacement was added using the same no-action-inheritance rule.
+
+Confirmed behavior:
+
+- `_enemyReserves` was added separately from active enemies.
+- `Enemy Reserve` is created in dummy battle data.
+- When an enemy reaches 0 HP, `HandleEnemyDefeated()` is called.
+- The defeated enemy is marked dead and removed from the grid.
+- The defeated enemy's turn state is cleared by `RemoveTurnState()`.
+- If an alive enemy reserve exists, it is placed into the defeated enemy's same `GridPos`.
+- `_enemies` is updated from the defeated enemy to the replacement enemy.
+- The replacement enemy is removed from `_enemyReserves`.
+- The replacement enemy is added to `_actedUnits`, so it cannot act during the turn it enters.
+- The replacement enemy has no `TurnNumber` during the entry turn.
+- On the next turn, the replacement enemy joins the speed-based turn order normally.
+- EnemyStatus shows the replacement enemy after it enters.
+
+Design decision:
+
+- Enemy replacement also does not inherit action rights. This preserves the tactical value of KOing an unacted enemy before its turn.
+- Ally and enemy KO replacement now follow the same core rule.
+
 Known limitation:
 
 - Ally KO without reserve keeps the KO unit in the ally side state for now.
 - Ally status UI does not yet have a dedicated KO visual style beyond current HP / turn-number behavior.
 - Enemy action targeting is still dummy behavior, not proper AI targeting.
+- Enemy reserve data is still dummy-only and not yet generalized into battle setup data.
 
 ## BattleUICreator status
 
@@ -245,6 +266,9 @@ Codex は今回の作業で以下の問題を繰り返した。
 - Ally KO automatic reserve replacement: OK.
 - Replacement reserve cannot act on the turn it enters: OK.
 - Replacement reserve joins speed order from the next turn: OK.
+- Enemy KO automatic reserve replacement: OK.
+- Replacement enemy cannot act on the turn it enters: OK.
+- Replacement enemy joins speed order from the next turn: OK.
 
 ## Next recommended task
 
@@ -252,13 +276,13 @@ Next task should be small and isolated.
 
 Candidate:
 
-- Implement enemy reserve replacement using the same no-action-inheritance rule.
+- Implement battle end checks.
 
 Expected direction:
 
-- Add enemy reserves separately from active enemies.
-- When an enemy reaches 0 HP, remove it from the grid.
-- If an enemy reserve exists, place it into the defeated enemy's same grid position.
-- Do not inherit the defeated enemy's action right.
-- The replacement enemy should join speed-based turn order from the next turn.
-- Keep this separate from full enemy AI targeting.
+- Add a minimal battle state flag, such as `_battleEnded`.
+- Check victory after enemy KO / enemy replacement handling.
+- Check defeat after ally KO / ally replacement handling.
+- Victory should require no alive active enemies and no alive enemy reserves.
+- Defeat should require no alive active allies and no alive ally reserves.
+- When battle ends, disable command input and stop turn progression.
