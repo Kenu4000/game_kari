@@ -504,6 +504,30 @@ namespace GameKari.Battle
                 && GetLinkCooldownRemaining(unit) > 0;
         }
 
+        private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
+        {
+            if (user == null || skill == null)
+            {
+                return;
+            }
+
+            if (skill.CooldownTurns > 0)
+            {
+                SetSkillCooldownRemaining(user, skill, skill.CooldownTurns);
+                Debug.Log($"[CT] {user.Name}: {skill.SkillName} CT set to {skill.CooldownTurns}.");
+            }
+            else
+            {
+                SetSkillCooldownRemaining(user, skill, 0);
+            }
+
+            if (skill.SkillKind == SkillKind.Link && skill.LinkCooldownTurns > 0)
+            {
+                SetLinkCooldownRemaining(user, skill.LinkCooldownTurns);
+                Debug.Log($"[CT] {user.Name}: LinkCooldown set to {skill.LinkCooldownTurns}.");
+            }
+        }
+
         private bool CanAcceptPlayerCommand()
         {
             return !_battleEnded
@@ -596,6 +620,7 @@ namespace GameKari.Battle
 
             ApplySkillDamage(skill);
             ApplySkillEffect(skill);
+            ApplySkillCooldownAfterUse(_active, skill);
 
             if (_battleEnded)
             {
@@ -3227,6 +3252,7 @@ namespace GameKari.Battle
                 "Focus",
                 "Apply AttackUp to self.",
                 SkillTargetPattern.Self,
+                CooldownTurns = 2,
                 6,
                 0,
                 SkillEffectType.ApplyBuff,
@@ -3262,6 +3288,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
