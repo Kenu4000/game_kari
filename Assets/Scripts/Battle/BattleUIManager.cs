@@ -82,6 +82,12 @@ namespace GameKari.Battle
             public EnemyTargetPattern TargetPattern;
         }
 
+        private class DefeatedEnemyInfo
+        {
+            public BattleUnit Unit;
+            public GridPos Position;
+        }
+
         private void Start()
         {
             BootstrapDummyBattle();
@@ -266,31 +272,35 @@ namespace GameKari.Battle
                 return;
             }
 
+            List<DefeatedEnemyInfo> defeatedEnemies = new();
+
             switch (skill.TargetPattern)
             {
                 case SkillTargetPattern.FrontTopEnemy:
-                    DamageEnemyAt(GridPos.FrontTop, 20);
+                    DamageEnemyAt(GridPos.FrontTop, 20, defeatedEnemies);
                     break;
 
                 case SkillTargetPattern.FrontBottomEnemy:
-                    DamageEnemyAt(GridPos.FrontBottom, 20);
+                    DamageEnemyAt(GridPos.FrontBottom, 20, defeatedEnemies);
                     break;
 
                 case SkillTargetPattern.BothFrontEnemies:
-                    DamageEnemyAt(GridPos.FrontTop, 15);
-                    DamageEnemyAt(GridPos.FrontBottom, 15);
+                    DamageEnemyAt(GridPos.FrontTop, 15, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontBottom, 15, defeatedEnemies);
                     break;
 
                 case SkillTargetPattern.AllEnemies:
-                    DamageEnemyAt(GridPos.FrontTop, 10);
-                    DamageEnemyAt(GridPos.BackTop, 10);
-                    DamageEnemyAt(GridPos.FrontBottom, 10);
-                    DamageEnemyAt(GridPos.BackBottom, 10);
+                    DamageEnemyAt(GridPos.FrontTop, 10, defeatedEnemies);
+                    DamageEnemyAt(GridPos.BackTop, 10, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontBottom, 10, defeatedEnemies);
+                    DamageEnemyAt(GridPos.BackBottom, 10, defeatedEnemies);
                     break;
             }
+
+            ResolveDefeatedEnemies(defeatedEnemies);
         }
 
-        private void DamageEnemyAt(GridPos pos, int damage)
+        private void DamageEnemyAt(GridPos pos, int damage, List<DefeatedEnemyInfo> defeatedEnemies)
         {
             if (_battleEnded)
             {
@@ -308,10 +318,134 @@ namespace GameKari.Battle
 
             Debug.Log($"[Damage] {target.Name} took {damage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
-            if (target.CurrentHP <= 0)
+            if (target.CurrentHP <= 0 && !ContainsDefeatedEnemy(defeatedEnemies, target))
             {
-                HandleEnemyDefeated(target, pos);
+                defeatedEnemies.Add(new DefeatedEnemyInfo
+                {
+                    Unit = target,
+                    Position = pos
+                });
             }
+        }
+
+        private bool ContainsDefeatedEnemy(List<DefeatedEnemyInfo> defeatedEnemies, BattleUnit target)
+        {
+            if (defeatedEnemies == null || target == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < defeatedEnemies.Count; i++)
+            {
+                if (defeatedEnemies[i].Unit == target)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void ResolveDefeatedEnemies(List<DefeatedEnemyInfo> defeatedEnemies)
+        {
+            if (defeatedEnemies == null || defeatedEnemies.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < defeatedEnemies.Count; i++)
+            {
+                DefeatedEnemyInfo defeated = defeatedEnemies[i];
+                if (defeated == null || defeated.Unit == null || defeated.Unit.IsDead)
+                {
+                    continue;
+                }
+
+                defeated.Unit.IsDead = true;
+                _grid.SetUnit(false, defeated.Position, null);
+                RemoveTurnState(defeated.Unit);
+
+                Debug.Log($"[KO] {defeated.Unit.Name} is defeated and removed from grid.");
+            }
+
+            CompactEnemyFrontlineIfEmpty();
+            FillEmptyEnemyCellsFromReserves();
+
+            CheckBattleEnd();
+        }
+
+        private void CompactEnemyFrontlineIfEmpty()
+        {
+            BattleUnit frontTop = _grid.GetUnit(false, GridPos.FrontTop);
+            BattleUnit frontBottom = _grid.GetUnit(false, GridPos.FrontBottom);
+
+            bool hasFrontTop = frontTop != null && !frontTop.IsDead;
+            bool hasFrontBottom = frontBottom != null && !frontBottom.IsDead;
+
+            if (hasFrontTop || hasFrontBottom)
+            {
+                return;
+            }
+
+            BattleUnit backTop = _grid.GetUnit(false, GridPos.BackTop);
+            BattleUnit backBottom = _grid.GetUnit(false, GridPos.BackBottom);
+
+            bool hasBackTop = backTop != null && !backTop.IsDead;
+            bool hasBackBottom = backBottom != null && !backBottom.IsDead;
+
+            if (!hasBackTop && !hasBackBottom)
+            {
+                return;
+            }
+
+            if (hasBackTop)
+            {
+                _grid.SetUnit(false, GridPos.BackTop, null);
+                _grid.SetUnit(false, GridPos.FrontTop, backTop);
+            }
+
+            if (hasBackBottom)
+            {
+                _grid.SetUnit(false, GridPos.BackBottom, null);
+                _grid.SetUnit(false, GridPos.FrontBottom, backBottom);
+            }
+
+            Debug.Log("[Formation] Compacted enemy frontline.");
+        }
+
+        private void FillEmptyEnemyCellsFromReserves()
+        {
+            TryFillEnemyCellFromReserve(GridPos.FrontTop);
+            TryFillEnemyCellFromReserve(GridPos.FrontBottom);
+            TryFillEnemyCellFromReserve(GridPos.BackTop);
+            TryFillEnemyCellFromReserve(GridPos.BackBottom);
+        }
+
+        private void TryFillEnemyCellFromReserve(GridPos position)
+        {
+            BattleUnit current = _grid.GetUnit(false, position);
+            if (current != null && !current.IsDead)
+            {
+                return;
+            }
+
+            BattleUnit replacement = GetNextEnemyReserve();
+            if (replacement == null)
+            {
+                return;
+            }
+
+            _grid.SetUnit(false, position, replacement);
+
+            if (!_enemies.Contains(replacement))
+            {
+                _enemies.Add(replacement);
+            }
+
+            _enemyReserves.Remove(replacement);
+            _actedUnits.Add(replacement);
+
+            Debug.Log($"[KO] {replacement.Name} entered enemy grid at {position}. Replacement cannot act this turn.");
         }
 
         private void HandleEnemyDefeated(BattleUnit defeatedEnemy, GridPos position)
@@ -952,10 +1086,12 @@ namespace GameKari.Battle
 
         private void RedrawBoard()
         {
-            enemyFrontTop.text = SafeName(_grid.GetUnit(false, GridPos.FrontTop));
-            enemyBackTop.text = SafeName(_grid.GetUnit(false, GridPos.BackTop));
-            enemyFrontBottom.text = SafeName(_grid.GetUnit(false, GridPos.FrontBottom));
-            enemyBackBottom.text = SafeName(_grid.GetUnit(false, GridPos.BackBottom));
+            // Enemy side is displayed mirrored on screen.
+            // Visual left cells show enemy backline, visual right cells show enemy frontline.
+            enemyFrontTop.text = SafeName(_grid.GetUnit(false, GridPos.BackTop));
+            enemyBackTop.text = SafeName(_grid.GetUnit(false, GridPos.FrontTop));
+            enemyFrontBottom.text = SafeName(_grid.GetUnit(false, GridPos.BackBottom));
+            enemyBackBottom.text = SafeName(_grid.GetUnit(false, GridPos.FrontBottom));
 
             allyFrontTop.text = SafeName(_grid.GetUnit(true, GridPos.FrontTop));
             allyBackTop.text = SafeName(_grid.GetUnit(true, GridPos.BackTop));
@@ -1021,16 +1157,16 @@ namespace GameKari.Battle
             switch (pos)
             {
                 case GridPos.FrontTop:
-                    SetCellImageColor(enemyFrontTop, color);
-                    break;
-                case GridPos.BackTop:
                     SetCellImageColor(enemyBackTop, color);
                     break;
+                case GridPos.BackTop:
+                    SetCellImageColor(enemyFrontTop, color);
+                    break;
                 case GridPos.FrontBottom:
-                    SetCellImageColor(enemyFrontBottom, color);
+                    SetCellImageColor(enemyBackBottom, color);
                     break;
                 case GridPos.BackBottom:
-                    SetCellImageColor(enemyBackBottom, color);
+                    SetCellImageColor(enemyFrontBottom, color);
                     break;
             }
         }
