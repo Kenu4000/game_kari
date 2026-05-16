@@ -157,6 +157,7 @@ namespace GameKari.Battle
 
             ConfirmFormation();
         }
+
         private void HandleDebugBuffHotkeys()
         {
 #if UNITY_EDITOR
@@ -444,6 +445,7 @@ namespace GameKari.Battle
                 rotateButton.interactable = true;
             }
         }
+        
         // Player actions
         private void HandleSkillClicked(SkillData skill)
         {
