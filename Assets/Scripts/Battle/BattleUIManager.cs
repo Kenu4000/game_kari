@@ -756,7 +756,6 @@ namespace GameKari.Battle
         }
 
 
-
         private void HandleSkillHover(SkillData skill)
         {
             if (_battleEnded)
@@ -1053,7 +1052,6 @@ namespace GameKari.Battle
 
             return null;
         }
-
 
 
         private void ApplyDummyEnemyAction(BattleUnit enemy)
@@ -1503,6 +1501,7 @@ namespace GameKari.Battle
 
             return null;
         }
+
         private void SetUiObjectsByNameVisible(string objectName, bool visible)
         {
             Transform[] transforms = Resources.FindObjectsOfTypeAll<Transform>();
@@ -1523,8 +1522,6 @@ namespace GameKari.Battle
                 }
 
                 candidateObject.SetActive(visible);
-
-
             }
         }
 
@@ -1779,6 +1776,7 @@ namespace GameKari.Battle
                 _resultPanelObject.SetActive(false);
             }
         }
+
         private void RedrawBoard()
         {
             // Enemy side is displayed mirrored on screen.
@@ -2295,36 +2293,6 @@ namespace GameKari.Battle
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
