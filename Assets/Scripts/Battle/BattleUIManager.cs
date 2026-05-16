@@ -581,6 +581,12 @@ namespace GameKari.Battle
                 return;
             }
 
+            if (item.Count <= 0)
+            {
+                Debug.Log($"[Item] No {item.ItemName} left. Item cannot be used.");
+                return;
+            }
+
             BattleUnit target = TryGetForwardAlly(_active);
             if (target == null)
             {
@@ -592,8 +598,15 @@ namespace GameKari.Battle
             target.CurrentHP = Mathf.Min(target.CurrentHP + item.HealAmount, target.Data.MaxHP);
             int healed = target.CurrentHP - beforeHp;
 
+            item.Count--;
+
+            if (commandPanel != null)
+            {
+                commandPanel.RefreshItems();
+            }
+
             ShowActionOverlay(item.ItemName, _active.Name);
-            Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}");
+            Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {item.Count}");
 
             MarkActiveAsActed();
             RedrawBoard();

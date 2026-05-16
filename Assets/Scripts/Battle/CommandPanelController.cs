@@ -49,7 +49,8 @@ namespace GameKari.Battle
             ItemId = "potion",
             ItemName = "Potion",
             Description = "Heal the ally in front of the active unit.",
-            HealAmount = 20
+            HealAmount = 20,
+            Count = 3
         };
 
         private void Awake()
@@ -261,7 +262,14 @@ namespace GameKari.Battle
                 ? "-"
                 : item.Description;
 
-            return $"{description}\nHeal: {item.HealAmount}";
+            string countText = $"Count: {item.Count}";
+
+            if (item.Count > 0)
+            {
+                return $"{description}\nHeal: {item.HealAmount}\n{countText}";
+            }
+
+            return $"{description}\nHeal: {item.HealAmount}\n{countText}\nNo items left.";
         }
 
         private void ClearDescription()
@@ -347,9 +355,19 @@ namespace GameKari.Battle
                 if (i == 0)
                 {
                     button.gameObject.SetActive(true);
+
+                    if (_dummyPotion.Count <= 0)
+                    {
+                        button.interactable = false;
+                        SetButtonLabel(button, "-");
+                        RemoveHoverEvents(button.gameObject);
+                        continue;
+                    }
+
                     button.interactable = true;
-                    SetButtonLabel(button, $"{_dummyPotion.ItemName} HP:{_dummyPotion.HealAmount}");
+                    SetButtonLabel(button, $"{_dummyPotion.ItemName} HP:{_dummyPotion.HealAmount} x{_dummyPotion.Count}");
                     button.onClick.AddListener(() => OnItemClicked?.Invoke(_dummyPotion));
+
                     RemoveHoverEvents(button.gameObject);
 
                     EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
@@ -378,6 +396,11 @@ namespace GameKari.Battle
                     SetButtonLabel(button, "-");
                 }
             }
+        }
+
+        public void RefreshItems()
+        {
+            BindFixedItemButtons();
         }
 
         public void SetInteractable(bool interactable)
