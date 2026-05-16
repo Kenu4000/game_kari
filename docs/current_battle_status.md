@@ -1,11 +1,20 @@
 # Current Battle Status
 
-## Latest confirmed UI notes
+## Latest confirmed implementation notes
 
 - Play start clears the skill description text, so default `New Text` is not shown.
 - `CommandPanelController.Setup()` clears the skill description when no skill is currently hovered.
-- Skill hover description can still refresh while hovering the same skill.
+- Skill hover description can refresh while hovering the same skill.
 - Swap and Item panels clear skill description and target preview.
+- `SkillData` now stores `MpCost` and `Damage`.
+- Skill damage is routed through `BattleUIManager.CalculateDamage()`.
+- `CalculateDamage()` currently returns the base damage unchanged and is reserved for future buff/debuff modifiers.
+- `ItemData` now stores `HealAmount` and `Count`.
+- Dummy Potion starts at count 3.
+- Potion use decrements count only after a valid forward ally target is found.
+- Potion disappears from the item slot as `-` when count reaches 0.
+- Dummy skill creation is split into `AddDefaultSkills()` and `CreateSkill()`.
+- Dummy potion creation is split into `CreateDummyPotion()`.
 
 ## Stable reference
 
