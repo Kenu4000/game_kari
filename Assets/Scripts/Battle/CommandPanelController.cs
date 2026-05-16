@@ -42,6 +42,8 @@ namespace GameKari.Battle
         private BattleUnit _activeUnit;
         private List<BattleUnit> _reserves;
 
+        private int _hoveredSkillIndex = -1;
+
         private void Awake()
         {
             HookRootButtons();
@@ -63,6 +65,7 @@ namespace GameKari.Battle
             BindFixedItemButtons();
 
             ShowSkills();
+            RefreshHoveredSkillDescription();
         }
 
         private void Update()
@@ -143,24 +146,24 @@ namespace GameKari.Battle
 
                 button.gameObject.SetActive(true);
 
+                // MP不足でもhover説明を出したいので、ここでは無効化しない。
+                // 実際に使えるかどうかは BattleUIManager.HandleSkillClicked() 側で判定する。
+                button.interactable = true;
+
                 bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
-                button.interactable = hasEnoughMp;
 
                 string label = skill.MpCost > 0
                     ? $"{skill.SkillName} MP:{skill.MpCost}"
                     : skill.SkillName;
 
+                if (!hasEnoughMp)
+                {
+                    label += " ×";
+                }
+
                 SetButtonLabel(button, label);
 
-                button.onClick.AddListener(() =>
-                {
-                    if (_activeUnit == null || _activeUnit.CurrentMP < skill.MpCost)
-                    {
-                        return;
-                    }
-
-                    OnSkillClicked?.Invoke(skill);
-                });
+                button.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
 
                 EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
                 if (trigger == null)
@@ -168,11 +171,15 @@ namespace GameKari.Battle
                     trigger = button.gameObject.AddComponent<EventTrigger>();
                 }
 
+                int skillIndex = i;
+
                 AddHoverEvent(trigger, EventTriggerType.PointerEnter, () =>
                 {
+                    _hoveredSkillIndex = skillIndex;
+
                     if (descriptionText != null)
                     {
-                        descriptionText.text = skill.Description;
+                        descriptionText.text = BuildSkillDescription(skill);
                     }
 
                     OnSkillHovered?.Invoke(skill);
@@ -180,9 +187,62 @@ namespace GameKari.Battle
 
                 AddHoverEvent(trigger, EventTriggerType.PointerExit, () =>
                 {
+                    if (_hoveredSkillIndex == skillIndex)
+                    {
+                        _hoveredSkillIndex = -1;
+                    }
+
                     OnHoverExit?.Invoke();
                 });
             }
+        }
+
+
+        private string BuildSkillDescription(SkillData skill)
+        {
+            if (skill == null)
+            {
+                return string.Empty;
+            }
+
+            string mpText = skill.MpCost > 0
+                ? $"MP Cost: {skill.MpCost}"
+                : "MP Cost: 0";
+
+            string description = string.IsNullOrWhiteSpace(skill.Description)
+                ? "-"
+                : skill.Description;
+
+            bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
+
+            if (hasEnoughMp)
+            {
+                return $"{description}\n{mpText}";
+            }
+
+            int currentMp = _activeUnit == null ? 0 : _activeUnit.CurrentMP;
+            return $"{description}\n{mpText}\nNot enough MP. Current MP: {currentMp}";
+        }
+
+        private void RefreshHoveredSkillDescription()
+        {
+            if (_hoveredSkillIndex < 0)
+            {
+                return;
+            }
+
+            SkillData hoveredSkill = GetSkillAt(_hoveredSkillIndex);
+            if (hoveredSkill == null)
+            {
+                return;
+            }
+
+            if (descriptionText != null)
+            {
+                descriptionText.text = BuildSkillDescription(hoveredSkill);
+            }
+
+            OnSkillHovered?.Invoke(hoveredSkill);
         }
 
         private void BindSwapButtons()
