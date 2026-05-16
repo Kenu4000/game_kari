@@ -943,6 +943,8 @@ namespace GameKari.Battle
                 SetAllyBoardCellColor(_active.GridPos, ActiveCellColor);
             }
         }
+
+        // Player preview
         private void HandleSkillHover(SkillData skill)
         {
             if (_battleEnded)
@@ -1107,6 +1109,7 @@ namespace GameKari.Battle
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
 
+        // Action animation and value popups
         private void PrepareSkillActionFlashTargets(SkillData skill)
         {
             if (skill == null)
@@ -1385,7 +1388,7 @@ namespace GameKari.Battle
                     return null;
             }
         }
-        // Action animation and value popups
+
         private IEnumerator PlayPendingActionFlashOrDelay()
         {
             float duration = Mathf.Max(0f, actionResolveDelaySeconds);
