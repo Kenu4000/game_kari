@@ -56,6 +56,8 @@ namespace GameKari.Battle
         private TMP_Text _resultSubText;
         private Button _resultReturnButton;
         private TMP_Text _resultReturnButtonText;
+        private GameObject _enemyActionPreviewPanelObject;
+        private TMP_Text _enemyActionPreviewText;
 
         private bool _battleEnded;
         private BattlePhase _phase;
@@ -110,9 +112,11 @@ namespace GameKari.Battle
             BootstrapDummyBattle();
             BindUI();
             EnsureResultPanel();
+            EnsureEnemyActionPreviewPanel();
             RedrawBoard();
             HideActionOverlay();
             HideResultPanel();
+            SetEnemyActionPreviewVisible(false);
         }
 
         private void Update()
@@ -373,6 +377,7 @@ namespace GameKari.Battle
 
             _phase = BattlePhase.ResolvingAction;
             ClearTargetPreview();
+            SetEnemyActionPreviewVisible(false);
             SetCommandUiVisible(false);
             SetActionOverlayVisible(true);
 
@@ -397,6 +402,8 @@ namespace GameKari.Battle
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
             EnsureSelectedEnemyActionsForPreview();
+            UpdateEnemyActionPreview();
+            SetEnemyActionPreviewVisible(true);
             HideActionOverlay();
             SetCommandUiVisible(true);
 
@@ -1273,6 +1280,7 @@ namespace GameKari.Battle
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
             ClearTargetPreview();
+            SetEnemyActionPreviewVisible(false);
             SetCommandUiVisible(false);
             HideActionOverlay();
             ShowResultPanel(result);
@@ -1592,6 +1600,108 @@ namespace GameKari.Battle
             }
         }
 
+        private void EnsureEnemyActionPreviewPanel()
+        {
+            if (_enemyActionPreviewPanelObject != null)
+            {
+                return;
+            }
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            if (canvas == null && commandPanel != null)
+            {
+                canvas = commandPanel.GetComponentInParent<Canvas>();
+            }
+
+            if (canvas == null)
+            {
+                return;
+            }
+
+            GameObject existing = FindUiGameObjectByName("EnemyActionPreviewPanel");
+            if (existing != null)
+            {
+                _enemyActionPreviewPanelObject = existing;
+                _enemyActionPreviewText = existing.GetComponentInChildren<TMP_Text>(true);
+                return;
+            }
+
+            _enemyActionPreviewPanelObject = new GameObject("EnemyActionPreviewPanel");
+            _enemyActionPreviewPanelObject.transform.SetParent(canvas.transform, false);
+
+            RectTransform panelRect = _enemyActionPreviewPanelObject.AddComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.02f, 0.74f);
+            panelRect.anchorMax = new Vector2(0.28f, 0.96f);
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            Image panelImage = _enemyActionPreviewPanelObject.AddComponent<Image>();
+            panelImage.color = new Color(0f, 0f, 0f, 0.55f);
+
+            GameObject textObject = new GameObject("EnemyActionPreviewText");
+            textObject.transform.SetParent(_enemyActionPreviewPanelObject.transform, false);
+
+            RectTransform textRect = textObject.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(10f, 8f);
+            textRect.offsetMax = new Vector2(-10f, -8f);
+
+            _enemyActionPreviewText = textObject.AddComponent<TextMeshProUGUI>();
+            _enemyActionPreviewText.alignment = TextAlignmentOptions.TopLeft;
+            _enemyActionPreviewText.fontSize = 18f;
+            _enemyActionPreviewText.raycastTarget = false;
+        }
+
+        private void UpdateEnemyActionPreview()
+        {
+            EnsureEnemyActionPreviewPanel();
+
+            if (_enemyActionPreviewText == null)
+            {
+                return;
+            }
+
+            List<string> lines = new()
+            {
+                "Enemy Actions"
+            };
+
+            for (int i = 0; i < _enemies.Count; i++)
+            {
+                BattleUnit enemy = _enemies[i];
+
+                if (enemy == null || enemy.IsDead || _actedUnits.Contains(enemy))
+                {
+                    continue;
+                }
+
+                EnemyActionData action = GetSelectedEnemyAction(enemy);
+                if (action == null)
+                {
+                    continue;
+                }
+
+                lines.Add($"{enemy.Name}: {action.ActionName}");
+            }
+
+            if (lines.Count == 1)
+            {
+                lines.Add("-");
+            }
+
+            _enemyActionPreviewText.text = string.Join("\n", lines);
+        }
+
+        private void SetEnemyActionPreviewVisible(bool visible)
+        {
+            EnsureEnemyActionPreviewPanel();
+
+            if (_enemyActionPreviewPanelObject != null)
+            {
+                _enemyActionPreviewPanelObject.SetActive(visible);
+            }
+        }
         private void EnsureResultPanel()
         {
             if (_resultPanelObject != null)
@@ -2347,6 +2457,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
