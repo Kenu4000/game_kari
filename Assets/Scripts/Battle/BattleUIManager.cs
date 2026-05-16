@@ -1759,14 +1759,15 @@ namespace GameKari.Battle
             _enemyActionPreviewText.raycastTarget = false;
         }
 
-        private string BuildEnemyActionPreviewLine(BattleUnit enemy, EnemyActionData action)
+        private string BuildEnemyActionPreviewLine(BattleUnit enemy, EnemyActionData action, bool isNext)
         {
             if (enemy == null || action == null)
             {
                 return "-";
             }
 
-            return $"{enemy.Name}: {action.ActionName} -> {BuildEnemyActionTargetText(enemy, action)}";
+            string prefix = isNext ? "NEXT > " : "";
+            return $"{prefix}{enemy.Name}: {action.ActionName} -> {BuildEnemyActionTargetText(enemy, action)}";
         }
 
         private string BuildEnemyActionTargetText(BattleUnit enemy, EnemyActionData action)
@@ -1835,6 +1836,8 @@ namespace GameKari.Battle
                 "Enemy Actions"
             };
 
+            BattleUnit nextEnemy = FindNextUnactedEnemy();
+
             for (int i = 0; i < _enemies.Count; i++)
             {
                 BattleUnit enemy = _enemies[i];
@@ -1850,7 +1853,7 @@ namespace GameKari.Battle
                     continue;
                 }
 
-                lines.Add(BuildEnemyActionPreviewLine(enemy, action));
+                lines.Add(BuildEnemyActionPreviewLine(enemy, action, enemy == nextEnemy));
             }
 
             if (lines.Count == 1)
@@ -2656,6 +2659,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
