@@ -50,6 +50,8 @@ namespace GameKari.Battle
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
         private SkillData _hoveredSkill;
+        private GameObject _topActionPanelObject;
+        private GameObject _bossNamePlateObject;
         private bool _battleEnded;
         private BattlePhase _phase;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
@@ -103,6 +105,8 @@ namespace GameKari.Battle
             BootstrapDummyBattle();
             BindUI();
             RedrawBoard();
+            ResolveTopOverlayObjects();
+            HideActionOverlay();
         }
 
         private void Update()
@@ -310,6 +314,9 @@ namespace GameKari.Battle
 
             _phase = BattlePhase.ResolvingAction;
             ClearTargetPreview();
+            SetCommandUiVisible(false);
+            SetActionOverlayVisible(true);
+            SetCommandUiVisible(false);
 
             if (commandPanel != null)
             {
@@ -331,6 +338,11 @@ namespace GameKari.Battle
 
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
+            HideActionOverlay();
+            SetCommandUiVisible(true);
+
+            HideActionOverlay();
+            SetCommandUiVisible(true);
 
             if (commandPanel != null)
             {
@@ -1189,6 +1201,12 @@ namespace GameKari.Battle
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
             ClearTargetPreview();
+            SetCommandUiVisible(false);
+            SetActionOverlayVisible(true);
+
+            SetCommandUiVisible(false);
+
+            SetCommandUiVisible(false);
 
             if (commandPanel != null)
             {
@@ -1369,8 +1387,106 @@ namespace GameKari.Battle
 
         private void ShowActionOverlay(string skillName, string userName)
         {
-            actionSkillName.text = skillName;
-            actionUserName.text = userName;
+            SetActionOverlayVisible(true);
+
+            if (actionSkillName != null)
+            {
+                actionSkillName.text = skillName;
+            }
+
+            if (actionUserName != null)
+            {
+                actionUserName.text = userName;
+            }
+        }
+
+        private void HideActionOverlay()
+        {
+            if (actionSkillName != null)
+            {
+                actionSkillName.text = "";
+            }
+
+            if (actionUserName != null)
+            {
+                actionUserName.text = "";
+            }
+
+            SetActionOverlayVisible(false);
+        }
+
+        private void SetActionOverlayVisible(bool visible)
+        {
+            ResolveTopOverlayObjects();
+
+            if (_topActionPanelObject != null)
+            {
+                _topActionPanelObject.SetActive(visible);
+            }
+            else
+            {
+                if (actionSkillName != null)
+                {
+                    actionSkillName.gameObject.SetActive(visible);
+                }
+
+                if (actionUserName != null)
+                {
+                    actionUserName.gameObject.SetActive(visible);
+                }
+            }
+
+            if (_bossNamePlateObject != null)
+            {
+                _bossNamePlateObject.SetActive(false);
+            }
+        }
+
+        private void ResolveTopOverlayObjects()
+        {
+            if (_topActionPanelObject == null)
+            {
+                _topActionPanelObject = FindUiGameObjectByName("TopActionPanel");
+            }
+
+            if (_bossNamePlateObject == null)
+            {
+                _bossNamePlateObject = FindUiGameObjectByName("BossNamePlate");
+            }
+        }
+
+        private GameObject FindUiGameObjectByName(string objectName)
+        {
+            Transform root = transform.root;
+            if (root == null)
+            {
+                return null;
+            }
+
+            Transform[] children = root.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < children.Length; i++)
+            {
+                Transform child = children[i];
+                if (child != null && child.name == objectName)
+                {
+                    return child.gameObject;
+                }
+            }
+
+            return null;
+        }
+
+        private void SetCommandUiVisible(bool visible)
+        {
+            if (commandPanel != null)
+            {
+                commandPanel.gameObject.SetActive(visible);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.gameObject.SetActive(visible);
+            }
         }
 
         private void RedrawBoard()
@@ -1889,6 +2005,11 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
+
+
 
 
 
