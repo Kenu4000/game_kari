@@ -448,46 +448,7 @@ namespace GameKari.Battle
             Debug.Log($"[KO] {replacement.Name} entered enemy grid at {position}. Replacement cannot act this turn.");
         }
 
-        private void HandleEnemyDefeated(BattleUnit defeatedEnemy, GridPos position)
-        {
-            if (defeatedEnemy == null || defeatedEnemy.IsDead)
-            {
-                return;
-            }
 
-            defeatedEnemy.IsDead = true;
-            _grid.SetUnit(false, position, null);
-            RemoveTurnState(defeatedEnemy);
-
-            Debug.Log($"[KO] {defeatedEnemy.Name} is defeated and removed from grid.");
-
-            BattleUnit replacement = GetNextEnemyReserve();
-            if (replacement == null)
-            {
-                Debug.Log($"[KO] No enemy reserve available for {defeatedEnemy.Name}.");
-                CheckBattleEnd();
-                return;
-            }
-
-            _grid.SetUnit(false, position, replacement);
-
-            int enemyIndex = _enemies.IndexOf(defeatedEnemy);
-            if (enemyIndex >= 0)
-            {
-                _enemies[enemyIndex] = replacement;
-            }
-            else
-            {
-                _enemies.Add(replacement);
-            }
-
-            _enemyReserves.Remove(replacement);
-
-            _actedUnits.Add(replacement);
-
-            Debug.Log($"[KO] {replacement.Name} replaced {defeatedEnemy.Name} at {position}. Replacement cannot act this turn.");
-            CheckBattleEnd();
-        }
 
         private void HandleSkillHover(SkillData skill)
         {
