@@ -217,21 +217,13 @@ namespace GameKari.Battle
                 ? "-"
                 : skill.Description;
 
-            string mpText = skill.MpCost > 0
-                ? $"MP Cost: {skill.MpCost}"
-                : "MP Cost: 0";
-
             string damageText = $"Damage: {skill.Damage}";
             string effectText = BuildSkillEffectDescription(skill);
             string cooldownText = BuildSkillCooldownDescription(skill);
 
-            bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
-            int currentMp = _activeUnit == null ? 0 : _activeUnit.CurrentMP;
-
             var lines = new List<string>
             {
                 description,
-                mpText,
                 damageText
             };
 
@@ -245,14 +237,8 @@ namespace GameKari.Battle
                 lines.Add(cooldownText);
             }
 
-            if (!hasEnoughMp)
-            {
-                lines.Add($"Not enough MP. Current MP: {currentMp}");
-            }
-
             return string.Join(System.Environment.NewLine, lines);
         }
-
         private string BuildSkillEffectDescription(SkillData skill)
         {
             if (skill == null || skill.EffectType == SkillEffectType.None)
@@ -298,9 +284,7 @@ namespace GameKari.Battle
                 return string.Empty;
             }
 
-            string label = skill.MpCost > 0
-                ? $"{skill.SkillName} MP:{skill.MpCost}"
-                : skill.SkillName;
+            string label = skill.SkillName;
 
             int skillCooldown = GetSkillCooldownRemaining(skill);
             if (skillCooldown > 0)
@@ -312,15 +296,8 @@ namespace GameKari.Battle
                 label += $" LINK:{GetLinkCooldownRemaining()}";
             }
 
-            bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
-            if (!hasEnoughMp)
-            {
-                label += " ×";
-            }
-
             return label;
         }
-
         private int GetSkillCooldownRemaining(SkillData skill)
         {
             return GetSkillCooldownRemaining(_activeUnit, skill);
@@ -472,7 +449,7 @@ namespace GameKari.Battle
 
                 button.gameObject.SetActive(true);
                 button.interactable = true;
-                SetButtonLabel(button, $"{reserve.Name} HP:{reserve.CurrentHP} MP:{reserve.CurrentMP}");
+                SetButtonLabel(button, $"{reserve.Name} HP:{reserve.CurrentHP}");
 
                 button.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
             }
@@ -665,6 +642,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

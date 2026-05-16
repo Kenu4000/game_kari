@@ -691,21 +691,13 @@ namespace GameKari.Battle
             {
                 return;
             }
+EnterResolvingAction();
 
-            if (_active.CurrentMP < skill.MpCost)
-            {
-                Debug.Log($"[Action] Skill failed: {_active.Name} does not have enough MP for {skill.SkillName}. MP: {_active.CurrentMP}/{skill.MpCost}");
-                return;
-            }
-
-            EnterResolvingAction();
-
-            _active.CurrentMP -= skill.MpCost;
 
             ShowActionOverlay(skill.SkillName, _active.Name);
             PrepareSkillActionFlashTargets(skill);
             SetPendingActionSourceFlashTargets(true, new List<GridPos> { _active.GridPos });
-            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}. MP: {_active.CurrentMP}/{_active.Data.MaxMP}");
+            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}.");
 
             ApplySkillDamage(skill);
             ApplySkillEffect(skill);
@@ -3385,6 +3377,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
