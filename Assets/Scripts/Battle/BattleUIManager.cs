@@ -62,12 +62,16 @@ namespace GameKari.Battle
         private bool _pendingActionFlashIsAllyBoard;
         private readonly List<GridPos> _pendingActionSourceFlashTargets = new();
         private bool _pendingActionSourceFlashIsAllyBoard;
+        private readonly List<ActionValuePopup> _pendingActionValuePopups = new();
+        private readonly List<TMP_Text> _activeActionValuePopupLabels = new();
 
         private bool _battleEnded;
         private BattlePhase _phase;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
+        [SerializeField] private Color damagePopupColor = new Color(1f, 0.35f, 0.35f, 1f);
+        [SerializeField] private Color healPopupColor = new Color(0.45f, 1f, 0.45f, 1f);
 
         private bool _formationSettling;
         private float _lastRotateTime;
@@ -86,6 +90,12 @@ namespace GameKari.Battle
         private const float EnemyStatusSlotSpacing = 16f;
         private const float EnemyStatusSlotWidth = 240f;
 
+        private sealed class ActionValuePopup
+        {
+            public bool IsAllyBoard;
+            public GridPos Position;
+            public string Text;
+        }
         private enum BattlePhase
         {
             CommandSelect,
@@ -534,6 +544,7 @@ namespace GameKari.Battle
             int finalDamage = CalculateDamage(_active, target, damage);
 
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - finalDamage);
+            AddPendingActionValuePopup(false, pos, $"-{finalDamage}");
 
             Debug.Log($"[Damage] {target.Name} took {finalDamage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
@@ -1079,6 +1090,7 @@ namespace GameKari.Battle
             ShowActionOverlay(item.ItemName, _active.Name);
             SetPendingActionFlashTargets(true, new List<GridPos> { target.GridPos });
             SetPendingActionSourceFlashTargets(true, new List<GridPos> { _active.GridPos });
+            AddPendingActionValuePopup(true, target.GridPos, $"+{healed}");
             Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {item.Count}");
 
             StartCoroutine(FinishPlayerActionAfterDelay());
@@ -1233,12 +1245,135 @@ namespace GameKari.Battle
         {
             _pendingActionSourceFlashTargets.Clear();
         }
+
         private void ClearPendingActionFlashTargets()
         {
             _pendingActionFlashTargets.Clear();
             ClearPendingActionSourceFlashTargets();
         }
 
+        private void AddPendingActionValuePopup(bool isAllyBoard, GridPos position, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            _pendingActionValuePopups.Add(new ActionValuePopup
+            {
+                IsAllyBoard = isAllyBoard,
+                Position = position,
+                Text = text
+            });
+        }
+
+        private void ClearPendingActionValuePopups()
+        {
+            _pendingActionValuePopups.Clear();
+        }
+
+        private void ShowPendingActionValuePopups()
+        {
+            HideActiveActionValuePopups();
+
+            if (_pendingActionValuePopups.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _pendingActionValuePopups.Count; i++)
+            {
+                ActionValuePopup popup = _pendingActionValuePopups[i];
+                if (popup == null)
+                {
+                    continue;
+                }
+
+                TMP_Text cellLabel = GetBoardCellLabel(popup.IsAllyBoard, popup.Position);
+                if (cellLabel == null || cellLabel.transform.parent == null)
+                {
+                    continue;
+                }
+
+                GameObject popupObject = new GameObject("ActionValuePopup");
+                popupObject.transform.SetParent(cellLabel.transform.parent, false);
+
+                RectTransform rect = popupObject.AddComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0f, 0.55f);
+                rect.anchorMax = new Vector2(1f, 1f);
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+
+                TMP_Text label = popupObject.AddComponent<TextMeshProUGUI>();
+                label.alignment = TextAlignmentOptions.Center;
+                label.fontSize = 28f;
+                label.raycastTarget = false;
+                label.text = popup.Text;
+                label.color = popup.Text.StartsWith("+")
+                    ? healPopupColor
+                    : damagePopupColor;
+
+                _activeActionValuePopupLabels.Add(label);
+            }
+        }
+
+        private void HideActiveActionValuePopups()
+        {
+            for (int i = 0; i < _activeActionValuePopupLabels.Count; i++)
+            {
+                TMP_Text label = _activeActionValuePopupLabels[i];
+                if (label == null)
+                {
+                    continue;
+                }
+
+                Destroy(label.gameObject);
+            }
+
+            _activeActionValuePopupLabels.Clear();
+        }
+
+        private TMP_Text GetBoardCellLabel(bool isAllyBoard, GridPos position)
+        {
+            if (isAllyBoard)
+            {
+                switch (position)
+                {
+                    case GridPos.FrontTop:
+                        return allyFrontTop;
+
+                    case GridPos.BackTop:
+                        return allyBackTop;
+
+                    case GridPos.FrontBottom:
+                        return allyFrontBottom;
+
+                    case GridPos.BackBottom:
+                        return allyBackBottom;
+
+                    default:
+                        return null;
+                }
+            }
+
+            switch (position)
+            {
+                case GridPos.FrontTop:
+                    return enemyBackTop;
+
+                case GridPos.BackTop:
+                    return enemyFrontTop;
+
+                case GridPos.FrontBottom:
+                    return enemyBackBottom;
+
+                case GridPos.BackBottom:
+                    return enemyFrontBottom;
+
+                default:
+                    return null;
+            }
+        }
         private IEnumerator PlayPendingActionFlashOrDelay()
         {
             float duration = Mathf.Max(0f, actionResolveDelaySeconds);
@@ -1248,11 +1383,15 @@ namespace GameKari.Battle
 
             if (!hasTargetFlash && !hasSourceFlash)
             {
+                ShowPendingActionValuePopups();
+
                 if (duration > 0f)
                 {
                     yield return new WaitForSeconds(duration);
                 }
 
+                HideActiveActionValuePopups();
+                ClearPendingActionValuePopups();
                 yield break;
             }
 
@@ -1272,6 +1411,8 @@ namespace GameKari.Battle
             int blinkCount = Mathf.Max(1, actionFlashCount);
             float interval = duration / (blinkCount * 2f);
 
+            ShowPendingActionValuePopups();
+
             for (int i = 0; i < blinkCount; i++)
             {
                 SetActionSourceFlashTargetsVisible(isSourceAllyBoard, sourcePositions, true);
@@ -1282,6 +1423,9 @@ namespace GameKari.Battle
                 SetActionFlashTargetsVisible(isTargetAllyBoard, targetPositions, false);
                 yield return new WaitForSeconds(interval);
             }
+
+            HideActiveActionValuePopups();
+            ClearPendingActionValuePopups();
         }
 
         private void SetActionSourceFlashTargetsVisible(bool isAllyBoard, List<GridPos> targets, bool visible)
@@ -1329,6 +1473,7 @@ namespace GameKari.Battle
                 }
             }
         }
+        
         
         private IEnumerator FinishPlayerActionAfterDelay()
         {
@@ -1522,6 +1667,7 @@ namespace GameKari.Battle
             int finalDamage = CalculateDamage(enemy, target, damage);
 
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - finalDamage);
+            AddPendingActionValuePopup(true, targetPosition, $"-{finalDamage}");
 
             Debug.Log($"[Enemy] {enemy.Name} used {actionName}: {target.Name} took {finalDamage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
@@ -2912,6 +3058,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
