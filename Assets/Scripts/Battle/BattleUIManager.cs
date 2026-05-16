@@ -333,6 +333,7 @@ namespace GameKari.Battle
 
             _selectedEnemyActions.Remove(enemy);
         }
+
         private void SetupInitialTurnState(BattleUnit fallbackActive)
         {
             RebuildTurnOrder();
@@ -374,7 +375,6 @@ namespace GameKari.Battle
             ClearTargetPreview();
             SetCommandUiVisible(false);
             SetActionOverlayVisible(true);
-            SetCommandUiVisible(false);
 
             if (commandPanel != null)
             {
@@ -397,9 +397,6 @@ namespace GameKari.Battle
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
             EnsureSelectedEnemyActionsForPreview();
-            HideActionOverlay();
-            SetCommandUiVisible(true);
-
             HideActionOverlay();
             SetCommandUiVisible(true);
 
@@ -1026,6 +1023,7 @@ namespace GameKari.Battle
 
             AdvanceToNextActor();
         }
+
         private void AdvanceToNextActor()
         {
             if (_battleEnded)
@@ -1109,7 +1107,6 @@ namespace GameKari.Battle
 
             return null;
         }
-
 
         private void ExecuteEnemyAction(BattleUnit enemy, EnemyActionData action)
         {
@@ -2350,8 +2347,6 @@ namespace GameKari.Battle
 
     }
 }
-
-
 
 
 
