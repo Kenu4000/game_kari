@@ -1112,6 +1112,93 @@ namespace GameKari.Battle
         }
 
         // Action animation and value popups
+        private List<GridPos> GetSkillTargetPositionsForAnimation(SkillData skill)
+        {
+            var targets = new List<GridPos>();
+
+            if (skill == null)
+            {
+                return targets;
+            }
+
+            switch (skill.TargetPattern)
+            {
+                case SkillTargetPattern.FrontTopEnemy:
+                    targets.Add(GridPos.FrontTop);
+                    break;
+
+                case SkillTargetPattern.FrontBottomEnemy:
+                    targets.Add(GridPos.FrontBottom);
+                    break;
+
+                case SkillTargetPattern.BothFrontEnemies:
+                    targets.Add(GridPos.FrontTop);
+                    targets.Add(GridPos.FrontBottom);
+                    break;
+
+                case SkillTargetPattern.AllEnemies:
+                    AddAllGridPositions(targets);
+                    break;
+
+                case SkillTargetPattern.Self:
+                    if (_active != null)
+                    {
+                        targets.Add(_active.GridPos);
+                    }
+                    break;
+            }
+
+            return targets;
+        }
+
+        private List<GridPos> GetEnemyActionTargetPositions(BattleUnit enemy, EnemyActionData action)
+        {
+            var targets = new List<GridPos>();
+
+            if (enemy == null || action == null)
+            {
+                return targets;
+            }
+
+            switch (action.TargetPattern)
+            {
+                case EnemyTargetPattern.SameGridPosAlly:
+                    targets.Add(enemy.GridPos);
+                    break;
+
+                case EnemyTargetPattern.AllyFrontTop:
+                    targets.Add(GridPos.FrontTop);
+                    break;
+
+                case EnemyTargetPattern.AllyFrontBottom:
+                    targets.Add(GridPos.FrontBottom);
+                    break;
+
+                case EnemyTargetPattern.BothFrontAllies:
+                    targets.Add(GridPos.FrontTop);
+                    targets.Add(GridPos.FrontBottom);
+                    break;
+
+                case EnemyTargetPattern.AllAllies:
+                    AddAllGridPositions(targets);
+                    break;
+            }
+
+            return targets;
+        }
+
+        private static void AddAllGridPositions(List<GridPos> targets)
+        {
+            if (targets == null)
+            {
+                return;
+            }
+
+            targets.Add(GridPos.FrontTop);
+            targets.Add(GridPos.BackTop);
+            targets.Add(GridPos.FrontBottom);
+            targets.Add(GridPos.BackBottom);
+        }
         private void PrepareSkillActionFlashTargets(SkillData skill)
         {
             if (skill == null)
@@ -1120,49 +1207,16 @@ namespace GameKari.Battle
                 return;
             }
 
-            switch (skill.TargetPattern)
+            bool isAllyBoard = skill.TargetPattern == SkillTargetPattern.Self;
+            List<GridPos> targets = GetSkillTargetPositionsForAnimation(skill);
+
+            if (targets.Count == 0)
             {
-                case SkillTargetPattern.FrontTopEnemy:
-                    SetPendingActionFlashTargets(false, new List<GridPos> { GridPos.FrontTop });
-                    break;
-
-                case SkillTargetPattern.FrontBottomEnemy:
-                    SetPendingActionFlashTargets(false, new List<GridPos> { GridPos.FrontBottom });
-                    break;
-
-                case SkillTargetPattern.BothFrontEnemies:
-                    SetPendingActionFlashTargets(false, new List<GridPos>
-                    {
-                        GridPos.FrontTop,
-                        GridPos.FrontBottom
-                    });
-                    break;
-
-                case SkillTargetPattern.AllEnemies:
-                    SetPendingActionFlashTargets(false, new List<GridPos>
-                    {
-                        GridPos.FrontTop,
-                        GridPos.BackTop,
-                        GridPos.FrontBottom,
-                        GridPos.BackBottom
-                    });
-                    break;
-
-                case SkillTargetPattern.Self:
-                    if (_active != null)
-                    {
-                        SetPendingActionFlashTargets(true, new List<GridPos> { _active.GridPos });
-                    }
-                    else
-                    {
-                        ClearPendingActionFlashTargets();
-                    }
-                    break;
-
-                default:
-                    ClearPendingActionFlashTargets();
-                    break;
+                ClearPendingActionFlashTargets();
+                return;
             }
+
+            SetPendingActionFlashTargets(isAllyBoard, targets);
         }
 
         private void PrepareEnemyActionFlashTargets(BattleUnit enemy, EnemyActionData action)
@@ -1173,42 +1227,15 @@ namespace GameKari.Battle
                 return;
             }
 
-            switch (action.TargetPattern)
+            List<GridPos> targets = GetEnemyActionTargetPositions(enemy, action);
+
+            if (targets.Count == 0)
             {
-                case EnemyTargetPattern.SameGridPosAlly:
-                    SetPendingActionFlashTargets(true, new List<GridPos> { enemy.GridPos });
-                    break;
-
-                case EnemyTargetPattern.AllyFrontTop:
-                    SetPendingActionFlashTargets(true, new List<GridPos> { GridPos.FrontTop });
-                    break;
-
-                case EnemyTargetPattern.AllyFrontBottom:
-                    SetPendingActionFlashTargets(true, new List<GridPos> { GridPos.FrontBottom });
-                    break;
-
-                case EnemyTargetPattern.BothFrontAllies:
-                    SetPendingActionFlashTargets(true, new List<GridPos>
-                    {
-                        GridPos.FrontTop,
-                        GridPos.FrontBottom
-                    });
-                    break;
-
-                case EnemyTargetPattern.AllAllies:
-                    SetPendingActionFlashTargets(true, new List<GridPos>
-                    {
-                        GridPos.FrontTop,
-                        GridPos.BackTop,
-                        GridPos.FrontBottom,
-                        GridPos.BackBottom
-                    });
-                    break;
-
-                default:
-                    ClearPendingActionFlashTargets();
-                    break;
+                ClearPendingActionFlashTargets();
+                return;
             }
+
+            SetPendingActionFlashTargets(true, targets);
         }
 
         private void SetPendingActionFlashTargets(bool isAllyBoard, List<GridPos> targets)
@@ -3079,6 +3106,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
