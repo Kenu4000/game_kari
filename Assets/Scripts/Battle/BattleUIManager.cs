@@ -337,12 +337,35 @@ namespace GameKari.Battle
                 return Mathf.Max(0, baseDamage);
             }
 
-            int finalDamage = baseDamage;
+            float multiplier = 1f;
 
-            // Buff / Debuff modifiers will be applied here later.
-            // Current behavior intentionally keeps damage unchanged.
+            if (HasBuff(attacker, BuffType.AttackUp))
+            {
+                multiplier *= 1.5f;
+            }
 
+            if (HasBuff(attacker, BuffType.AttackDown))
+            {
+                multiplier *= 0.5f;
+            }
+
+            if (HasBuff(target, BuffType.DefenseUp))
+            {
+                multiplier *= 0.5f;
+            }
+
+            if (HasBuff(target, BuffType.DefenseDown))
+            {
+                multiplier *= 1.5f;
+            }
+
+            int finalDamage = Mathf.RoundToInt(baseDamage * multiplier);
             return Mathf.Max(0, finalDamage);
+        }
+
+        private bool HasBuff(BattleUnit unit, BuffType type)
+        {
+            return FindBuff(unit, type) != null;
         }
         private void ApplyBuff(BattleUnit unit, BuffType type, int turns)
         {
@@ -1655,6 +1678,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
