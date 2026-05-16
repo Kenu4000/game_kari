@@ -52,6 +52,7 @@ namespace GameKari.Battle
 
         private void Start()
         {
+            ClearDescription();
             ShowSkills();
         }
 
@@ -65,7 +66,14 @@ namespace GameKari.Battle
             BindFixedItemButtons();
 
             ShowSkills();
-            RefreshHoveredSkillDescription();
+            if (_hoveredSkillIndex >= 0)
+            {
+                RefreshHoveredSkillDescription();
+            }
+            else
+            {
+                ClearDescription();
+            }
         }
 
         private void Update()
