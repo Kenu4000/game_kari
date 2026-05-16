@@ -44,14 +44,7 @@ namespace GameKari.Battle
 
         private int _hoveredSkillIndex = -1;
 
-        private readonly ItemData _dummyPotion = new ItemData
-        {
-            ItemId = "potion",
-            ItemName = "Potion",
-            Description = "Heal the ally in front of the active unit.",
-            HealAmount = 20,
-            Count = 3
-        };
+        private readonly ItemData _dummyPotion = CreateDummyPotion();
 
         private void Awake()
         {
@@ -270,6 +263,18 @@ namespace GameKari.Battle
             }
 
             return $"{description}\nHeal: {item.HealAmount}\n{countText}\nNo items left.";
+        }
+
+        private static ItemData CreateDummyPotion()
+        {
+            return new ItemData
+            {
+                ItemId = "potion",
+                ItemName = "Potion",
+                Description = "Heal the ally in front of the active unit.",
+                HealAmount = 20,
+                Count = 3
+            };
         }
 
         private void ClearDescription()

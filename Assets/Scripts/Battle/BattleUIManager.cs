@@ -1444,47 +1444,74 @@ namespace GameKari.Battle
             };
 
             var unit = new BattleUnit(data);
-            unit.Skills.Add(new SkillData
-            {
-                SkillId = "s1",
-                SkillName = "Slash",
-                Description = "Attack enemy front top.",
-                TargetPattern = SkillTargetPattern.FrontTopEnemy,
-                MpCost = 0,
-                Damage = 20
-            });
+            AddDefaultSkills(unit);
 
-            unit.Skills.Add(new SkillData
-            {
-                SkillId = "s2",
-                SkillName = "Pierce",
-                Description = "Attack enemy front bottom.",
-                TargetPattern = SkillTargetPattern.FrontBottomEnemy,
-                MpCost = 5,
-                Damage = 20
-            });
-
-            unit.Skills.Add(new SkillData
-            {
-                SkillId = "s3",
-                SkillName = "TwinHit",
-                Description = "Attack both front enemies.",
-                TargetPattern = SkillTargetPattern.BothFrontEnemies,
-                MpCost = 8,
-                Damage = 15
-            });
-
-            unit.Skills.Add(new SkillData
-            {
-                SkillId = "s4",
-                SkillName = "Wave",
-                Description = "Attack all enemies.",
-                TargetPattern = SkillTargetPattern.AllEnemies,
-                MpCost = 12,
-                Damage = 10
-            });
             return unit;
         }
+
+        private static void AddDefaultSkills(BattleUnit unit)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            unit.Skills.Add(CreateSkill(
+                "s1",
+                "Slash",
+                "Attack enemy front top.",
+                SkillTargetPattern.FrontTopEnemy,
+                0,
+                20
+            ));
+
+            unit.Skills.Add(CreateSkill(
+                "s2",
+                "Pierce",
+                "Attack enemy front bottom.",
+                SkillTargetPattern.FrontBottomEnemy,
+                5,
+                20
+            ));
+
+            unit.Skills.Add(CreateSkill(
+                "s3",
+                "TwinHit",
+                "Attack both front enemies.",
+                SkillTargetPattern.BothFrontEnemies,
+                8,
+                15
+            ));
+
+            unit.Skills.Add(CreateSkill(
+                "s4",
+                "Wave",
+                "Attack all enemies.",
+                SkillTargetPattern.AllEnemies,
+                12,
+                10
+            ));
+        }
+
+        private static SkillData CreateSkill(
+    string skillId,
+    string skillName,
+    string description,
+    SkillTargetPattern targetPattern,
+    int mpCost,
+    int damage)
+        {
+            return new SkillData
+            {
+                SkillId = skillId,
+                SkillName = skillName,
+                Description = description,
+                TargetPattern = targetPattern,
+                MpCost = mpCost,
+                Damage = damage
+            };
+        }
+
     }
 }
 
