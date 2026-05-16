@@ -1388,15 +1388,50 @@ namespace GameKari.Battle
         private void ShowActionOverlay(string skillName, string userName)
         {
             SetActionOverlayVisible(true);
+            SetActionOverlayText(skillName, userName);
+        }
 
-            if (actionSkillName != null)
+        private void SetActionOverlayText(string skillName, string userName)
+        {
+            TMP_Text skillLabel = actionSkillName;
+            TMP_Text userLabel = actionUserName;
+
+            GameObject topPanel = FindUiGameObjectByName("TopActionPanel");
+            if (topPanel != null)
             {
-                actionSkillName.text = skillName;
+                TMP_Text[] labels = topPanel.GetComponentsInChildren<TMP_Text>(true);
+
+                for (int i = 0; i < labels.Length; i++)
+                {
+                    TMP_Text label = labels[i];
+                    if (label == null)
+                    {
+                        continue;
+                    }
+
+                    string lowerName = label.name.ToLowerInvariant();
+
+                    if (lowerName.Contains("skill"))
+                    {
+                        skillLabel = label;
+                    }
+                    else if (lowerName.Contains("user"))
+                    {
+                        userLabel = label;
+                    }
+                }
             }
 
-            if (actionUserName != null)
+            if (skillLabel != null)
             {
-                actionUserName.text = userName;
+                skillLabel.gameObject.SetActive(true);
+                skillLabel.text = skillName;
+            }
+
+            if (userLabel != null)
+            {
+                userLabel.gameObject.SetActive(true);
+                userLabel.text = userName;
             }
         }
 
@@ -1456,12 +1491,12 @@ namespace GameKari.Battle
                 candidateObject.SetActive(visible);
                 changedCount++;
 
-                Debug.Log($"[UI] Set {objectName} visible={visible}: {GetHierarchyPath(candidate)} activeSelf={candidateObject.activeSelf}");
+
             }
 
             if (changedCount == 0)
             {
-                Debug.LogWarning($"[UI] No scene object found by name: {objectName}");
+
             }
         }
 
@@ -1497,11 +1532,11 @@ namespace GameKari.Battle
                     continue;
                 }
 
-                Debug.Log($"[UI] Found {objectName}: {GetHierarchyPath(candidate)}");
+
                 return candidateObject;
             }
 
-            Debug.LogWarning($"[UI] Could not find UI object: {objectName}");
+
             return null;
         }
 
@@ -2053,6 +2088,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
