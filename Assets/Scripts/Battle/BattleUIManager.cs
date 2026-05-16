@@ -314,9 +314,11 @@ namespace GameKari.Battle
                 return;
             }
 
-            target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
+            int finalDamage = CalculateDamage(_active, target, damage);
 
-            Debug.Log($"[Damage] {target.Name} took {damage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
+            target.CurrentHP = Mathf.Max(0, target.CurrentHP - finalDamage);
+
+            Debug.Log($"[Damage] {target.Name} took {finalDamage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
             if (target.CurrentHP <= 0 && !ContainsDefeatedEnemy(defeatedEnemies, target))
             {
@@ -326,6 +328,21 @@ namespace GameKari.Battle
                     Position = pos
                 });
             }
+        }
+
+        private int CalculateDamage(BattleUnit attacker, BattleUnit target, int baseDamage)
+        {
+            if (attacker == null || target == null)
+            {
+                return Mathf.Max(0, baseDamage);
+            }
+
+            int finalDamage = baseDamage;
+
+            // Buff / Debuff modifiers will be applied here later.
+            // Current behavior intentionally keeps damage unchanged.
+
+            return Mathf.Max(0, finalDamage);
         }
 
         private bool ContainsDefeatedEnemy(List<DefeatedEnemyInfo> defeatedEnemies, BattleUnit target)
@@ -774,9 +791,11 @@ namespace GameKari.Battle
                 return;
             }
 
-            target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
+            int finalDamage = CalculateDamage(enemy, target, damage);
 
-            Debug.Log($"[Enemy] {enemy.Name} used {actionName}: {target.Name} took {damage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
+            target.CurrentHP = Mathf.Max(0, target.CurrentHP - finalDamage);
+
+            Debug.Log($"[Enemy] {enemy.Name} used {actionName}: {target.Name} took {finalDamage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
             if (target.CurrentHP <= 0)
             {
