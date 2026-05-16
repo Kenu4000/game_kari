@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,6 +53,7 @@ namespace GameKari.Battle
         private bool _battleEnded;
         private BattlePhase _phase;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
+        [SerializeField] private float actionResolveDelaySeconds = 0.35f;
 
         private bool _formationSettling;
         private float _lastRotateTime;
@@ -370,9 +372,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            MarkActiveAsActed();
-            RedrawBoard();
-            AdvanceToNextActor();
+            StartCoroutine(FinishPlayerActionAfterDelay());
         }
 
         private void ApplySkillDamage(SkillData skill)
@@ -898,11 +898,25 @@ namespace GameKari.Battle
             ShowActionOverlay(item.ItemName, _active.Name);
             Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {item.Count}");
 
+            StartCoroutine(FinishPlayerActionAfterDelay());
+        }
+
+        private IEnumerator FinishPlayerActionAfterDelay()
+        {
+            if (actionResolveDelaySeconds > 0f)
+            {
+                yield return new WaitForSeconds(actionResolveDelaySeconds);
+            }
+
+            if (_battleEnded)
+            {
+                yield break;
+            }
+
             MarkActiveAsActed();
             RedrawBoard();
             AdvanceToNextActor();
         }
-
         private void MarkActiveAsActed()
         {
             if (_active == null || _battleEnded)
@@ -1875,6 +1889,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
