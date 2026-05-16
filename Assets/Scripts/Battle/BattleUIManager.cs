@@ -1410,6 +1410,12 @@ namespace GameKari.Battle
 
             RedrawBoard();
 
+            if (!_battleEnded && _phase == BattlePhase.CommandSelect)
+            {
+                UpdateEnemyActionPreview();
+                SetEnemyActionPreviewVisible(true);
+            }
+
             if (!_battleEnded && commandPanel != null)
             {
                 commandPanel.SetInteractable(true);
@@ -1653,6 +1659,67 @@ namespace GameKari.Battle
             _enemyActionPreviewText.raycastTarget = false;
         }
 
+        private string BuildEnemyActionPreviewLine(BattleUnit enemy, EnemyActionData action)
+        {
+            if (enemy == null || action == null)
+            {
+                return "-";
+            }
+
+            return $"{enemy.Name}: {action.ActionName} -> {BuildEnemyActionTargetText(enemy, action)}";
+        }
+
+        private string BuildEnemyActionTargetText(BattleUnit enemy, EnemyActionData action)
+        {
+            if (action == null)
+            {
+                return "Unknown";
+            }
+
+            switch (action.TargetPattern)
+            {
+                case EnemyTargetPattern.SameGridPosAlly:
+                    return enemy == null
+                        ? "Ally same position"
+                        : $"Ally {FormatEnemyPreviewGridPos(enemy.GridPos)}";
+
+                case EnemyTargetPattern.AllyFrontTop:
+                    return "Ally FrontTop";
+
+                case EnemyTargetPattern.AllyFrontBottom:
+                    return "Ally FrontBottom";
+
+                case EnemyTargetPattern.BothFrontAllies:
+                    return "Ally front row";
+
+                case EnemyTargetPattern.AllAllies:
+                    return "All allies";
+
+                default:
+                    return "Unknown";
+            }
+        }
+
+        private static string FormatEnemyPreviewGridPos(GridPos pos)
+        {
+            switch (pos)
+            {
+                case GridPos.FrontTop:
+                    return "FrontTop";
+
+                case GridPos.BackTop:
+                    return "BackTop";
+
+                case GridPos.FrontBottom:
+                    return "FrontBottom";
+
+                case GridPos.BackBottom:
+                    return "BackBottom";
+
+                default:
+                    return pos.ToString();
+            }
+        }
         private void UpdateEnemyActionPreview()
         {
             EnsureEnemyActionPreviewPanel();
@@ -1682,7 +1749,7 @@ namespace GameKari.Battle
                     continue;
                 }
 
-                lines.Add($"{enemy.Name}: {action.ActionName}");
+                lines.Add(BuildEnemyActionPreviewLine(enemy, action));
             }
 
             if (lines.Count == 1)
@@ -1702,6 +1769,7 @@ namespace GameKari.Battle
                 _enemyActionPreviewPanelObject.SetActive(visible);
             }
         }
+        
         private void EnsureResultPanel()
         {
             if (_resultPanelObject != null)
@@ -2457,6 +2525,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
