@@ -18,7 +18,7 @@
 - SkillTargetPattern.Self exists.
 - Skill4 is currently Focus instead of Wave.
 - Focus costs 6 MP for now as a legacy field, does 0 damage, targets Self, has EffectTarget Self, and applies AttackUp for 2 turns.
-- Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, expiry, CT assignment, CT ticking, and CT blocking behave as expected.
+- Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, expiry, CT assignment, CT ticking, CT blocking, and command UI CT display behave as expected.
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
 - Skill descriptions show effect text for ApplyBuff skills.
@@ -39,16 +39,20 @@
 - BattleUnit has SkillCooldowns for per-skill current CT state.
 - BattleUnit has LinkCooldownRemaining for user-side link cooldown state.
 - BattleUIManager has helper methods for reading and writing skill cooldown and LinkCooldown state.
-- Current helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), TickLinkCooldown(), CanUseSkillWithCooldowns(), and ApplySkillCooldownAfterUse().
+- CommandPanelController reads BattleUnit.SkillCooldowns and LinkCooldownRemaining for skill button and description display.
+- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), TickLinkCooldown(), CanUseSkillWithCooldowns(), and ApplySkillCooldownAfterUse().
+- Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), and IsLinkSkillBlocked().
 - Successful skill use applies per-skill CT when CooldownTurns is greater than 0.
 - Successful Link skill use applies LinkCooldown when LinkCooldownTurns is greater than 0.
 - Ally turn entry ticks that ally's per-skill CT and LinkCooldown.
 - Skills with remaining CT are blocked in HandleSkillClicked().
 - Link skills are blocked in HandleSkillClicked() while the user has LinkCooldownRemaining.
-- CT blocking currently logs the reason to Console but does not yet update button visuals.
-- There is currently no CT display, CT-based button disabling, WAIT label, or dedicated unavailable-reason UI.
+- Skill buttons now show WAIT / LINK state text when CT or LinkCooldown is active.
+- Skill hover descriptions now show cooldown / LinkCooldown status text.
+- Some non-ASCII cooldown text may not render correctly depending on the current TMP font setup; this is a display/font issue, not a cooldown logic issue.
+- CT blocking currently logs the reason to Console and command UI shows state text, but there is no button darkening, WAIT icon, or dedicated unavailable-reason UI yet.
 - Existing MP checks and MP consumption still remain temporarily as legacy behavior.
-- Next implementation step should expose CT state in the command UI or remove/disable legacy MP checks after verifying CT-only flow.
+- Next implementation step should replace non-ASCII CT display text with ASCII-only labels if TMP font coverage remains unstable, then remove/disable legacy MP checks after verifying CT-only flow.
 
 ## Battle phase and UI status
 
