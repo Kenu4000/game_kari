@@ -1758,6 +1758,16 @@ namespace GameKari.Battle
             {
                 _resultSubText.text = "Battle End";
             }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                _resultReturnButtonText.text = "Return";
+            }
         }
 
         private void HideResultPanel()
@@ -2285,6 +2295,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
