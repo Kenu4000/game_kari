@@ -1709,6 +1709,35 @@ namespace GameKari.Battle
         private void HandleResultReturnClicked()
         {
             Debug.Log("[Result] Return clicked.");
+
+            RestartDummyBattle();
+        }
+
+        private void RestartDummyBattle()
+        {
+            StopAllCoroutines();
+
+            HideResultPanel();
+            HideActionOverlay();
+            SetCommandUiVisible(true);
+
+            BootstrapDummyBattle();
+
+            if (commandPanel != null)
+            {
+                commandPanel.Setup(_active, _reserves);
+                commandPanel.SetInteractable(true);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.gameObject.SetActive(true);
+                rotateButton.interactable = true;
+            }
+
+            RedrawBoard();
+
+            Debug.Log("[Battle] Restarted dummy battle.");
         }
 
         private void ShowResultPanel(string result)
@@ -2256,6 +2285,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
