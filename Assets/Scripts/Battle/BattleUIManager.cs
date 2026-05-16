@@ -119,24 +119,35 @@ namespace GameKari.Battle
                 return;
             }
 
+            bool changed = false;
+
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 ApplyBuff(_active, BuffType.AttackUp, 2);
+                changed = true;
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha2))
             {
                 ApplyBuff(_active, BuffType.AttackDown, 2);
+                changed = true;
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha3))
             {
                 ApplyBuff(_active, BuffType.DefenseUp, 2);
+                changed = true;
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha4))
             {
                 ApplyBuff(_active, BuffType.DefenseDown, 2);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                RedrawBoard();
             }
 #endif
         }
@@ -1511,6 +1522,7 @@ namespace GameKari.Battle
             int currentHp = unit.CurrentHP;
             int maxHp = unit.Data.MaxHP;
             SetBarFill(slot, "HPBar", currentHp, maxHp);
+            SetOrCreateLabel(slot, "Buffs", BuildBuffText(unit));
         }
 
         private void RedrawAllyStatusSlot(int slotNumber, BattleUnit unit)
@@ -1545,6 +1557,7 @@ namespace GameKari.Battle
 
             SetBarFill(slot, "HPBar", currentHp, maxHp);
             SetBarFill(slot, "MPBar", currentMp, maxMp);
+            SetOrCreateLabel(slot, "Buffs", BuildBuffText(unit));
         }
 
         private List<BattleUnit> GetAliveEnemies()
@@ -1595,6 +1608,28 @@ namespace GameKari.Battle
                 : "";
         }
 
+        private static string BuildBuffText(BattleUnit unit)
+        {
+            if (unit == null || unit.Buffs == null || unit.Buffs.Count == 0)
+            {
+                return "";
+            }
+
+            var lines = new List<string>();
+
+            for (int i = 0; i < unit.Buffs.Count; i++)
+            {
+                BuffState buff = unit.Buffs[i];
+                if (buff == null)
+                {
+                    continue;
+                }
+
+                lines.Add($"{buff.Type} {buff.RemainingTurns}");
+            }
+
+            return string.Join("\n", lines);
+        }
         private static void SetLabel(Transform root, string childName, string text)
         {
             TMP_Text label = root.Find(childName)?.GetComponent<TMP_Text>();
@@ -1602,6 +1637,39 @@ namespace GameKari.Battle
             {
                 label.text = text;
             }
+        }
+
+        private static void SetOrCreateLabel(Transform root, string childName, string text)
+        {
+            if (root == null)
+            {
+                return;
+            }
+
+            Transform existing = root.Find(childName);
+            TMP_Text label = existing == null
+                ? null
+                : existing.GetComponent<TMP_Text>();
+
+            if (label == null)
+            {
+                GameObject labelObject = new GameObject(childName);
+                labelObject.transform.SetParent(root, false);
+
+                label = labelObject.AddComponent<TextMeshProUGUI>();
+                label.fontSize = 16f;
+                label.alignment = TextAlignmentOptions.Left;
+                label.raycastTarget = false;
+
+                RectTransform rect = labelObject.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0f, 0f);
+                rect.anchorMax = new Vector2(1f, 0f);
+                rect.pivot = new Vector2(0f, 0f);
+                rect.offsetMin = new Vector2(10f, 8f);
+                rect.offsetMax = new Vector2(-10f, 42f);
+            }
+
+            label.text = text ?? "";
         }
 
         private static void SetBarFill(Transform root, string barName, int current, int max)
@@ -1699,6 +1767,8 @@ namespace GameKari.Battle
                 15
             ));
 
+            // Temporary buff test skill.
+            // Wave is intentionally parked until skill slot/UI handling is expanded.
             unit.Skills.Add(CreateSkill(
                 "s4",
                 "Focus",
@@ -1739,6 +1809,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 

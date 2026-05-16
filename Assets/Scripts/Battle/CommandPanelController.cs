@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -228,6 +228,7 @@ namespace GameKari.Battle
                 : "MP Cost: 0";
 
             string damageText = $"Damage: {skill.Damage}";
+            string effectText = BuildSkillEffectDescription(skill);
 
             string description = string.IsNullOrWhiteSpace(skill.Description)
                 ? "-"
@@ -237,11 +238,28 @@ namespace GameKari.Battle
 
             if (hasEnoughMp)
             {
-                return $"{description}\n{mpText}\n{damageText}";
+                return $"{description}\n{mpText}\n{damageText}{effectText}";
             }
 
             int currentMp = _activeUnit == null ? 0 : _activeUnit.CurrentMP;
-            return $"{description}\n{mpText}\n{damageText}\nNot enough MP. Current MP: {currentMp}";
+            return $"{description}\n{mpText}\n{damageText}{effectText}\nNot enough MP. Current MP: {currentMp}";
+        }
+
+        private string BuildSkillEffectDescription(SkillData skill)
+        {
+            if (skill == null || skill.EffectType == SkillEffectType.None)
+            {
+                return string.Empty;
+            }
+
+            switch (skill.EffectType)
+            {
+                case SkillEffectType.ApplyBuff:
+                    return $"\nEffect: {skill.BuffType} {skill.BuffTurns} turns";
+
+                default:
+                    return string.Empty;
+            }
         }
 
         private string BuildItemDescription(ItemData item)
