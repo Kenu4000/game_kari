@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -10,6 +10,12 @@ namespace GameKari.Battle
         AllEnemies
     }
 
+    public enum SkillEffectType
+    {
+        None,
+        ApplyBuff
+    }
+
     [System.Serializable]
     public class SkillData
     {
@@ -19,5 +25,9 @@ namespace GameKari.Battle
         public SkillTargetPattern TargetPattern;
         public int MpCost;
         public int Damage;
+        public SkillEffectType EffectType;
+        public BuffType BuffType;
+        public int BuffTurns;
     }
 }
+
