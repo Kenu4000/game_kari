@@ -344,6 +344,126 @@ namespace GameKari.Battle
 
             return Mathf.Max(0, finalDamage);
         }
+        private void ApplyBuff(BattleUnit unit, BuffType type, int turns)
+        {
+            if (unit == null || unit.IsDead || turns <= 0)
+            {
+                return;
+            }
+
+            BuffType? opposite = GetOppositeBuffType(type);
+            if (opposite.HasValue)
+            {
+                BuffState oppositeBuff = FindBuff(unit, opposite.Value);
+                if (oppositeBuff != null)
+                {
+                    unit.Buffs.Remove(oppositeBuff);
+                    Debug.Log($"[Buff] {unit.Name}: {type} cancelled {opposite.Value}.");
+                    return;
+                }
+            }
+
+            BuffState existing = FindBuff(unit, type);
+            if (existing != null)
+            {
+                existing.RemainingTurns = turns;
+                Debug.Log($"[Buff] {unit.Name}: {type} refreshed to {turns} turns.");
+                return;
+            }
+
+            unit.Buffs.Add(new BuffState
+            {
+                Type = type,
+                RemainingTurns = turns
+            });
+
+            Debug.Log($"[Buff] {unit.Name}: {type} applied for {turns} turns.");
+        }
+
+        private BuffState FindBuff(BattleUnit unit, BuffType type)
+        {
+            if (unit == null || unit.Buffs == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < unit.Buffs.Count; i++)
+            {
+                BuffState buff = unit.Buffs[i];
+                if (buff != null && buff.Type == type)
+                {
+                    return buff;
+                }
+            }
+
+            return null;
+        }
+
+        private BuffType? GetOppositeBuffType(BuffType type)
+        {
+            switch (type)
+            {
+                case BuffType.AttackUp:
+                    return BuffType.AttackDown;
+
+                case BuffType.AttackDown:
+                    return BuffType.AttackUp;
+
+                case BuffType.DefenseUp:
+                    return BuffType.DefenseDown;
+
+                case BuffType.DefenseDown:
+                    return BuffType.DefenseUp;
+
+                default:
+                    return null;
+            }
+        }
+
+        private void TickBuffsAtTurnStart()
+        {
+            TickBuffsInUnits(_grid.AllyGrid.Values);
+            TickBuffsInUnits(_grid.EnemyGrid.Values);
+        }
+
+        private void TickBuffsInUnits(IEnumerable<BattleUnit> units)
+        {
+            if (units == null)
+            {
+                return;
+            }
+
+            foreach (BattleUnit unit in units)
+            {
+                TickBuffs(unit);
+            }
+        }
+
+        private void TickBuffs(BattleUnit unit)
+        {
+            if (unit == null || unit.IsDead || unit.Buffs == null || unit.Buffs.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = unit.Buffs.Count - 1; i >= 0; i--)
+            {
+                BuffState buff = unit.Buffs[i];
+                if (buff == null)
+                {
+                    unit.Buffs.RemoveAt(i);
+                    continue;
+                }
+
+                buff.RemainingTurns--;
+
+                if (buff.RemainingTurns <= 0)
+                {
+                    Debug.Log($"[Buff] {unit.Name}: {buff.Type} expired.");
+                    unit.Buffs.RemoveAt(i);
+                }
+            }
+        }
 
         private bool ContainsDefeatedEnemy(List<DefeatedEnemyInfo> defeatedEnemies, BattleUnit target)
         {
@@ -976,6 +1096,8 @@ namespace GameKari.Battle
 
             CompactFrontlineIfEmpty(true);
 
+            TickBuffsAtTurnStart();
+
             RebuildTurnOrder();
 
             BattleUnit nextAlly = FindNextUnactedAlly();
@@ -1533,6 +1655,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
