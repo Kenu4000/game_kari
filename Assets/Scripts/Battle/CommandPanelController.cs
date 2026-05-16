@@ -208,6 +208,8 @@ namespace GameKari.Battle
             string mpText = skill.MpCost > 0
                 ? $"MP Cost: {skill.MpCost}"
                 : "MP Cost: 0";
+            
+            string damageText = $"Damage: {skill.Damage}";
 
             string description = string.IsNullOrWhiteSpace(skill.Description)
                 ? "-"
@@ -217,11 +219,11 @@ namespace GameKari.Battle
 
             if (hasEnoughMp)
             {
-                return $"{description}\n{mpText}";
+                return $"{description}\n{mpText}\n{damageText}";
             }
 
             int currentMp = _activeUnit == null ? 0 : _activeUnit.CurrentMP;
-            return $"{description}\n{mpText}\nNot enough MP. Current MP: {currentMp}";
+           return $"{description}\n{mpText}\n{damageText}\nNot enough MP. Current MP: {currentMp}";
         }
 
         private void RefreshHoveredSkillDescription()

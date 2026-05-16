@@ -277,23 +277,23 @@ namespace GameKari.Battle
             switch (skill.TargetPattern)
             {
                 case SkillTargetPattern.FrontTopEnemy:
-                    DamageEnemyAt(GridPos.FrontTop, 20, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontTop, skill.Damage, defeatedEnemies);
                     break;
 
                 case SkillTargetPattern.FrontBottomEnemy:
-                    DamageEnemyAt(GridPos.FrontBottom, 20, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontBottom, skill.Damage, defeatedEnemies);
                     break;
 
                 case SkillTargetPattern.BothFrontEnemies:
-                    DamageEnemyAt(GridPos.FrontTop, 15, defeatedEnemies);
-                    DamageEnemyAt(GridPos.FrontBottom, 15, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontTop, skill.Damage, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontBottom, skill.Damage, defeatedEnemies);
                     break;
 
                 case SkillTargetPattern.AllEnemies:
-                    DamageEnemyAt(GridPos.FrontTop, 10, defeatedEnemies);
-                    DamageEnemyAt(GridPos.BackTop, 10, defeatedEnemies);
-                    DamageEnemyAt(GridPos.FrontBottom, 10, defeatedEnemies);
-                    DamageEnemyAt(GridPos.BackBottom, 10, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontTop, skill.Damage, defeatedEnemies);
+                    DamageEnemyAt(GridPos.BackTop, skill.Damage, defeatedEnemies);
+                    DamageEnemyAt(GridPos.FrontBottom, skill.Damage, defeatedEnemies);
+                    DamageEnemyAt(GridPos.BackBottom, skill.Damage, defeatedEnemies);
                     break;
             }
 
@@ -1423,10 +1423,45 @@ namespace GameKari.Battle
             };
 
             var unit = new BattleUnit(data);
-            unit.Skills.Add(new SkillData { SkillId = "s1", SkillName = "Slash", Description = "Attack enemy front top.", TargetPattern = SkillTargetPattern.FrontTopEnemy, MpCost = 0 });
-            unit.Skills.Add(new SkillData { SkillId = "s2", SkillName = "Pierce", Description = "Attack enemy front bottom.", TargetPattern = SkillTargetPattern.FrontBottomEnemy, MpCost = 5 });
-            unit.Skills.Add(new SkillData { SkillId = "s3", SkillName = "TwinHit", Description = "Attack both front enemies.", TargetPattern = SkillTargetPattern.BothFrontEnemies, MpCost = 8 });
-            unit.Skills.Add(new SkillData { SkillId = "s4", SkillName = "Wave", Description = "Attack all enemies.", TargetPattern = SkillTargetPattern.AllEnemies, MpCost = 12 });
+            unit.Skills.Add(new SkillData
+            {
+                SkillId = "s1",
+                SkillName = "Slash",
+                Description = "Attack enemy front top.",
+                TargetPattern = SkillTargetPattern.FrontTopEnemy,
+                MpCost = 0,
+                Damage = 20
+            });
+
+            unit.Skills.Add(new SkillData
+            {
+                SkillId = "s2",
+                SkillName = "Pierce",
+                Description = "Attack enemy front bottom.",
+                TargetPattern = SkillTargetPattern.FrontBottomEnemy,
+                MpCost = 5,
+                Damage = 20
+            });
+
+            unit.Skills.Add(new SkillData
+            {
+                SkillId = "s3",
+                SkillName = "TwinHit",
+                Description = "Attack both front enemies.",
+                TargetPattern = SkillTargetPattern.BothFrontEnemies,
+                MpCost = 8,
+                Damage = 15
+            });
+
+            unit.Skills.Add(new SkillData
+            {
+                SkillId = "s4",
+                SkillName = "Wave",
+                Description = "Attack all enemies.",
+                TargetPattern = SkillTargetPattern.AllEnemies,
+                MpCost = 12,
+                Damage = 10
+            });
             return unit;
         }
     }
