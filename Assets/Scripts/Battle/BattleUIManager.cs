@@ -2420,14 +2420,39 @@ namespace GameKari.Battle
                 return "";
             }
 
-            if (_actedUnits.Contains(unit))
+            // Acted units should not display a number, but they must still
+            // occupy their original turn-order position when numbering
+            // the remaining visible units.
+            bool shouldHideNumber = _actedUnits.Contains(unit);
+
+            if (_turnOrder == null)
             {
                 return "";
             }
 
-            return _turnNumbers.TryGetValue(unit, out int number)
-                ? number.ToString()
-                : "";
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+            int displayNumber = 0;
+
+            for (int i = 0; i < order.Count; i++)
+            {
+                BattleUnit current = order[i];
+
+                if (current == null || current.IsDead)
+                {
+                    continue;
+                }
+
+                displayNumber++;
+
+                if (current == unit)
+                {
+                    return shouldHideNumber
+                        ? ""
+                        : displayNumber.ToString();
+                }
+            }
+
+            return "";
         }
 
         private static string BuildBuffText(BattleUnit unit)
@@ -2631,6 +2656,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
