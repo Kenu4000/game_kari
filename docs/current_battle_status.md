@@ -3,6 +3,8 @@
 ## Latest confirmed implementation notes
 
 - SkillData has MpCost, Damage, EffectType, EffectTarget, BuffType, and BuffTurns.
+- SkillData also has SkillKind, CooldownTurns, and LinkCooldownTurns as preparation fields for skill cooldown and link-skill restrictions.
+- SkillKind exists with Personal and Link.
 - SkillEffectTargetType exists with Self, Target, AllAllies, and AllEnemies.
 - Skill damage is routed through BattleUIManager.CalculateDamage().
 - CalculateDamage applies AttackUp, AttackDown, DefenseUp, and DefenseDown modifiers.
@@ -21,6 +23,16 @@
 - Dummy Potion starts at count 3 and disappears from the item slot as '-' when count reaches 0.
 - Play start clears default skill description text.
 - Swap and Item panels clear skill description and target preview.
+
+## Skill resource / cooldown preparation status
+
+- SkillKind has been added as a data field but is not enforced yet.
+- SkillKind.Personal is for ordinary individual skills.
+- SkillKind.Link is reserved for future link/combination skills.
+- CooldownTurns has been added as a per-skill data field but is not consumed by battle logic yet.
+- LinkCooldownTurns has been added as a data field for future user-side link cooldown, but LinkCooldown state is not implemented yet.
+- There is currently no CT ticking, CT display, CT-based button disabling, or LinkCooldown restriction.
+- Existing battle behavior remains unchanged: all usable skills are still available if their existing MP/command conditions pass.
 
 ## Battle phase and UI status
 
