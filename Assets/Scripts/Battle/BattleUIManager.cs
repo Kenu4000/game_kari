@@ -3252,11 +3252,11 @@ namespace GameKari.Battle
                 "Focus",
                 "Apply AttackUp to self.",
                 SkillTargetPattern.Self,
-                CooldownTurns = 2,
                 6,
                 0,
                 SkillEffectType.ApplyBuff,
                 BuffType.AttackUp,
+                2,
                 2
             ));
         }
@@ -3270,7 +3270,11 @@ namespace GameKari.Battle
             int damage,
             SkillEffectType effectType = SkillEffectType.None,
             BuffType buffType = BuffType.AttackUp,
-            int buffTurns = 0)
+            int buffTurns = 0,
+            int cooldownTurns = 0,
+            int linkCooldownTurns = 0,
+            SkillKind skillKind = SkillKind.Personal,
+            SkillEffectTargetType effectTarget = SkillEffectTargetType.Self)
         {
             return new SkillData
             {
@@ -3278,9 +3282,13 @@ namespace GameKari.Battle
                 SkillName = skillName,
                 Description = description,
                 TargetPattern = targetPattern,
+                SkillKind = skillKind,
+                CooldownTurns = cooldownTurns,
+                LinkCooldownTurns = linkCooldownTurns,
                 MpCost = mpCost,
                 Damage = damage,
                 EffectType = effectType,
+                EffectTarget = effectTarget,
                 BuffType = buffType,
                 BuffTurns = buffTurns
             };
@@ -3288,6 +3296,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
