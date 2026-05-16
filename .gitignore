@@ -36,7 +36,3 @@ Recordings/
 # Local patch scripts and backups
 *.ps1
 *.bak_*
-*.bak_*
-*.bak_fix_*
-*.bak_add_*
-*.bak_result_*
