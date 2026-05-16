@@ -25,6 +25,12 @@ namespace GameKari.Battle
         AllEnemies
     }
 
+    public enum SkillKind
+    {
+        Personal,
+        Link
+    }
+
     [System.Serializable]
     public class SkillData
     {
@@ -32,6 +38,9 @@ namespace GameKari.Battle
         public string SkillName;
         [TextArea] public string Description;
         public SkillTargetPattern TargetPattern;
+        public SkillKind SkillKind;
+        public int CooldownTurns;
+        public int LinkCooldownTurns;
         public int MpCost;
         public int Damage;
         public SkillEffectType EffectType;
@@ -40,6 +49,7 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
+
 
 
 
