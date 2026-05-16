@@ -37,12 +37,20 @@ namespace GameKari.Battle
         public Action<SkillData> OnSkillHovered;
         public Action OnHoverExit;
         public Action<BattleUnit> OnReserveClicked;
-        public Action<string> OnItemClicked;
+        public Action<ItemData> OnItemClicked;
 
         private BattleUnit _activeUnit;
         private List<BattleUnit> _reserves;
 
         private int _hoveredSkillIndex = -1;
+
+        private readonly ItemData _dummyPotion = new ItemData
+        {
+            ItemId = "potion",
+            ItemName = "Potion",
+            Description = "Heal the ally in front of the active unit.",
+            HealAmount = 20
+        };
 
         private void Awake()
         {
@@ -242,6 +250,20 @@ namespace GameKari.Battle
             return $"{description}\n{mpText}\n{damageText}\nNot enough MP. Current MP: {currentMp}";
         }
 
+        private string BuildItemDescription(ItemData item)
+        {
+            if (item == null)
+            {
+                return string.Empty;
+            }
+
+            string description = string.IsNullOrWhiteSpace(item.Description)
+                ? "-"
+                : item.Description;
+
+            return $"{description}\nHeal: {item.HealAmount}";
+        }
+
         private void ClearDescription()
         {
             if (descriptionText != null)
@@ -326,8 +348,28 @@ namespace GameKari.Battle
                 {
                     button.gameObject.SetActive(true);
                     button.interactable = true;
-                    SetButtonLabel(button, "Potion");
-                    button.onClick.AddListener(() => OnItemClicked?.Invoke("Potion"));
+                    SetButtonLabel(button, $"{_dummyPotion.ItemName} HP:{_dummyPotion.HealAmount}");
+                    button.onClick.AddListener(() => OnItemClicked?.Invoke(_dummyPotion));
+                    RemoveHoverEvents(button.gameObject);
+
+                    EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
+                    if (trigger == null)
+                    {
+                        trigger = button.gameObject.AddComponent<EventTrigger>();
+                    }
+
+                    AddHoverEvent(trigger, EventTriggerType.PointerEnter, () =>
+                    {
+                        if (descriptionText != null)
+                        {
+                            descriptionText.text = BuildItemDescription(_dummyPotion);
+                        }
+                    });
+
+                    AddHoverEvent(trigger, EventTriggerType.PointerExit, () =>
+                    {
+                        ClearDescription();
+                    });
                 }
                 else
                 {

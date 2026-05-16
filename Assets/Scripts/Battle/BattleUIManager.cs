@@ -569,9 +569,14 @@ namespace GameKari.Battle
             }
         }
 
-        private void HandleItemClicked(string itemId)
+        private void HandleItemClicked(ItemData item)
         {
             if (_battleEnded || _formationSettling)
+            {
+                return;
+            }
+
+            if (item == null)
             {
                 return;
             }
@@ -583,9 +588,12 @@ namespace GameKari.Battle
                 return;
             }
 
-            target.CurrentHP = Mathf.Min(target.CurrentHP + 20, target.Data.MaxHP);
-            ShowActionOverlay(itemId, _active.Name);
-            Debug.Log($"[Action] Item used (dummy): {itemId} -> {target.Name}");
+            int beforeHp = target.CurrentHP;
+            target.CurrentHP = Mathf.Min(target.CurrentHP + item.HealAmount, target.Data.MaxHP);
+            int healed = target.CurrentHP - beforeHp;
+
+            ShowActionOverlay(item.ItemName, _active.Name);
+            Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
             MarkActiveAsActed();
             RedrawBoard();
