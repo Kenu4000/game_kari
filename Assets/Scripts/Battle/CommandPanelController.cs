@@ -168,17 +168,7 @@ namespace GameKari.Battle
                 // 実際に使えるかどうかは BattleUIManager.HandleSkillClicked() 側で判定する。
                 button.interactable = true;
 
-                bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
-
-                string label = skill.MpCost > 0
-                    ? $"{skill.SkillName} MP:{skill.MpCost}"
-                    : skill.SkillName;
-
-                if (!hasEnoughMp)
-                {
-                    label += " ×";
-                }
-
+                string label = BuildSkillButtonLabel(skill);
                 SetButtonLabel(button, label);
 
                 button.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
@@ -223,26 +213,44 @@ namespace GameKari.Battle
                 return string.Empty;
             }
 
+            string description = string.IsNullOrWhiteSpace(skill.Description)
+                ? "-"
+                : skill.Description;
+
             string mpText = skill.MpCost > 0
                 ? $"MP Cost: {skill.MpCost}"
                 : "MP Cost: 0";
 
             string damageText = $"Damage: {skill.Damage}";
             string effectText = BuildSkillEffectDescription(skill);
-
-            string description = string.IsNullOrWhiteSpace(skill.Description)
-                ? "-"
-                : skill.Description;
+            string cooldownText = BuildSkillCooldownDescription(skill);
 
             bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
+            int currentMp = _activeUnit == null ? 0 : _activeUnit.CurrentMP;
 
-            if (hasEnoughMp)
+            var lines = new List<string>
             {
-                return $"{description}\n{mpText}\n{damageText}{effectText}";
+                description,
+                mpText,
+                damageText
+            };
+
+            if (!string.IsNullOrEmpty(effectText))
+            {
+                lines.Add(effectText);
             }
 
-            int currentMp = _activeUnit == null ? 0 : _activeUnit.CurrentMP;
-            return $"{description}\n{mpText}\n{damageText}{effectText}\nNot enough MP. Current MP: {currentMp}";
+            if (!string.IsNullOrEmpty(cooldownText))
+            {
+                lines.Add(cooldownText);
+            }
+
+            if (!hasEnoughMp)
+            {
+                lines.Add($"Not enough MP. Current MP: {currentMp}");
+            }
+
+            return string.Join(System.Environment.NewLine, lines);
         }
 
         private string BuildSkillEffectDescription(SkillData skill)
@@ -255,11 +263,123 @@ namespace GameKari.Battle
             switch (skill.EffectType)
             {
                 case SkillEffectType.ApplyBuff:
-                    return $"\nEffect: {skill.BuffType} {skill.BuffTurns} turns";
+                    return $"Effect: {skill.BuffType} {skill.BuffTurns} turns";
 
                 default:
                     return string.Empty;
             }
+        }
+
+        private string BuildSkillCooldownDescription(SkillData skill)
+        {
+            if (skill == null)
+            {
+                return string.Empty;
+            }
+
+            int skillCooldown = GetSkillCooldownRemaining(skill);
+            if (skillCooldown > 0)
+            {
+                return $"Cooldown: WAIT 残り{skillCooldown}";
+            }
+
+            if (IsLinkSkillBlocked(skill))
+            {
+                return $"LinkCooldown: 残り{GetLinkCooldownRemaining()}";
+            }
+
+            return string.Empty;
+        }
+
+        private string BuildSkillButtonLabel(SkillData skill)
+        {
+            if (skill == null)
+            {
+                return string.Empty;
+            }
+
+            string label = skill.MpCost > 0
+                ? $"{skill.SkillName} MP:{skill.MpCost}"
+                : skill.SkillName;
+
+            int skillCooldown = GetSkillCooldownRemaining(skill);
+            if (skillCooldown > 0)
+            {
+                label += $" WAIT:残り{skillCooldown}";
+            }
+            else if (IsLinkSkillBlocked(skill))
+            {
+                label += $" LINK:残り{GetLinkCooldownRemaining()}";
+            }
+
+            bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
+            if (!hasEnoughMp)
+            {
+                label += " ×";
+            }
+
+            return label;
+        }
+
+        private int GetSkillCooldownRemaining(SkillData skill)
+        {
+            return GetSkillCooldownRemaining(_activeUnit, skill);
+        }
+
+        private int GetSkillCooldownRemaining(BattleUnit unit, SkillData skill)
+        {
+            SkillCooldownState state = FindSkillCooldownState(unit, skill);
+            return state == null ? 0 : Mathf.Max(0, state.RemainingTurns);
+        }
+
+        private SkillCooldownState FindSkillCooldownState(BattleUnit unit, SkillData skill)
+        {
+            if (unit == null || skill == null || unit.SkillCooldowns == null)
+            {
+                return null;
+            }
+
+            string key = GetSkillCooldownKey(skill);
+            if (string.IsNullOrEmpty(key))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < unit.SkillCooldowns.Count; i++)
+            {
+                SkillCooldownState state = unit.SkillCooldowns[i];
+                if (state != null && state.SkillId == key)
+                {
+                    return state;
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetSkillCooldownKey(SkillData skill)
+        {
+            return skill == null ? string.Empty : skill.SkillId ?? string.Empty;
+        }
+
+        private int GetLinkCooldownRemaining()
+        {
+            if (_activeUnit == null)
+            {
+                return 0;
+            }
+
+            return Mathf.Max(0, _activeUnit.LinkCooldownRemaining);
+        }
+
+        private bool IsLinkSkillBlocked(SkillData skill)
+        {
+            if (skill == null || _activeUnit == null)
+            {
+                return false;
+            }
+
+            return skill.SkillKind == SkillKind.Link && GetLinkCooldownRemaining() > 0;
         }
 
         private string BuildItemDescription(ItemData item)
