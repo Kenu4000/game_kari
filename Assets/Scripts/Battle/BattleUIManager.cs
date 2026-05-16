@@ -563,6 +563,28 @@ namespace GameKari.Battle
 
             Debug.Log($"[CT] {unit.Name}: LinkCooldown {unit.LinkCooldownRemaining} remaining.");
         }
+        private bool CanUseSkillWithCooldowns(BattleUnit user, SkillData skill)
+        {
+            if (user == null || skill == null)
+            {
+                return false;
+            }
+
+            int skillCooldown = GetSkillCooldownRemaining(user, skill);
+            if (skillCooldown > 0)
+            {
+                Debug.Log($"[CT] Skill blocked: {user.Name} cannot use {skill.SkillName}. CT {skillCooldown} remaining.");
+                return false;
+            }
+
+            if (IsLinkSkillBlocked(user, skill))
+            {
+                Debug.Log($"[CT] Link skill blocked: {user.Name} cannot use {skill.SkillName}. LinkCooldown {GetLinkCooldownRemaining(user)} remaining.");
+                return false;
+            }
+
+            return true;
+        }
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null)
@@ -659,6 +681,11 @@ namespace GameKari.Battle
         private void HandleSkillClicked(SkillData skill)
         {
             if (!CanAcceptPlayerCommand())
+            {
+                return;
+            }
+
+            if (!CanUseSkillWithCooldowns(_active, skill))
             {
                 return;
             }
@@ -3356,6 +3383,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
