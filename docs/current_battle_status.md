@@ -9,6 +9,17 @@
 - `SkillData` now stores `MpCost` and `Damage`.
 - Skill damage is routed through `BattleUIManager.CalculateDamage()`.
 - `CalculateDamage()` currently returns the base damage unchanged and is reserved for future buff/debuff modifiers.
+- `BattleUIManager` has base buff/debuff helper methods:
+  - `ApplyBuff()`
+  - `FindBuff()`
+  - `GetOppositeBuffType()`
+  - `TickBuffsAtTurnStart()`
+  - `TickBuffsInUnits()`
+  - `TickBuffs()`
+- Buff ticking is called from `StartNextTurn()` before rebuilding turn order.
+- Buffs are not yet applied from skills.
+- Buffs do not yet affect damage.
+- Buff UI is not yet implemented.
 - `ItemData` now stores `HealAmount` and `Count`.
 - Dummy Potion starts at count 3.
 - Potion use decrements count only after a valid forward ally target is found.
