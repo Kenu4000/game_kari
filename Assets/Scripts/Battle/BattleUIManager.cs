@@ -45,6 +45,7 @@ namespace GameKari.Battle
 
         private readonly List<BattleUnit> _enemyReserves = new();
         private readonly Dictionary<BattleUnit, EnemyActionData> _enemyActions = new();
+        private readonly Dictionary<BattleUnit, EnemyActionData> _selectedEnemyActions = new();
 
         private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
         private readonly HashSet<BattleUnit> _actedUnits = new();
@@ -196,6 +197,7 @@ namespace GameKari.Battle
             _reserves.Clear();
             _enemyReserves.Clear();
             _enemyActions.Clear();
+            _selectedEnemyActions.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
         }
@@ -280,6 +282,57 @@ namespace GameKari.Battle
             };
         }
 
+        private EnemyActionData SelectEnemyAction(BattleUnit enemy)
+        {
+            return GetEnemyAction(enemy);
+        }
+
+        private void EnsureSelectedEnemyActionsForPreview()
+        {
+            for (int i = 0; i < _enemies.Count; i++)
+            {
+                BattleUnit enemy = _enemies[i];
+
+                if (enemy == null || enemy.IsDead || _actedUnits.Contains(enemy))
+                {
+                    continue;
+                }
+
+                if (_selectedEnemyActions.ContainsKey(enemy))
+                {
+                    continue;
+                }
+
+                _selectedEnemyActions[enemy] = SelectEnemyAction(enemy);
+            }
+        }
+
+        private EnemyActionData GetSelectedEnemyAction(BattleUnit enemy)
+        {
+            if (enemy == null)
+            {
+                return null;
+            }
+
+            if (_selectedEnemyActions.TryGetValue(enemy, out EnemyActionData selectedAction))
+            {
+                return selectedAction;
+            }
+
+            EnemyActionData action = SelectEnemyAction(enemy);
+            _selectedEnemyActions[enemy] = action;
+            return action;
+        }
+
+        private void ClearSelectedEnemyAction(BattleUnit enemy)
+        {
+            if (enemy == null)
+            {
+                return;
+            }
+
+            _selectedEnemyActions.Remove(enemy);
+        }
         private void SetupInitialTurnState(BattleUnit fallbackActive)
         {
             RebuildTurnOrder();
@@ -343,6 +396,7 @@ namespace GameKari.Battle
 
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
+            EnsureSelectedEnemyActionsForPreview();
             HideActionOverlay();
             SetCommandUiVisible(true);
 
@@ -953,10 +1007,11 @@ namespace GameKari.Battle
 
             EnterResolvingAction();
 
-            EnemyActionData action = GetEnemyAction(enemy);
+            EnemyActionData action = GetSelectedEnemyAction(enemy);
 
             _actedUnits.Add(enemy);
             ExecuteEnemyAction(enemy, action);
+            ClearSelectedEnemyAction(enemy);
             RedrawBoard();
 
             if (actionResolveDelaySeconds > 0f)
@@ -1290,6 +1345,8 @@ namespace GameKari.Battle
             }
 
             CompactFrontlineIfEmpty(true);
+
+            _selectedEnemyActions.Clear();
 
             TickBuffsAtTurnStart();
 
@@ -2293,6 +2350,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
