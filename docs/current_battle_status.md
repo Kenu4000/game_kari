@@ -13,6 +13,7 @@
 - Skill4 is currently Focus instead of Wave.
 - Focus costs 6 MP, does 0 damage, targets Self, and applies AttackUp for 2 turns.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, and expiry behave as expected.
+- Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
 - Skill descriptions show effect text for ApplyBuff skills.
 - ItemData stores HealAmount and Count.
@@ -47,6 +48,15 @@
 - Player Skill and Item actions use actionResolveDelaySeconds before advancing to the next actor.
 - Enemy actions also use ResolvingAction and actionResolveDelaySeconds, so consecutive enemy actions are shown one by one.
 - Overlay visibility is currently controlled by scene-object name lookup for TopActionPanel and BossNamePlate.
+
+## Skill target separation status
+
+- Skill target handling is now separated into damage targets, effect targets, and animation targets.
+- GetSkillDamageTargetPositions() is used for enemy damage cells only.
+- GetSkillEffectTargets() is used for buff/effect recipient units.
+- GetSkillAnimationTargetPositions() is used for action flash cells.
+- Self-target skills are effect/animation targets, not enemy damage targets.
+- Current ApplyBuff skills still resolve to the active user as the effect target unless more detailed ally/enemy effect targeting is added later.
 
 ## Action animation status
 
