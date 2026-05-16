@@ -504,6 +504,65 @@ namespace GameKari.Battle
                 && GetLinkCooldownRemaining(unit) > 0;
         }
 
+        private void TickSkillCooldownsAtTurnStart(BattleUnit unit)
+        {
+            if (unit == null || unit.IsDead)
+            {
+                return;
+            }
+
+            TickSkillCooldowns(unit);
+            TickLinkCooldown(unit);
+        }
+
+        private void TickSkillCooldowns(BattleUnit unit)
+        {
+            if (unit == null || unit.SkillCooldowns == null || unit.SkillCooldowns.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = unit.SkillCooldowns.Count - 1; i >= 0; i--)
+            {
+                SkillCooldownState state = unit.SkillCooldowns[i];
+                if (state == null)
+                {
+                    unit.SkillCooldowns.RemoveAt(i);
+                    continue;
+                }
+
+                state.RemainingTurns--;
+
+                if (state.RemainingTurns <= 0)
+                {
+                    Debug.Log($"[CT] {unit.Name}: {state.SkillId} is ready.");
+                    unit.SkillCooldowns.RemoveAt(i);
+                }
+                else
+                {
+                    Debug.Log($"[CT] {unit.Name}: {state.SkillId} CT {state.RemainingTurns} remaining.");
+                }
+            }
+        }
+
+        private void TickLinkCooldown(BattleUnit unit)
+        {
+            if (unit == null || unit.LinkCooldownRemaining <= 0)
+            {
+                return;
+            }
+
+            unit.LinkCooldownRemaining--;
+
+            if (unit.LinkCooldownRemaining <= 0)
+            {
+                unit.LinkCooldownRemaining = 0;
+                Debug.Log($"[CT] {unit.Name}: LinkCooldown ready.");
+                return;
+            }
+
+            Debug.Log($"[CT] {unit.Name}: LinkCooldown {unit.LinkCooldownRemaining} remaining.");
+        }
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null)
@@ -576,6 +635,7 @@ namespace GameKari.Battle
 
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
+            TickSkillCooldownsAtTurnStart(activeUnit);
             EnsureSelectedEnemyActionsForPreview();
             UpdateEnemyActionPreview();
             RedrawEnemyActionPreviewHighlights();
@@ -3296,6 +3356,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
