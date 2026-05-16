@@ -50,6 +50,7 @@ namespace GameKari.Battle
         private BattleUnit _active;
         private SkillData _hoveredSkill;
         private bool _battleEnded;
+        private BattlePhase _phase;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
 
         private bool _formationSettling;
@@ -65,6 +66,13 @@ namespace GameKari.Battle
         private const float EnemyStatusSlotHeight = 135f;
         private const float EnemyStatusSlotSpacing = 16f;
         private const float EnemyStatusSlotWidth = 240f;
+
+        private enum BattlePhase
+        {
+            CommandSelect,
+            ResolvingAction,
+            BattleEnded
+        }
 
         private enum EnemyTargetPattern
         {
@@ -155,6 +163,7 @@ namespace GameKari.Battle
         private void BootstrapDummyBattle()
         {
             _battleEnded = false;
+            _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
             _hoveredSkill = null;
 
@@ -277,17 +286,75 @@ namespace GameKari.Battle
             rotateButton.onClick.AddListener(HandleRotateClicked);
         }
 
-        private void HandleSkillClicked(SkillData skill)
+        private bool CanAcceptPlayerCommand()
         {
-            if (_battleEnded || _formationSettling)
+            return !_battleEnded
+                && _phase == BattlePhase.CommandSelect
+                && !_formationSettling;
+        }
+
+        private bool CanAcceptRotateCommand()
+        {
+            return !_battleEnded
+                && _phase == BattlePhase.CommandSelect;
+        }
+
+        private void EnterResolvingAction()
+        {
+            if (_battleEnded)
             {
                 return;
             }
+
+            _phase = BattlePhase.ResolvingAction;
+            ClearTargetPreview();
+
+            if (commandPanel != null)
+            {
+                commandPanel.SetInteractable(false);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.interactable = false;
+            }
+        }
+
+        private void EnterCommandSelect(BattleUnit activeUnit)
+        {
+            if (_battleEnded)
+            {
+                return;
+            }
+
+            _phase = BattlePhase.CommandSelect;
+            _active = activeUnit;
+
+            if (commandPanel != null)
+            {
+                commandPanel.Setup(_active, _reserves);
+                commandPanel.SetInteractable(true);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.interactable = true;
+            }
+        }
+        private void HandleSkillClicked(SkillData skill)
+        {
+            if (!CanAcceptPlayerCommand())
+            {
+                return;
+            }
+
             if (_active.CurrentMP < skill.MpCost)
             {
                 Debug.Log($"[Action] Skill failed: {_active.Name} does not have enough MP for {skill.SkillName}. MP: {_active.CurrentMP}/{skill.MpCost}");
                 return;
             }
+
+            EnterResolvingAction();
 
             _active.CurrentMP -= skill.MpCost;
 
@@ -725,7 +792,7 @@ namespace GameKari.Battle
 
         private void HandleSwap(BattleUnit reserve)
         {
-            if (_battleEnded || _formationSettling)
+            if (!CanAcceptPlayerCommand())
             {
                 return;
             }
@@ -745,9 +812,7 @@ namespace GameKari.Battle
             _reserves.Remove(reserve);
             _reserves.Add(previousActive);
 
-            _active = reserve;
-
-            commandPanel.Setup(_active, _reserves);
+            EnterCommandSelect(reserve);
             RedrawBoard();
 
             Debug.Log("[Action] Swapped active unit with reserve (no action consumption). ");
@@ -794,7 +859,7 @@ namespace GameKari.Battle
 
         private void HandleItemClicked(ItemData item)
         {
-            if (_battleEnded || _formationSettling)
+            if (!CanAcceptPlayerCommand())
             {
                 return;
             }
@@ -816,6 +881,8 @@ namespace GameKari.Battle
                 Debug.Log("[Item] No forward ally target. Item cannot be used.");
                 return;
             }
+
+            EnterResolvingAction();
 
             int beforeHp = target.CurrentHP;
             target.CurrentHP = Mathf.Min(target.CurrentHP + item.HealAmount, target.Data.MaxHP);
@@ -866,8 +933,7 @@ namespace GameKari.Battle
 
                 if (_allies.Contains(nextUnit))
                 {
-                    _active = nextUnit;
-                    commandPanel.Setup(_active, _reserves);
+                    EnterCommandSelect(nextUnit);
                     RedrawBoard();
                     Debug.Log($"[Turn] Next active ally: {_active.Name}");
                     return;
@@ -1107,6 +1173,7 @@ namespace GameKari.Battle
         private void EndBattle(string result)
         {
             _battleEnded = true;
+            _phase = BattlePhase.BattleEnded;
             ClearTargetPreview();
 
             if (commandPanel != null)
@@ -1189,8 +1256,7 @@ namespace GameKari.Battle
             BattleUnit nextAlly = FindNextUnactedAlly();
             if (nextAlly != null)
             {
-                _active = nextAlly;
-                commandPanel.Setup(_active, _reserves);
+                EnterCommandSelect(nextAlly);
             }
 
             RedrawBoard();
@@ -1209,7 +1275,7 @@ namespace GameKari.Battle
 
         private void HandleRotateClicked()
         {
-            if (_battleEnded)
+            if (!CanAcceptRotateCommand())
             {
                 return;
             }
@@ -1809,6 +1875,9 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
 
 
 
