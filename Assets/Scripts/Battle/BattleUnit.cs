@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace GameKari.Battle
 {
@@ -18,6 +18,13 @@ namespace GameKari.Battle
     }
 
     [System.Serializable]
+    public class SkillCooldownState
+    {
+        public string SkillId;
+        public int RemainingTurns;
+    }
+
+    [System.Serializable]
     public class BattleUnit
     {
         public CharacterData Data;
@@ -28,6 +35,8 @@ namespace GameKari.Battle
         public GridPos GridPos;
         public readonly List<SkillData> Skills = new();
         public readonly List<BuffState> Buffs = new();
+        public readonly List<SkillCooldownState> SkillCooldowns = new();
+        public int LinkCooldownRemaining;
 
         public BattleUnit(CharacterData data)
         {
@@ -39,3 +48,4 @@ namespace GameKari.Battle
         public string Name => Data.DisplayName;
     }
 }
+
