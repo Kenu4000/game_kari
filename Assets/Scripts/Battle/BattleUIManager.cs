@@ -53,6 +53,8 @@ namespace GameKari.Battle
         private GameObject _resultPanelObject;
         private TMP_Text _resultTitleText;
         private TMP_Text _resultSubText;
+        private Button _resultReturnButton;
+        private TMP_Text _resultReturnButtonText;
 
         private bool _battleEnded;
         private BattlePhase _phase;
@@ -1580,6 +1582,7 @@ namespace GameKari.Battle
                     }
                 }
 
+                TryBindExistingResultReturnButton();
                 return;
             }
 
@@ -1622,6 +1625,90 @@ namespace GameKari.Battle
             subRect.anchorMax = new Vector2(1f, 0.5f);
             subRect.offsetMin = Vector2.zero;
             subRect.offsetMax = Vector2.zero;
+
+            CreateResultReturnButton();
+        }
+
+        private void TryBindExistingResultReturnButton()
+        {
+            if (_resultPanelObject == null)
+            {
+                return;
+            }
+
+            Transform buttonTransform = _resultPanelObject.transform.Find("ReturnButton");
+            if (buttonTransform == null)
+            {
+                CreateResultReturnButton();
+                return;
+            }
+
+            _resultReturnButton = buttonTransform.GetComponent<Button>();
+            _resultReturnButtonText = buttonTransform.GetComponentInChildren<TMP_Text>(true);
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.onClick.RemoveListener(HandleResultReturnClicked);
+                _resultReturnButton.onClick.AddListener(HandleResultReturnClicked);
+            }
+        }
+
+        private void CreateResultReturnButton()
+        {
+            if (_resultPanelObject == null)
+            {
+                return;
+            }
+
+            Transform existing = _resultPanelObject.transform.Find("ReturnButton");
+            if (existing != null)
+            {
+                _resultReturnButton = existing.GetComponent<Button>();
+                _resultReturnButtonText = existing.GetComponentInChildren<TMP_Text>(true);
+
+                if (_resultReturnButton != null)
+                {
+                    _resultReturnButton.onClick.RemoveListener(HandleResultReturnClicked);
+                    _resultReturnButton.onClick.AddListener(HandleResultReturnClicked);
+                }
+
+                return;
+            }
+
+            GameObject buttonObject = new GameObject("ReturnButton");
+            buttonObject.transform.SetParent(_resultPanelObject.transform, false);
+
+            RectTransform buttonRect = buttonObject.AddComponent<RectTransform>();
+            buttonRect.anchorMin = new Vector2(0.25f, 0.08f);
+            buttonRect.anchorMax = new Vector2(0.75f, 0.22f);
+            buttonRect.offsetMin = Vector2.zero;
+            buttonRect.offsetMax = Vector2.zero;
+
+            Image buttonImage = buttonObject.AddComponent<Image>();
+            buttonImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+
+            _resultReturnButton = buttonObject.AddComponent<Button>();
+            _resultReturnButton.onClick.AddListener(HandleResultReturnClicked);
+
+            GameObject textObject = new GameObject("Text");
+            textObject.transform.SetParent(buttonObject.transform, false);
+
+            RectTransform textRect = textObject.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            _resultReturnButtonText = textObject.AddComponent<TextMeshProUGUI>();
+            _resultReturnButtonText.alignment = TextAlignmentOptions.Center;
+            _resultReturnButtonText.fontSize = 24f;
+            _resultReturnButtonText.raycastTarget = false;
+            _resultReturnButtonText.text = "Return";
+        }
+
+        private void HandleResultReturnClicked()
+        {
+            Debug.Log("[Result] Return clicked.");
         }
 
         private void ShowResultPanel(string result)
@@ -2169,6 +2256,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
