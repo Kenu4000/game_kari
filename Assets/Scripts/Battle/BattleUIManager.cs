@@ -8,6 +8,7 @@ namespace GameKari.Battle
 {
     public class BattleUIManager : MonoBehaviour
     {
+        // Serialized references
         [Header("Controllers")]
         [SerializeField] private CommandPanelController commandPanel;
         [SerializeField] private Button rotateButton;
@@ -35,6 +36,7 @@ namespace GameKari.Battle
         [SerializeField] private Transform enemyStatusPanel;
         [SerializeField] private Transform allyStatusPanel;
 
+        // Runtime state
         private BattleGrid _grid;
         private FormationController _formation;
         private TurnOrderManager _turnOrder;
@@ -76,6 +78,7 @@ namespace GameKari.Battle
         private bool _formationSettling;
         private float _lastRotateTime;
 
+        // Constants and phase types
         private static readonly Color NormalStatusColor = new Color(0.9f, 0.93f, 0.96f, 1f);
         private static readonly Color ActiveStatusColor = new Color(0.7f, 0.85f, 1f, 1f);
         private static readonly Color NormalCellColor = new Color(0.95f, 0.96f, 0.98f, 1f);
@@ -125,6 +128,7 @@ namespace GameKari.Battle
             public GridPos Position;
         }
 
+        // Battle setup
         private void Start()
         {
             BootstrapDummyBattle();
@@ -274,6 +278,7 @@ namespace GameKari.Battle
             SetEnemyAction(enemyReserve, "Strike", 60, EnemyTargetPattern.SameGridPosAlly);
         }
 
+        // Enemy action selection
         private void SetEnemyAction(BattleUnit enemy, string actionName, int damage, EnemyTargetPattern targetPattern)
         {
             if (enemy == null)
@@ -386,6 +391,7 @@ namespace GameKari.Battle
                 && _phase == BattlePhase.CommandSelect;
         }
 
+        // Phase transitions
         private void EnterResolvingAction()
         {
             if (_battleEnded)
@@ -438,6 +444,7 @@ namespace GameKari.Battle
                 rotateButton.interactable = true;
             }
         }
+        // Player actions
         private void HandleSkillClicked(SkillData skill)
         {
             if (!CanAcceptPlayerCommand())
@@ -472,6 +479,7 @@ namespace GameKari.Battle
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
 
+        // Skill effects and damage
         private void ApplySkillDamage(SkillData skill)
         {
             if (skill == null)
@@ -591,6 +599,7 @@ namespace GameKari.Battle
             return Mathf.Max(0, finalDamage);
         }
 
+        // Buff handling
         private bool HasBuff(BattleUnit unit, BuffType type)
         {
             return FindBuff(unit, type) != null;
@@ -734,6 +743,7 @@ namespace GameKari.Battle
             return false;
         }
 
+        // KO and replacement handling
         private void ResolveDefeatedEnemies(List<DefeatedEnemyInfo> defeatedEnemies)
         {
             if (defeatedEnemies == null || defeatedEnemies.Count == 0)
@@ -837,6 +847,7 @@ namespace GameKari.Battle
         }
 
 
+        // Enemy action preview
         private void RedrawEnemyActionPreviewHighlights()
         {
             ResetEnemyActionPreviewHighlights();
@@ -1374,6 +1385,7 @@ namespace GameKari.Battle
                     return null;
             }
         }
+        // Action animation and value popups
         private IEnumerator PlayPendingActionFlashOrDelay()
         {
             float duration = Mathf.Max(0f, actionResolveDelaySeconds);
@@ -1475,6 +1487,7 @@ namespace GameKari.Battle
         }
         
         
+        // Turn progression
         private IEnumerator FinishPlayerActionAfterDelay()
         {
             yield return PlayPendingActionFlashOrDelay();
@@ -2273,6 +2286,7 @@ namespace GameKari.Battle
             }
         }
         
+        // Result UI
         private void EnsureResultPanel()
         {
             if (_resultPanelObject != null)
@@ -2512,6 +2526,7 @@ namespace GameKari.Battle
             }
         }
 
+        // Board redraw and status UI
         private void RedrawBoard()
         {
             // Enemy side is displayed mirrored on screen.
@@ -2879,6 +2894,7 @@ namespace GameKari.Battle
 
             return string.Join("\n", lines);
         }
+        // Utility
         private static void SetLabel(Transform root, string childName, string text)
         {
             TMP_Text label = root.Find(childName)?.GetComponent<TMP_Text>();
