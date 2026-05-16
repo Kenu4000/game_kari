@@ -54,7 +54,8 @@
 - CommandSelect prepares selected enemy actions for preview.
 - EnemyActionPreviewPanel is created automatically under Canvas if it does not already exist.
 - EnemyActionPreviewPanel shows unacted enemies as enemy name, action name, and target summary.
-- The board highlight shows only the next unacted enemy's target, not every enemy target at once.
+- The next unacted enemy line is marked with `NEXT >`.
+- The board highlight shows only the `NEXT >` enemy's target, not every enemy target at once.
 - Enemy action preview highlights are red-tinted ally board cells.
 - Enemy action preview highlights are redrawn at the end of RedrawBoard(), so they appear without requiring Rotate.
 - Skill hover still uses the enemy board target preview separately.
