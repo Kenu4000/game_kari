@@ -327,6 +327,9 @@ namespace GameKari.Battle
                     DamageEnemyAt(GridPos.FrontBottom, skill.Damage, defeatedEnemies);
                     DamageEnemyAt(GridPos.BackBottom, skill.Damage, defeatedEnemies);
                     break;
+
+                case SkillTargetPattern.Self:
+                    break;
             }
 
             ResolveDefeatedEnemies(defeatedEnemies);
@@ -1698,21 +1701,27 @@ namespace GameKari.Battle
 
             unit.Skills.Add(CreateSkill(
                 "s4",
-                "Wave",
-                "Attack all enemies.",
-                SkillTargetPattern.AllEnemies,
-                12,
-                10
+                "Focus",
+                "Apply AttackUp to self.",
+                SkillTargetPattern.Self,
+                6,
+                0,
+                SkillEffectType.ApplyBuff,
+                BuffType.AttackUp,
+                2
             ));
         }
 
         private static SkillData CreateSkill(
-    string skillId,
-    string skillName,
-    string description,
-    SkillTargetPattern targetPattern,
-    int mpCost,
-    int damage)
+            string skillId,
+            string skillName,
+            string description,
+            SkillTargetPattern targetPattern,
+            int mpCost,
+            int damage,
+            SkillEffectType effectType = SkillEffectType.None,
+            BuffType buffType = BuffType.AttackUp,
+            int buffTurns = 0)
         {
             return new SkillData
             {
@@ -1721,12 +1730,16 @@ namespace GameKari.Battle
                 Description = description,
                 TargetPattern = targetPattern,
                 MpCost = mpCost,
-                Damage = damage
+                Damage = damage,
+                EffectType = effectType,
+                BuffType = buffType,
+                BuffTurns = buffTurns
             };
         }
 
     }
 }
+
 
 
 

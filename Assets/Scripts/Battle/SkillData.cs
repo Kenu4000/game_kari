@@ -7,7 +7,8 @@ namespace GameKari.Battle
         FrontTopEnemy,
         FrontBottomEnemy,
         BothFrontEnemies,
-        AllEnemies
+        AllEnemies,
+        Self
     }
 
     public enum SkillEffectType
@@ -30,4 +31,5 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
+
 
