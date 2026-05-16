@@ -563,6 +563,7 @@ namespace GameKari.Battle
 
             Debug.Log($"[CT] {unit.Name}: LinkCooldown {unit.LinkCooldownRemaining} remaining.");
         }
+
         private bool CanUseSkillWithCooldowns(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null)
@@ -585,6 +586,7 @@ namespace GameKari.Battle
 
             return true;
         }
+        
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null)
