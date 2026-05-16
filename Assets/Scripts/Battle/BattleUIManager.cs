@@ -953,8 +953,10 @@ namespace GameKari.Battle
 
             EnterResolvingAction();
 
+            EnemyActionData action = GetEnemyAction(enemy);
+
             _actedUnits.Add(enemy);
-            ApplyDummyEnemyAction(enemy);
+            ExecuteEnemyAction(enemy, action);
             RedrawBoard();
 
             if (actionResolveDelaySeconds > 0f)
@@ -1054,14 +1056,12 @@ namespace GameKari.Battle
         }
 
 
-        private void ApplyDummyEnemyAction(BattleUnit enemy)
+        private void ExecuteEnemyAction(BattleUnit enemy, EnemyActionData action)
         {
-            if (enemy == null || enemy.IsDead || _battleEnded)
+            if (enemy == null || enemy.IsDead || action == null || _battleEnded)
             {
                 return;
             }
-
-            EnemyActionData action = GetEnemyAction(enemy);
 
             ShowActionOverlay(action.ActionName, enemy.Name);
 
@@ -2293,6 +2293,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
