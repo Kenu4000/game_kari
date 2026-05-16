@@ -97,6 +97,8 @@ namespace GameKari.Battle
 
         private void Update()
         {
+            HandleDebugBuffHotkeys();
+
             if (!_formationSettling)
             {
                 return;
@@ -108,6 +110,35 @@ namespace GameKari.Battle
             }
 
             ConfirmFormation();
+        }
+        private void HandleDebugBuffHotkeys()
+        {
+#if UNITY_EDITOR
+            if (_battleEnded || _active == null)
+            {
+                return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                ApplyBuff(_active, BuffType.AttackUp, 2);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                ApplyBuff(_active, BuffType.AttackDown, 2);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                ApplyBuff(_active, BuffType.DefenseUp, 2);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                ApplyBuff(_active, BuffType.DefenseDown, 2);
+            }
+#endif
         }
 
         private void BootstrapDummyBattle()
@@ -1678,6 +1709,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
