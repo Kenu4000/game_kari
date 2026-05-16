@@ -50,6 +50,9 @@ namespace GameKari.Battle
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
         private SkillData _hoveredSkill;
+        private GameObject _resultPanelObject;
+        private TMP_Text _resultTitleText;
+        private TMP_Text _resultSubText;
 
         private bool _battleEnded;
         private BattlePhase _phase;
@@ -103,8 +106,10 @@ namespace GameKari.Battle
         {
             BootstrapDummyBattle();
             BindUI();
+            EnsureResultPanel();
             RedrawBoard();
             HideActionOverlay();
+            HideResultPanel();
         }
 
         private void Update()
@@ -1217,18 +1222,8 @@ namespace GameKari.Battle
             _phase = BattlePhase.BattleEnded;
             ClearTargetPreview();
             SetCommandUiVisible(false);
-            SetActionOverlayVisible(true);
-
-            SetCommandUiVisible(false);
-
-            SetCommandUiVisible(false);
-
-            if (commandPanel != null)
-            {
-                commandPanel.SetInteractable(false);
-            }
-
-            ShowActionOverlay(result, "Battle End");
+            HideActionOverlay();
+            ShowResultPanel(result);
             Debug.Log($"[Battle] {result}");
         }
 
@@ -1544,6 +1539,120 @@ namespace GameKari.Battle
             }
         }
 
+        private void EnsureResultPanel()
+        {
+            if (_resultPanelObject != null)
+            {
+                return;
+            }
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            if (canvas == null && commandPanel != null)
+            {
+                canvas = commandPanel.GetComponentInParent<Canvas>();
+            }
+
+            if (canvas == null)
+            {
+                return;
+            }
+
+            GameObject existing = FindUiGameObjectByName("ResultPanel");
+            if (existing != null)
+            {
+                _resultPanelObject = existing;
+                TMP_Text[] labels = _resultPanelObject.GetComponentsInChildren<TMP_Text>(true);
+                for (int i = 0; i < labels.Length; i++)
+                {
+                    if (labels[i] == null)
+                    {
+                        continue;
+                    }
+
+                    string lowerName = labels[i].name.ToLowerInvariant();
+                    if (lowerName.Contains("title"))
+                    {
+                        _resultTitleText = labels[i];
+                    }
+                    else if (lowerName.Contains("sub"))
+                    {
+                        _resultSubText = labels[i];
+                    }
+                }
+
+                return;
+            }
+
+            _resultPanelObject = new GameObject("ResultPanel");
+            _resultPanelObject.transform.SetParent(canvas.transform, false);
+
+            RectTransform panelRect = _resultPanelObject.AddComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.35f, 0.35f);
+            panelRect.anchorMax = new Vector2(0.65f, 0.65f);
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            Image panelImage = _resultPanelObject.AddComponent<Image>();
+            panelImage.color = new Color(0f, 0f, 0f, 0.78f);
+
+            GameObject titleObject = new GameObject("ResultTitle");
+            titleObject.transform.SetParent(_resultPanelObject.transform, false);
+
+            _resultTitleText = titleObject.AddComponent<TextMeshProUGUI>();
+            _resultTitleText.alignment = TextAlignmentOptions.Center;
+            _resultTitleText.fontSize = 42f;
+            _resultTitleText.raycastTarget = false;
+
+            RectTransform titleRect = titleObject.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0f, 0.55f);
+            titleRect.anchorMax = new Vector2(1f, 0.85f);
+            titleRect.offsetMin = Vector2.zero;
+            titleRect.offsetMax = Vector2.zero;
+
+            GameObject subObject = new GameObject("ResultSubText");
+            subObject.transform.SetParent(_resultPanelObject.transform, false);
+
+            _resultSubText = subObject.AddComponent<TextMeshProUGUI>();
+            _resultSubText.alignment = TextAlignmentOptions.Center;
+            _resultSubText.fontSize = 24f;
+            _resultSubText.raycastTarget = false;
+
+            RectTransform subRect = subObject.GetComponent<RectTransform>();
+            subRect.anchorMin = new Vector2(0f, 0.25f);
+            subRect.anchorMax = new Vector2(1f, 0.5f);
+            subRect.offsetMin = Vector2.zero;
+            subRect.offsetMax = Vector2.zero;
+        }
+
+        private void ShowResultPanel(string result)
+        {
+            EnsureResultPanel();
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(true);
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.text = result;
+            }
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.text = "Battle End";
+            }
+        }
+
+        private void HideResultPanel()
+        {
+            EnsureResultPanel();
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(false);
+            }
+        }
         private void RedrawBoard()
         {
             // Enemy side is displayed mirrored on screen.
@@ -2060,6 +2169,9 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
 
 
 
