@@ -58,6 +58,8 @@ namespace GameKari.Battle
         private TMP_Text _resultReturnButtonText;
         private GameObject _enemyActionPreviewPanelObject;
         private TMP_Text _enemyActionPreviewText;
+        private readonly List<GridPos> _pendingActionFlashTargets = new();
+        private bool _pendingActionFlashIsAllyBoard;
 
         private bool _battleEnded;
         private BattlePhase _phase;
@@ -73,6 +75,7 @@ namespace GameKari.Battle
         private static readonly Color ActiveCellColor = new Color(0.7f, 0.88f, 1f, 1f);
         private static readonly Color TargetPreviewCellColor = new Color(1f, 0.92f, 0.55f, 1f);
         private static readonly Color EnemyActionPreviewCellColor = new Color(1f, 0.65f, 0.65f, 1f);
+        private static readonly Color ActionFlashCellColor = new Color(1f, 1f, 1f, 1f);
 
         private const float EnemyStatusPanelVerticalPadding = 24f;
         private const float EnemyStatusSlotHeight = 135f;
@@ -439,6 +442,7 @@ namespace GameKari.Battle
             _active.CurrentMP -= skill.MpCost;
 
             ShowActionOverlay(skill.SkillName, _active.Name);
+            PrepareSkillActionFlashTargets(skill);
             Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}. MP: {_active.CurrentMP}/{_active.Data.MaxMP}");
 
             ApplySkillDamage(skill);
@@ -1068,17 +1072,209 @@ namespace GameKari.Battle
             }
 
             ShowActionOverlay(item.ItemName, _active.Name);
+            SetPendingActionFlashTargets(true, new List<GridPos> { target.GridPos });
             Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {item.Count}");
 
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
 
+        private void PrepareSkillActionFlashTargets(SkillData skill)
+        {
+            if (skill == null)
+            {
+                ClearPendingActionFlashTargets();
+                return;
+            }
+
+            switch (skill.TargetPattern)
+            {
+                case SkillTargetPattern.FrontTopEnemy:
+                    SetPendingActionFlashTargets(false, new List<GridPos> { GridPos.FrontTop });
+                    break;
+
+                case SkillTargetPattern.FrontBottomEnemy:
+                    SetPendingActionFlashTargets(false, new List<GridPos> { GridPos.FrontBottom });
+                    break;
+
+                case SkillTargetPattern.BothFrontEnemies:
+                    SetPendingActionFlashTargets(false, new List<GridPos>
+                    {
+                        GridPos.FrontTop,
+                        GridPos.FrontBottom
+                    });
+                    break;
+
+                case SkillTargetPattern.AllEnemies:
+                    SetPendingActionFlashTargets(false, new List<GridPos>
+                    {
+                        GridPos.FrontTop,
+                        GridPos.BackTop,
+                        GridPos.FrontBottom,
+                        GridPos.BackBottom
+                    });
+                    break;
+
+                case SkillTargetPattern.Self:
+                    if (_active != null)
+                    {
+                        SetPendingActionFlashTargets(true, new List<GridPos> { _active.GridPos });
+                    }
+                    else
+                    {
+                        ClearPendingActionFlashTargets();
+                    }
+                    break;
+
+                default:
+                    ClearPendingActionFlashTargets();
+                    break;
+            }
+        }
+
+        private void PrepareEnemyActionFlashTargets(BattleUnit enemy, EnemyActionData action)
+        {
+            if (enemy == null || action == null)
+            {
+                ClearPendingActionFlashTargets();
+                return;
+            }
+
+            switch (action.TargetPattern)
+            {
+                case EnemyTargetPattern.SameGridPosAlly:
+                    SetPendingActionFlashTargets(true, new List<GridPos> { enemy.GridPos });
+                    break;
+
+                case EnemyTargetPattern.AllyFrontTop:
+                    SetPendingActionFlashTargets(true, new List<GridPos> { GridPos.FrontTop });
+                    break;
+
+                case EnemyTargetPattern.AllyFrontBottom:
+                    SetPendingActionFlashTargets(true, new List<GridPos> { GridPos.FrontBottom });
+                    break;
+
+                case EnemyTargetPattern.BothFrontAllies:
+                    SetPendingActionFlashTargets(true, new List<GridPos>
+                    {
+                        GridPos.FrontTop,
+                        GridPos.FrontBottom
+                    });
+                    break;
+
+                case EnemyTargetPattern.AllAllies:
+                    SetPendingActionFlashTargets(true, new List<GridPos>
+                    {
+                        GridPos.FrontTop,
+                        GridPos.BackTop,
+                        GridPos.FrontBottom,
+                        GridPos.BackBottom
+                    });
+                    break;
+
+                default:
+                    ClearPendingActionFlashTargets();
+                    break;
+            }
+        }
+
+        private void SetPendingActionFlashTargets(bool isAllyBoard, List<GridPos> targets)
+        {
+            _pendingActionFlashIsAllyBoard = isAllyBoard;
+            _pendingActionFlashTargets.Clear();
+
+            if (targets == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                GridPos pos = targets[i];
+
+                if (_pendingActionFlashTargets.Contains(pos))
+                {
+                    continue;
+                }
+
+                _pendingActionFlashTargets.Add(pos);
+            }
+        }
+
+        private void ClearPendingActionFlashTargets()
+        {
+            _pendingActionFlashTargets.Clear();
+        }
+
+        private IEnumerator PlayPendingActionFlashOrDelay()
+        {
+            float duration = Mathf.Max(0f, actionResolveDelaySeconds);
+
+            if (_pendingActionFlashTargets.Count == 0)
+            {
+                if (duration > 0f)
+                {
+                    yield return new WaitForSeconds(duration);
+                }
+
+                yield break;
+            }
+
+            bool isAllyBoard = _pendingActionFlashIsAllyBoard;
+            List<GridPos> targets = new(_pendingActionFlashTargets);
+            ClearPendingActionFlashTargets();
+
+            if (duration <= 0f)
+            {
+                yield break;
+            }
+
+            float halfDuration = duration * 0.5f;
+
+            SetActionFlashTargetsVisible(isAllyBoard, targets, true);
+            yield return new WaitForSeconds(halfDuration);
+
+            SetActionFlashTargetsVisible(isAllyBoard, targets, false);
+            yield return new WaitForSeconds(halfDuration);
+        }
+
+        private void SetActionFlashTargetsVisible(bool isAllyBoard, List<GridPos> targets, bool visible)
+        {
+            if (targets == null)
+            {
+                return;
+            }
+
+            if (!visible)
+            {
+                if (isAllyBoard)
+                {
+                    ResetAllyBoardHighlights();
+                }
+                else
+                {
+                    ResetEnemyBoardHighlights();
+                }
+
+                return;
+            }
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                GridPos pos = targets[i];
+
+                if (isAllyBoard)
+                {
+                    SetAllyBoardCellColor(pos, ActionFlashCellColor);
+                }
+                else
+                {
+                    SetEnemyBoardCellColor(pos, ActionFlashCellColor);
+                }
+            }
+        }
         private IEnumerator FinishPlayerActionAfterDelay()
         {
-            if (actionResolveDelaySeconds > 0f)
-            {
-                yield return new WaitForSeconds(actionResolveDelaySeconds);
-            }
+            yield return PlayPendingActionFlashOrDelay();
 
             if (_battleEnded)
             {
@@ -1116,10 +1312,7 @@ namespace GameKari.Battle
             ClearSelectedEnemyAction(enemy);
             RedrawBoard();
 
-            if (actionResolveDelaySeconds > 0f)
-            {
-                yield return new WaitForSeconds(actionResolveDelaySeconds);
-            }
+            yield return PlayPendingActionFlashOrDelay();
 
             if (_battleEnded)
             {
@@ -1221,6 +1414,7 @@ namespace GameKari.Battle
             }
 
             ShowActionOverlay(action.ActionName, enemy.Name);
+            PrepareEnemyActionFlashTargets(enemy, action);
 
             switch (action.TargetPattern)
             {
@@ -2659,6 +2853,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
