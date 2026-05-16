@@ -284,6 +284,7 @@ namespace GameKari.Battle
             Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}. MP: {_active.CurrentMP}/{_active.Data.MaxMP}");
 
             ApplySkillDamage(skill);
+            ApplySkillEffect(skill);
 
             if (_battleEnded)
             {
@@ -329,6 +330,23 @@ namespace GameKari.Battle
             }
 
             ResolveDefeatedEnemies(defeatedEnemies);
+        }
+        private void ApplySkillEffect(SkillData skill)
+        {
+            if (skill == null || _active == null || _active.IsDead)
+            {
+                return;
+            }
+
+            switch (skill.EffectType)
+            {
+                case SkillEffectType.None:
+                    return;
+
+                case SkillEffectType.ApplyBuff:
+                    ApplyBuff(_active, skill.BuffType, skill.BuffTurns);
+                    return;
+            }
         }
 
         private void DamageEnemyAt(GridPos pos, int damage, List<DefeatedEnemyInfo> defeatedEnemies)
@@ -1709,6 +1727,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
