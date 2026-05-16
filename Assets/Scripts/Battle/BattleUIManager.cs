@@ -43,6 +43,7 @@ namespace GameKari.Battle
         private readonly List<BattleUnit> _reserves = new();
 
         private readonly List<BattleUnit> _enemyReserves = new();
+        private readonly Dictionary<BattleUnit, EnemyActionData> _enemyActions = new();
 
         private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
         private readonly HashSet<BattleUnit> _actedUnits = new();
@@ -64,6 +65,22 @@ namespace GameKari.Battle
         private const float EnemyStatusSlotHeight = 135f;
         private const float EnemyStatusSlotSpacing = 16f;
         private const float EnemyStatusSlotWidth = 240f;
+
+        private enum EnemyTargetPattern
+        {
+            SameGridPosAlly,
+            AllyFrontTop,
+            AllyFrontBottom,
+            BothFrontAllies,
+            AllAllies
+        }
+
+        private class EnemyActionData
+        {
+            public string ActionName;
+            public int Damage;
+            public EnemyTargetPattern TargetPattern;
+        }
 
         private void Start()
         {
@@ -110,6 +127,7 @@ namespace GameKari.Battle
             _enemies.Clear();
             _reserves.Clear();
             _enemyReserves.Clear();
+            _enemyActions.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
         }
@@ -156,6 +174,42 @@ namespace GameKari.Battle
             _grid.SetUnit(false, GridPos.BackTop, enemyB);
             _grid.SetUnit(false, GridPos.FrontBottom, enemyC);
             _grid.SetUnit(false, GridPos.BackBottom, enemyD);
+
+            SetEnemyAction(enemyA, "Claw", 60, EnemyTargetPattern.SameGridPosAlly);
+            SetEnemyAction(enemyB, "Arrow", 45, EnemyTargetPattern.AllyFrontTop);
+            SetEnemyAction(enemyC, "Bite", 60, EnemyTargetPattern.AllyFrontBottom);
+            SetEnemyAction(enemyD, "Hex", 25, EnemyTargetPattern.AllAllies);
+            SetEnemyAction(enemyReserve, "Strike", 60, EnemyTargetPattern.SameGridPosAlly);
+        }
+
+        private void SetEnemyAction(BattleUnit enemy, string actionName, int damage, EnemyTargetPattern targetPattern)
+        {
+            if (enemy == null)
+            {
+                return;
+            }
+
+            _enemyActions[enemy] = new EnemyActionData
+            {
+                ActionName = actionName,
+                Damage = damage,
+                TargetPattern = targetPattern
+            };
+        }
+
+        private EnemyActionData GetEnemyAction(BattleUnit enemy)
+        {
+            if (enemy != null && _enemyActions.TryGetValue(enemy, out EnemyActionData action))
+            {
+                return action;
+            }
+
+            return new EnemyActionData
+            {
+                ActionName = "Strike",
+                Damage = 60,
+                TargetPattern = EnemyTargetPattern.SameGridPosAlly
+            };
         }
 
         private void SetupInitialTurnState(BattleUnit fallbackActive)
@@ -548,21 +602,57 @@ namespace GameKari.Battle
                 return;
             }
 
-            GridPos targetPosition = enemy.GridPos;
+            EnemyActionData action = GetEnemyAction(enemy);
+
+            ShowActionOverlay(action.ActionName, enemy.Name);
+
+            switch (action.TargetPattern)
+            {
+                case EnemyTargetPattern.SameGridPosAlly:
+                    DamageAllyAt(enemy.GridPos, action.Damage, enemy, action.ActionName);
+                    break;
+
+                case EnemyTargetPattern.AllyFrontTop:
+                    DamageAllyAt(GridPos.FrontTop, action.Damage, enemy, action.ActionName);
+                    break;
+
+                case EnemyTargetPattern.AllyFrontBottom:
+                    DamageAllyAt(GridPos.FrontBottom, action.Damage, enemy, action.ActionName);
+                    break;
+
+                case EnemyTargetPattern.BothFrontAllies:
+                    DamageAllyAt(GridPos.FrontTop, action.Damage, enemy, action.ActionName);
+                    DamageAllyAt(GridPos.FrontBottom, action.Damage, enemy, action.ActionName);
+                    break;
+
+                case EnemyTargetPattern.AllAllies:
+                    DamageAllyAt(GridPos.FrontTop, action.Damage, enemy, action.ActionName);
+                    DamageAllyAt(GridPos.BackTop, action.Damage, enemy, action.ActionName);
+                    DamageAllyAt(GridPos.FrontBottom, action.Damage, enemy, action.ActionName);
+                    DamageAllyAt(GridPos.BackBottom, action.Damage, enemy, action.ActionName);
+                    break;
+            }
+        }
+
+        private void DamageAllyAt(GridPos targetPosition, int damage, BattleUnit enemy, string actionName)
+        {
+            if (_battleEnded)
+            {
+                return;
+            }
+
             BattleUnit target = _grid.GetUnit(true, targetPosition);
 
             if (target == null || target.IsDead)
             {
-                Debug.Log($"[Enemy] Dummy enemy action: {enemy.Name} missed unavailable ally cell: {targetPosition}");
+                Debug.Log($"[Enemy] {enemy.Name} used {actionName} and missed unavailable ally cell: {targetPosition}");
                 CheckBattleEnd();
                 return;
             }
 
-            const int damage = 80;
-
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - damage);
 
-            Debug.Log($"[Enemy] Dummy enemy action: {enemy.Name} -> {target.Name} took {damage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
+            Debug.Log($"[Enemy] {enemy.Name} used {actionName}: {target.Name} took {damage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
             if (target.CurrentHP <= 0)
             {
