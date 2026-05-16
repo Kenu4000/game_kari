@@ -48,6 +48,19 @@
 - Enemy actions also use ResolvingAction and actionResolveDelaySeconds, so consecutive enemy actions are shown one by one.
 - Overlay visibility is currently controlled by scene-object name lookup for TopActionPanel and BossNamePlate.
 
+## Action animation status
+
+- ResolvingAction now has a minimal target flash animation.
+- The flash uses pending action targets stored before the action resolve delay.
+- Skill actions flash the affected enemy board cells.
+- Self-target skills flash the active ally cell.
+- Item actions flash the healed ally cell.
+- Enemy actions flash the ally board cells actually targeted by the executed enemy action.
+- The flash currently uses the existing actionResolveDelaySeconds timing.
+- Enemy action preview highlights and action flash highlights are separate systems.
+- EnemyActionPreviewPanel and red preview highlights hide during ResolvingAction; only the white action flash is shown during action resolution.
+- This is a temporary animation layer; no character movement, damage popup, Animator Controller, or external tween library is involved yet.
+
 ## Enemy action preview status
 
 - Enemy actions are selected and cached separately from execution.
