@@ -3,6 +3,9 @@
 ## Latest confirmed implementation notes
 
 - SkillData has MpCost, Damage, EffectType, EffectTarget, BuffType, and BuffTurns.
+- SkillData.MpCost is legacy and planned for removal after cooldown logic replaces MP as the main skill resource.
+- BattleUnit.CurrentMP and CharacterData.MaxMP are legacy and planned for removal after MP-dependent behavior is disabled.
+- Do not add new MP-based mechanics.
 - SkillData also has SkillKind, CooldownTurns, and LinkCooldownTurns as preparation fields for skill cooldown and link-skill restrictions.
 - SkillKind exists with Personal and Link.
 - SkillEffectTargetType exists with Self, Target, AllAllies, and AllEnemies.
@@ -14,7 +17,7 @@
 - SkillEffectType.ApplyBuff is processed after skill damage.
 - SkillTargetPattern.Self exists.
 - Skill4 is currently Focus instead of Wave.
-- Focus costs 6 MP, does 0 damage, targets Self, has EffectTarget Self, and applies AttackUp for 2 turns.
+- Focus costs 6 MP for now as a legacy field, does 0 damage, targets Self, has EffectTarget Self, and applies AttackUp for 2 turns.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, and expiry behave as expected.
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
@@ -26,13 +29,20 @@
 
 ## Skill resource / cooldown preparation status
 
+- MP is planned for removal.
+- CooldownTurns / LinkCooldownTurns are intended to replace MP as the main skill resource model.
 - SkillKind has been added as a data field but is not enforced yet.
 - SkillKind.Personal is for ordinary individual skills.
 - SkillKind.Link is reserved for future link/combination skills.
 - CooldownTurns has been added as a per-skill data field but is not consumed by battle logic yet.
-- LinkCooldownTurns has been added as a data field for future user-side link cooldown, but LinkCooldown state is not implemented yet.
+- LinkCooldownTurns has been added as a data field for future user-side link cooldown.
+- BattleUnit has SkillCooldowns for per-skill current CT state.
+- BattleUnit has LinkCooldownRemaining for user-side link cooldown state.
+- BattleUIManager has helper methods for reading and writing skill cooldown and LinkCooldown state.
+- Current helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), and IsLinkSkillBlocked().
 - There is currently no CT ticking, CT display, CT-based button disabling, or LinkCooldown restriction.
 - Existing battle behavior remains unchanged: all usable skills are still available if their existing MP/command conditions pass.
+- Next implementation step should add CT / LinkCooldown application after successful skill use before removing MP checks.
 
 ## Battle phase and UI status
 
