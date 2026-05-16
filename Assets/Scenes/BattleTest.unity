@@ -1495,6 +1495,10 @@ MonoBehaviour:
   enemyStatusPanel: {fileID: 1598440990}
   allyStatusPanel: {fileID: 1310406782}
   rotationSettleSeconds: 0.5
+  actionResolveDelaySeconds: 0.35
+  actionFlashCount: 3
+  damagePopupColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+  healPopupColor: {r: 0.45, g: 1, b: 0.45, a: 1}
 --- !u!4 &234214470
 Transform:
   m_ObjectHideFlags: 0
@@ -3757,8 +3761,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4282335039
+  m_fontColor: {r: 0.24528301, g: 0.24528301, b: 0.24528301, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -3775,8 +3779,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
