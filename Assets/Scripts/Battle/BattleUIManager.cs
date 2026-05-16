@@ -60,11 +60,14 @@ namespace GameKari.Battle
         private TMP_Text _enemyActionPreviewText;
         private readonly List<GridPos> _pendingActionFlashTargets = new();
         private bool _pendingActionFlashIsAllyBoard;
+        private readonly List<GridPos> _pendingActionSourceFlashTargets = new();
+        private bool _pendingActionSourceFlashIsAllyBoard;
 
         private bool _battleEnded;
         private BattlePhase _phase;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
+        [SerializeField] private int actionFlashCount = 3;
 
         private bool _formationSettling;
         private float _lastRotateTime;
@@ -76,6 +79,7 @@ namespace GameKari.Battle
         private static readonly Color TargetPreviewCellColor = new Color(1f, 0.92f, 0.55f, 1f);
         private static readonly Color EnemyActionPreviewCellColor = new Color(1f, 0.65f, 0.65f, 1f);
         private static readonly Color ActionFlashCellColor = new Color(1f, 1f, 1f, 1f);
+        private static readonly Color ActionSourceFlashCellColor = new Color(0.75f, 1f, 1f, 1f);
 
         private const float EnemyStatusPanelVerticalPadding = 24f;
         private const float EnemyStatusSlotHeight = 135f;
@@ -443,6 +447,7 @@ namespace GameKari.Battle
 
             ShowActionOverlay(skill.SkillName, _active.Name);
             PrepareSkillActionFlashTargets(skill);
+            SetPendingActionSourceFlashTargets(true, new List<GridPos> { _active.GridPos });
             Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}. MP: {_active.CurrentMP}/{_active.Data.MaxMP}");
 
             ApplySkillDamage(skill);
@@ -1073,6 +1078,7 @@ namespace GameKari.Battle
 
             ShowActionOverlay(item.ItemName, _active.Name);
             SetPendingActionFlashTargets(true, new List<GridPos> { target.GridPos });
+            SetPendingActionSourceFlashTargets(true, new List<GridPos> { _active.GridPos });
             Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {item.Count}");
 
             StartCoroutine(FinishPlayerActionAfterDelay());
@@ -1200,16 +1206,47 @@ namespace GameKari.Battle
             }
         }
 
+        private void SetPendingActionSourceFlashTargets(bool isAllyBoard, List<GridPos> targets)
+        {
+            _pendingActionSourceFlashIsAllyBoard = isAllyBoard;
+            _pendingActionSourceFlashTargets.Clear();
+
+            if (targets == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                GridPos pos = targets[i];
+
+                if (_pendingActionSourceFlashTargets.Contains(pos))
+                {
+                    continue;
+                }
+
+                _pendingActionSourceFlashTargets.Add(pos);
+            }
+        }
+
+        private void ClearPendingActionSourceFlashTargets()
+        {
+            _pendingActionSourceFlashTargets.Clear();
+        }
         private void ClearPendingActionFlashTargets()
         {
             _pendingActionFlashTargets.Clear();
+            ClearPendingActionSourceFlashTargets();
         }
 
         private IEnumerator PlayPendingActionFlashOrDelay()
         {
             float duration = Mathf.Max(0f, actionResolveDelaySeconds);
 
-            if (_pendingActionFlashTargets.Count == 0)
+            bool hasTargetFlash = _pendingActionFlashTargets.Count > 0;
+            bool hasSourceFlash = _pendingActionSourceFlashTargets.Count > 0;
+
+            if (!hasTargetFlash && !hasSourceFlash)
             {
                 if (duration > 0f)
                 {
@@ -1219,8 +1256,12 @@ namespace GameKari.Battle
                 yield break;
             }
 
-            bool isAllyBoard = _pendingActionFlashIsAllyBoard;
-            List<GridPos> targets = new(_pendingActionFlashTargets);
+            bool isTargetAllyBoard = _pendingActionFlashIsAllyBoard;
+            bool isSourceAllyBoard = _pendingActionSourceFlashIsAllyBoard;
+
+            List<GridPos> targetPositions = new(_pendingActionFlashTargets);
+            List<GridPos> sourcePositions = new(_pendingActionSourceFlashTargets);
+
             ClearPendingActionFlashTargets();
 
             if (duration <= 0f)
@@ -1228,16 +1269,32 @@ namespace GameKari.Battle
                 yield break;
             }
 
-            float halfDuration = duration * 0.5f;
+            int blinkCount = Mathf.Max(1, actionFlashCount);
+            float interval = duration / (blinkCount * 2f);
 
-            SetActionFlashTargetsVisible(isAllyBoard, targets, true);
-            yield return new WaitForSeconds(halfDuration);
+            for (int i = 0; i < blinkCount; i++)
+            {
+                SetActionSourceFlashTargetsVisible(isSourceAllyBoard, sourcePositions, true);
+                SetActionFlashTargetsVisible(isTargetAllyBoard, targetPositions, true);
+                yield return new WaitForSeconds(interval);
 
-            SetActionFlashTargetsVisible(isAllyBoard, targets, false);
-            yield return new WaitForSeconds(halfDuration);
+                SetActionSourceFlashTargetsVisible(isSourceAllyBoard, sourcePositions, false);
+                SetActionFlashTargetsVisible(isTargetAllyBoard, targetPositions, false);
+                yield return new WaitForSeconds(interval);
+            }
+        }
+
+        private void SetActionSourceFlashTargetsVisible(bool isAllyBoard, List<GridPos> targets, bool visible)
+        {
+            SetActionFlashTargetsVisible(isAllyBoard, targets, visible, ActionSourceFlashCellColor);
         }
 
         private void SetActionFlashTargetsVisible(bool isAllyBoard, List<GridPos> targets, bool visible)
+        {
+            SetActionFlashTargetsVisible(isAllyBoard, targets, visible, ActionFlashCellColor);
+        }
+
+        private void SetActionFlashTargetsVisible(bool isAllyBoard, List<GridPos> targets, bool visible, Color flashColor)
         {
             if (targets == null)
             {
@@ -1264,14 +1321,15 @@ namespace GameKari.Battle
 
                 if (isAllyBoard)
                 {
-                    SetAllyBoardCellColor(pos, ActionFlashCellColor);
+                    SetAllyBoardCellColor(pos, flashColor);
                 }
                 else
                 {
-                    SetEnemyBoardCellColor(pos, ActionFlashCellColor);
+                    SetEnemyBoardCellColor(pos, flashColor);
                 }
             }
         }
+        
         private IEnumerator FinishPlayerActionAfterDelay()
         {
             yield return PlayPendingActionFlashOrDelay();
@@ -1415,6 +1473,7 @@ namespace GameKari.Battle
 
             ShowActionOverlay(action.ActionName, enemy.Name);
             PrepareEnemyActionFlashTargets(enemy, action);
+            SetPendingActionSourceFlashTargets(false, new List<GridPos> { enemy.GridPos });
 
             switch (action.TargetPattern)
             {
@@ -2853,6 +2912,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
