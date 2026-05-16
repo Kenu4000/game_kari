@@ -17,6 +17,14 @@ namespace GameKari.Battle
         ApplyBuff
     }
 
+    public enum SkillEffectTargetType
+    {
+        Self,
+        Target,
+        AllAllies,
+        AllEnemies
+    }
+
     [System.Serializable]
     public class SkillData
     {
@@ -27,9 +35,11 @@ namespace GameKari.Battle
         public int MpCost;
         public int Damage;
         public SkillEffectType EffectType;
+        public SkillEffectTargetType EffectTarget;
         public BuffType BuffType;
         public int BuffTurns;
     }
 }
+
 
 

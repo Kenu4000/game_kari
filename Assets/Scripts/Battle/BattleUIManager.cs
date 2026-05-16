@@ -1141,24 +1141,28 @@ namespace GameKari.Battle
                 return targets;
             }
 
-            switch (skill.TargetPattern)
+            switch (skill.EffectTarget)
             {
-                case SkillTargetPattern.Self:
+                case SkillEffectTargetType.Self:
                     targets.Add(_active);
                     break;
 
-                default:
-                    // Current ApplyBuff skills are still treated as self effects.
-                    // This preserves existing behavior until ally/enemy effect targeting is introduced.
-                    if (skill.EffectType == SkillEffectType.ApplyBuff)
-                    {
-                        targets.Add(_active);
-                    }
+                case SkillEffectTargetType.Target:
+                    // Reserved for future ally/enemy effect targeting.
+                    break;
+
+                case SkillEffectTargetType.AllAllies:
+                    // Reserved for future party-wide effects.
+                    break;
+
+                case SkillEffectTargetType.AllEnemies:
+                    // Reserved for future enemy-wide effects.
                     break;
             }
 
             return targets;
         }
+        
         private List<GridPos> GetSkillAnimationTargetPositions(SkillData skill)
         {
             var targets = new List<GridPos>();
@@ -3133,6 +3137,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
