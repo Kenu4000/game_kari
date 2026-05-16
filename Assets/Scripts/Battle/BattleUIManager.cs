@@ -50,8 +50,7 @@ namespace GameKari.Battle
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
         private SkillData _hoveredSkill;
-        private GameObject _topActionPanelObject;
-        private GameObject _bossNamePlateObject;
+
         private bool _battleEnded;
         private BattlePhase _phase;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
@@ -105,7 +104,6 @@ namespace GameKari.Battle
             BootstrapDummyBattle();
             BindUI();
             RedrawBoard();
-            ResolveTopOverlayObjects();
             HideActionOverlay();
         }
 
@@ -1485,10 +1483,32 @@ namespace GameKari.Battle
             }
         }
 
+        private GameObject FindUiGameObjectByName(string objectName)
+        {
+            Transform[] transforms = Resources.FindObjectsOfTypeAll<Transform>();
+
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                Transform candidate = transforms[i];
+                if (candidate == null || candidate.name != objectName)
+                {
+                    continue;
+                }
+
+                GameObject candidateObject = candidate.gameObject;
+                if (!candidateObject.scene.IsValid())
+                {
+                    continue;
+                }
+
+                return candidateObject;
+            }
+
+            return null;
+        }
         private void SetUiObjectsByNameVisible(string objectName, bool visible)
         {
             Transform[] transforms = Resources.FindObjectsOfTypeAll<Transform>();
-            int changedCount = 0;
 
             for (int i = 0; i < transforms.Length; i++)
             {
@@ -1506,74 +1526,9 @@ namespace GameKari.Battle
                 }
 
                 candidateObject.SetActive(visible);
-                changedCount++;
 
 
             }
-
-            if (changedCount == 0)
-            {
-
-            }
-        }
-
-        private void ResolveTopOverlayObjects()
-        {
-            if (_topActionPanelObject == null)
-            {
-                _topActionPanelObject = FindUiGameObjectByName("TopActionPanel");
-            }
-
-            if (_bossNamePlateObject == null)
-            {
-                _bossNamePlateObject = FindUiGameObjectByName("BossNamePlate");
-            }
-        }
-
-        private GameObject FindUiGameObjectByName(string objectName)
-        {
-            Transform[] transforms = Resources.FindObjectsOfTypeAll<Transform>();
-
-            for (int i = 0; i < transforms.Length; i++)
-            {
-                Transform candidate = transforms[i];
-                if (candidate == null || candidate.name != objectName)
-                {
-                    continue;
-                }
-
-                GameObject candidateObject = candidate.gameObject;
-
-                if (!candidateObject.scene.IsValid())
-                {
-                    continue;
-                }
-
-
-                return candidateObject;
-            }
-
-
-            return null;
-        }
-
-        private string GetHierarchyPath(Transform target)
-        {
-            if (target == null)
-            {
-                return "";
-            }
-
-            string path = target.name;
-            Transform current = target.parent;
-
-            while (current != null)
-            {
-                path = current.name + "/" + path;
-                current = current.parent;
-            }
-
-            return path;
         }
 
         private void SetCommandUiVisible(bool visible)
@@ -2105,6 +2060,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
