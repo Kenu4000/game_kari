@@ -28,12 +28,14 @@
   - TopActionPanel is hidden.
   - BossNamePlate is hidden.
   - ResultPanel is hidden.
+  - EnemyActionPreviewPanel is visible.
 - ResolvingAction:
   - CommandPanel is hidden.
   - TopActionPanel is visible.
   - SkillName/UserName, ItemName/UserName, or enemy action/user text is shown.
   - BossNamePlate is hidden.
   - ResultPanel is hidden.
+  - EnemyActionPreviewPanel is hidden.
 - BattleEnded:
   - CommandPanel is hidden.
   - TopActionPanel is hidden.
@@ -41,9 +43,32 @@
   - ResultPanel is visible.
   - Victory/Defeat and Battle End are shown.
   - ReturnButton is visible.
+  - EnemyActionPreviewPanel is hidden.
 - Player Skill and Item actions use actionResolveDelaySeconds before advancing to the next actor.
 - Enemy actions also use ResolvingAction and actionResolveDelaySeconds, so consecutive enemy actions are shown one by one.
 - Overlay visibility is currently controlled by scene-object name lookup for TopActionPanel and BossNamePlate.
+
+## Enemy action preview status
+
+- Enemy actions are selected and cached separately from execution.
+- CommandSelect prepares selected enemy actions for preview.
+- EnemyActionPreviewPanel is created automatically under Canvas if it does not already exist.
+- EnemyActionPreviewPanel shows unacted enemies as enemy name, action name, and target summary.
+- The board highlight shows only the next unacted enemy's target, not every enemy target at once.
+- Enemy action preview highlights are red-tinted ally board cells.
+- Enemy action preview highlights are redrawn at the end of RedrawBoard(), so they appear without requiring Rotate.
+- Skill hover still uses the enemy board target preview separately.
+- Enemy action preview panel and highlights hide during ResolvingAction and BattleEnded.
+- Rotate refreshes enemy action preview text and highlights.
+
+## Turn order display status
+
+- Turn order numbers are shown in status slots.
+- Acted units hide their own displayed turn number.
+- Acted units still keep their original position for numbering later units.
+- Dead units are excluded from displayed turn-number counting.
+- This prevents a display number larger than the current visible battle participant count after KO.
+- Reserve replacements that cannot act this turn do not show a turn number.
 
 ## Result panel status
 
