@@ -940,6 +940,31 @@ namespace GameKari.Battle
             RedrawStatusPanels();
         }
 
+        private IEnumerator ResolveEnemyActionAndAdvance(BattleUnit enemy)
+        {
+            if (enemy == null || enemy.IsDead || _battleEnded)
+            {
+                yield break;
+            }
+
+            EnterResolvingAction();
+
+            _actedUnits.Add(enemy);
+            ApplyDummyEnemyAction(enemy);
+            RedrawBoard();
+
+            if (actionResolveDelaySeconds > 0f)
+            {
+                yield return new WaitForSeconds(actionResolveDelaySeconds);
+            }
+
+            if (_battleEnded)
+            {
+                yield break;
+            }
+
+            AdvanceToNextActor();
+        }
         private void AdvanceToNextActor()
         {
             if (_battleEnded)
@@ -967,16 +992,8 @@ namespace GameKari.Battle
 
                 if (_enemies.Contains(nextUnit))
                 {
-                    _actedUnits.Add(nextUnit);
-                    ApplyDummyEnemyAction(nextUnit);
-                    RedrawBoard();
-
-                    if (_battleEnded)
-                    {
-                        return;
-                    }
-
-                    continue;
+                    StartCoroutine(ResolveEnemyActionAndAdvance(nextUnit));
+                    return;
                 }
 
                 _actedUnits.Add(nextUnit);
@@ -2088,6 +2105,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
