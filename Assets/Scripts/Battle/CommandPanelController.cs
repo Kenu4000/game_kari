@@ -280,12 +280,12 @@ namespace GameKari.Battle
             int skillCooldown = GetSkillCooldownRemaining(skill);
             if (skillCooldown > 0)
             {
-                return $"Cooldown: WAIT 残り{skillCooldown}";
+                return $"Cooldown: WAIT {skillCooldown}";
             }
 
             if (IsLinkSkillBlocked(skill))
             {
-                return $"LinkCooldown: 残り{GetLinkCooldownRemaining()}";
+                return $"LinkCooldown: {GetLinkCooldownRemaining()}";
             }
 
             return string.Empty;
@@ -305,11 +305,11 @@ namespace GameKari.Battle
             int skillCooldown = GetSkillCooldownRemaining(skill);
             if (skillCooldown > 0)
             {
-                label += $" WAIT:残り{skillCooldown}";
+                label += $" WAIT:{skillCooldown}";
             }
             else if (IsLinkSkillBlocked(skill))
             {
-                label += $" LINK:残り{GetLinkCooldownRemaining()}";
+                label += $" LINK:{GetLinkCooldownRemaining()}";
             }
 
             bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
@@ -665,3 +665,6 @@ namespace GameKari.Battle
         }
     }
 }
+
+
+
