@@ -445,7 +445,7 @@ namespace GameKari.Battle
                 rotateButton.interactable = true;
             }
         }
-        
+
         // Player actions
         private void HandleSkillClicked(SkillData skill)
         {
@@ -490,38 +490,18 @@ namespace GameKari.Battle
             }
 
             List<DefeatedEnemyInfo> defeatedEnemies = new();
+            List<GridPos> targets = GetSkillDamageTargetPositions(skill);
 
-            switch (skill.TargetPattern)
+            for (int i = 0; i < targets.Count; i++)
             {
-                case SkillTargetPattern.FrontTopEnemy:
-                    DamageEnemyAt(GridPos.FrontTop, skill.Damage, defeatedEnemies);
-                    break;
-
-                case SkillTargetPattern.FrontBottomEnemy:
-                    DamageEnemyAt(GridPos.FrontBottom, skill.Damage, defeatedEnemies);
-                    break;
-
-                case SkillTargetPattern.BothFrontEnemies:
-                    DamageEnemyAt(GridPos.FrontTop, skill.Damage, defeatedEnemies);
-                    DamageEnemyAt(GridPos.FrontBottom, skill.Damage, defeatedEnemies);
-                    break;
-
-                case SkillTargetPattern.AllEnemies:
-                    DamageEnemyAt(GridPos.FrontTop, skill.Damage, defeatedEnemies);
-                    DamageEnemyAt(GridPos.BackTop, skill.Damage, defeatedEnemies);
-                    DamageEnemyAt(GridPos.FrontBottom, skill.Damage, defeatedEnemies);
-                    DamageEnemyAt(GridPos.BackBottom, skill.Damage, defeatedEnemies);
-                    break;
-
-                case SkillTargetPattern.Self:
-                    break;
+                DamageEnemyAt(targets[i], skill.Damage, defeatedEnemies);
             }
 
             ResolveDefeatedEnemies(defeatedEnemies);
         }
         private void ApplySkillEffect(SkillData skill)
         {
-            if (skill == null || _active == null || _active.IsDead)
+            if (skill == null)
             {
                 return;
             }
@@ -532,7 +512,11 @@ namespace GameKari.Battle
                     return;
 
                 case SkillEffectType.ApplyBuff:
-                    ApplyBuff(_active, skill.BuffType, skill.BuffTurns);
+                    List<BattleUnit> effectTargets = GetSkillEffectTargets(skill);
+                    for (int i = 0; i < effectTargets.Count; i++)
+                    {
+                        ApplyBuff(effectTargets[i], skill.BuffType, skill.BuffTurns);
+                    }
                     return;
             }
         }
@@ -1112,7 +1096,70 @@ namespace GameKari.Battle
         }
 
         // Action animation and value popups
-        private List<GridPos> GetSkillTargetPositionsForAnimation(SkillData skill)
+        private List<GridPos> GetSkillDamageTargetPositions(SkillData skill)
+        {
+            var targets = new List<GridPos>();
+
+            if (skill == null)
+            {
+                return targets;
+            }
+
+            switch (skill.TargetPattern)
+            {
+                case SkillTargetPattern.FrontTopEnemy:
+                    targets.Add(GridPos.FrontTop);
+                    break;
+
+                case SkillTargetPattern.FrontBottomEnemy:
+                    targets.Add(GridPos.FrontBottom);
+                    break;
+
+                case SkillTargetPattern.BothFrontEnemies:
+                    targets.Add(GridPos.FrontTop);
+                    targets.Add(GridPos.FrontBottom);
+                    break;
+
+                case SkillTargetPattern.AllEnemies:
+                    AddAllGridPositions(targets);
+                    break;
+
+                case SkillTargetPattern.Self:
+                    // Self skills are effect/animation targets, not enemy damage targets.
+                    break;
+            }
+
+            return targets;
+        }
+
+        private List<BattleUnit> GetSkillEffectTargets(SkillData skill)
+        {
+            var targets = new List<BattleUnit>();
+
+            if (skill == null || _active == null || _active.IsDead)
+            {
+                return targets;
+            }
+
+            switch (skill.TargetPattern)
+            {
+                case SkillTargetPattern.Self:
+                    targets.Add(_active);
+                    break;
+
+                default:
+                    // Current ApplyBuff skills are still treated as self effects.
+                    // This preserves existing behavior until ally/enemy effect targeting is introduced.
+                    if (skill.EffectType == SkillEffectType.ApplyBuff)
+                    {
+                        targets.Add(_active);
+                    }
+                    break;
+            }
+
+            return targets;
+        }
+        private List<GridPos> GetSkillAnimationTargetPositions(SkillData skill)
         {
             var targets = new List<GridPos>();
 
@@ -1199,6 +1246,7 @@ namespace GameKari.Battle
             targets.Add(GridPos.FrontBottom);
             targets.Add(GridPos.BackBottom);
         }
+        
         private void PrepareSkillActionFlashTargets(SkillData skill)
         {
             if (skill == null)
@@ -1208,7 +1256,7 @@ namespace GameKari.Battle
             }
 
             bool isAllyBoard = skill.TargetPattern == SkillTargetPattern.Self;
-            List<GridPos> targets = GetSkillTargetPositionsForAnimation(skill);
+            List<GridPos> targets = GetSkillAnimationTargetPositions(skill);
 
             if (targets.Count == 0)
             {
@@ -1665,31 +1713,10 @@ namespace GameKari.Battle
             PrepareEnemyActionFlashTargets(enemy, action);
             SetPendingActionSourceFlashTargets(false, new List<GridPos> { enemy.GridPos });
 
-            switch (action.TargetPattern)
+            List<GridPos> targets = GetEnemyActionTargetPositions(enemy, action);
+            for (int i = 0; i < targets.Count; i++)
             {
-                case EnemyTargetPattern.SameGridPosAlly:
-                    DamageAllyAt(enemy.GridPos, action.Damage, enemy, action.ActionName);
-                    break;
-
-                case EnemyTargetPattern.AllyFrontTop:
-                    DamageAllyAt(GridPos.FrontTop, action.Damage, enemy, action.ActionName);
-                    break;
-
-                case EnemyTargetPattern.AllyFrontBottom:
-                    DamageAllyAt(GridPos.FrontBottom, action.Damage, enemy, action.ActionName);
-                    break;
-
-                case EnemyTargetPattern.BothFrontAllies:
-                    DamageAllyAt(GridPos.FrontTop, action.Damage, enemy, action.ActionName);
-                    DamageAllyAt(GridPos.FrontBottom, action.Damage, enemy, action.ActionName);
-                    break;
-
-                case EnemyTargetPattern.AllAllies:
-                    DamageAllyAt(GridPos.FrontTop, action.Damage, enemy, action.ActionName);
-                    DamageAllyAt(GridPos.BackTop, action.Damage, enemy, action.ActionName);
-                    DamageAllyAt(GridPos.FrontBottom, action.Damage, enemy, action.ActionName);
-                    DamageAllyAt(GridPos.BackBottom, action.Damage, enemy, action.ActionName);
-                    break;
+                DamageAllyAt(targets[i], action.Damage, enemy, action.ActionName);
             }
         }
 
@@ -3106,6 +3133,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
