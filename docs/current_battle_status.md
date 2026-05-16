@@ -2,7 +2,8 @@
 
 ## Latest confirmed implementation notes
 
-- SkillData has MpCost, Damage, EffectType, BuffType, and BuffTurns.
+- SkillData has MpCost, Damage, EffectType, EffectTarget, BuffType, and BuffTurns.
+- SkillEffectTargetType exists with Self, Target, AllAllies, and AllEnemies.
 - Skill damage is routed through BattleUIManager.CalculateDamage().
 - CalculateDamage applies AttackUp, AttackDown, DefenseUp, and DefenseDown modifiers.
 - BattleUIManager has buff helper methods for apply, refresh, cancel, find, and turn ticking.
@@ -11,7 +12,7 @@
 - SkillEffectType.ApplyBuff is processed after skill damage.
 - SkillTargetPattern.Self exists.
 - Skill4 is currently Focus instead of Wave.
-- Focus costs 6 MP, does 0 damage, targets Self, and applies AttackUp for 2 turns.
+- Focus costs 6 MP, does 0 damage, targets Self, has EffectTarget Self, and applies AttackUp for 2 turns.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, and expiry behave as expected.
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
@@ -54,9 +55,12 @@
 - Skill target handling is now separated into damage targets, effect targets, and animation targets.
 - GetSkillDamageTargetPositions() is used for enemy damage cells only.
 - GetSkillEffectTargets() is used for buff/effect recipient units.
+- GetSkillEffectTargets() now reads SkillData.EffectTarget.
+- EffectTarget Self is implemented and returns the active user.
+- EffectTarget Target, AllAllies, and AllEnemies are reserved for future effect targeting.
 - GetSkillAnimationTargetPositions() is used for action flash cells.
 - Self-target skills are effect/animation targets, not enemy damage targets.
-- Current ApplyBuff skills still resolve to the active user as the effect target unless more detailed ally/enemy effect targeting is added later.
+- Current non-Self effect targeting is reserved and intentionally not active yet.
 
 ## Action animation status
 
