@@ -142,10 +142,25 @@ namespace GameKari.Battle
                 }
 
                 button.gameObject.SetActive(true);
-                button.interactable = true;
-                SetButtonLabel(button, skill.SkillName);
 
-                button.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
+                bool hasEnoughMp = _activeUnit != null && _activeUnit.CurrentMP >= skill.MpCost;
+                button.interactable = hasEnoughMp;
+
+                string label = skill.MpCost > 0
+                    ? $"{skill.SkillName} MP:{skill.MpCost}"
+                    : skill.SkillName;
+
+                SetButtonLabel(button, label);
+
+                button.onClick.AddListener(() =>
+                {
+                    if (_activeUnit == null || _activeUnit.CurrentMP < skill.MpCost)
+                    {
+                        return;
+                    }
+
+                    OnSkillClicked?.Invoke(skill);
+                });
 
                 EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
                 if (trigger == null)

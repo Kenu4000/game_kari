@@ -17,5 +17,6 @@ namespace GameKari.Battle
         public string SkillName;
         [TextArea] public string Description;
         public SkillTargetPattern TargetPattern;
+        public int MpCost;
     }
 }

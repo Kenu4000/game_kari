@@ -235,8 +235,16 @@ namespace GameKari.Battle
             {
                 return;
             }
+            if (_active.CurrentMP < skill.MpCost)
+            {
+                Debug.Log($"[Action] Skill failed: {_active.Name} does not have enough MP for {skill.SkillName}. MP: {_active.CurrentMP}/{skill.MpCost}");
+                return;
+            }
+
+            _active.CurrentMP -= skill.MpCost;
+
             ShowActionOverlay(skill.SkillName, _active.Name);
-            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}");
+            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}. MP: {_active.CurrentMP}/{_active.Data.MaxMP}");
 
             ApplySkillDamage(skill);
 
@@ -1318,10 +1326,10 @@ namespace GameKari.Battle
             };
 
             var unit = new BattleUnit(data);
-            unit.Skills.Add(new SkillData { SkillId = "s1", SkillName = "Slash", Description = "Attack enemy front top.", TargetPattern = SkillTargetPattern.FrontTopEnemy });
-            unit.Skills.Add(new SkillData { SkillId = "s2", SkillName = "Pierce", Description = "Attack enemy front bottom.", TargetPattern = SkillTargetPattern.FrontBottomEnemy });
-            unit.Skills.Add(new SkillData { SkillId = "s3", SkillName = "TwinHit", Description = "Attack both front enemies.", TargetPattern = SkillTargetPattern.BothFrontEnemies });
-            unit.Skills.Add(new SkillData { SkillId = "s4", SkillName = "Wave", Description = "Attack all enemies.", TargetPattern = SkillTargetPattern.AllEnemies });
+            unit.Skills.Add(new SkillData { SkillId = "s1", SkillName = "Slash", Description = "Attack enemy front top.", TargetPattern = SkillTargetPattern.FrontTopEnemy, MpCost = 0 });
+            unit.Skills.Add(new SkillData { SkillId = "s2", SkillName = "Pierce", Description = "Attack enemy front bottom.", TargetPattern = SkillTargetPattern.FrontBottomEnemy, MpCost = 5 });
+            unit.Skills.Add(new SkillData { SkillId = "s3", SkillName = "TwinHit", Description = "Attack both front enemies.", TargetPattern = SkillTargetPattern.BothFrontEnemies, MpCost = 8 });
+            unit.Skills.Add(new SkillData { SkillId = "s4", SkillName = "Wave", Description = "Attack all enemies.", TargetPattern = SkillTargetPattern.AllEnemies, MpCost = 12 });
             return unit;
         }
     }
