@@ -379,6 +379,131 @@ namespace GameKari.Battle
             rotateButton.onClick.AddListener(HandleRotateClicked);
         }
 
+        // Skill cooldown helpers
+        private int GetSkillCooldownRemaining(BattleUnit unit, SkillData skill)
+        {
+            SkillCooldownState state = FindSkillCooldownState(unit, skill);
+            return state == null
+                ? 0
+                : Mathf.Max(0, state.RemainingTurns);
+        }
+
+        private void SetSkillCooldownRemaining(BattleUnit unit, SkillData skill, int turns)
+        {
+            if (unit == null || skill == null)
+            {
+                return;
+            }
+
+            string key = GetSkillCooldownKey(skill);
+            if (string.IsNullOrEmpty(key))
+            {
+                return;
+            }
+
+            int remainingTurns = Mathf.Max(0, turns);
+            SkillCooldownState state = FindSkillCooldownState(unit, skill);
+
+            if (remainingTurns <= 0)
+            {
+                if (state != null)
+                {
+                    unit.SkillCooldowns.Remove(state);
+                }
+
+                return;
+            }
+
+            if (state == null)
+            {
+                unit.SkillCooldowns.Add(new SkillCooldownState
+                {
+                    SkillId = key,
+                    RemainingTurns = remainingTurns
+                });
+
+                return;
+            }
+
+            state.RemainingTurns = remainingTurns;
+        }
+
+        private SkillCooldownState FindSkillCooldownState(BattleUnit unit, SkillData skill)
+        {
+            if (unit == null || skill == null || unit.SkillCooldowns == null)
+            {
+                return null;
+            }
+
+            string key = GetSkillCooldownKey(skill);
+            if (string.IsNullOrEmpty(key))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < unit.SkillCooldowns.Count; i++)
+            {
+                SkillCooldownState state = unit.SkillCooldowns[i];
+                if (state == null)
+                {
+                    continue;
+                }
+
+                if (state.SkillId == key)
+                {
+                    return state;
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetSkillCooldownKey(SkillData skill)
+        {
+            if (skill == null)
+            {
+                return "";
+            }
+
+            if (!string.IsNullOrEmpty(skill.SkillId))
+            {
+                return skill.SkillId;
+            }
+
+            return skill.SkillName ?? "";
+        }
+
+        private int GetLinkCooldownRemaining(BattleUnit unit)
+        {
+            if (unit == null)
+            {
+                return 0;
+            }
+
+            return Mathf.Max(0, unit.LinkCooldownRemaining);
+        }
+
+        private void SetLinkCooldownRemaining(BattleUnit unit, int turns)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            unit.LinkCooldownRemaining = Mathf.Max(0, turns);
+        }
+
+        private bool IsLinkSkillBlocked(BattleUnit unit, SkillData skill)
+        {
+            if (unit == null || skill == null)
+            {
+                return false;
+            }
+
+            return skill.SkillKind == SkillKind.Link
+                && GetLinkCooldownRemaining(unit) > 0;
+        }
+
         private bool CanAcceptPlayerCommand()
         {
             return !_battleEnded
@@ -3137,6 +3262,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
