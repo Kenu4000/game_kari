@@ -27,19 +27,35 @@
   - CommandPanel is visible and usable.
   - TopActionPanel is hidden.
   - BossNamePlate is hidden.
+  - ResultPanel is hidden.
 - ResolvingAction:
   - CommandPanel is hidden.
   - TopActionPanel is visible.
-  - SkillName/UserName or ItemName/UserName is shown.
+  - SkillName/UserName, ItemName/UserName, or enemy action/user text is shown.
   - BossNamePlate is hidden.
+  - ResultPanel is hidden.
 - BattleEnded:
   - CommandPanel is hidden.
-  - TopActionPanel is visible.
-  - Victory/Defeat and Battle End are shown.
+  - TopActionPanel is hidden.
   - BossNamePlate is hidden.
+  - ResultPanel is visible.
+  - Victory/Defeat and Battle End are shown.
+  - ReturnButton is visible.
 - Player Skill and Item actions use actionResolveDelaySeconds before advancing to the next actor.
 - Enemy actions also use ResolvingAction and actionResolveDelaySeconds, so consecutive enemy actions are shown one by one.
 - Overlay visibility is currently controlled by scene-object name lookup for TopActionPanel and BossNamePlate.
+
+## Result panel status
+
+- ResultPanel is created automatically under Canvas if it does not already exist.
+- ResultPanel contains ResultTitle, ResultSubText, and ReturnButton.
+- ReturnButton currently restarts the dummy battle.
+- Confirmed Return flow:
+  - ResultPanel hides.
+  - CommandPanel returns.
+  - The dummy battle restarts from the first ally turn.
+  - HP, MP, buffs, Potion count, and enemy state return to their initial dummy battle state.
+  - Skill, Swap, Item, and Rotate are usable after restart.
 
 ## Stable reference
 
