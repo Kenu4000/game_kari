@@ -88,11 +88,19 @@ namespace GameKari.Battle
 
         public void ShowSwap()
         {
+            _hoveredSkillIndex = -1;
+            ClearDescription();
+            OnHoverExit?.Invoke();
+
             SetPanelStates(true, false, true, false);
         }
 
         public void ShowItems()
         {
+            _hoveredSkillIndex = -1;
+            ClearDescription();
+            OnHoverExit?.Invoke();
+
             SetPanelStates(true, false, false, true);
         }
 
@@ -208,7 +216,7 @@ namespace GameKari.Battle
             string mpText = skill.MpCost > 0
                 ? $"MP Cost: {skill.MpCost}"
                 : "MP Cost: 0";
-            
+
             string damageText = $"Damage: {skill.Damage}";
 
             string description = string.IsNullOrWhiteSpace(skill.Description)
@@ -223,7 +231,15 @@ namespace GameKari.Battle
             }
 
             int currentMp = _activeUnit == null ? 0 : _activeUnit.CurrentMP;
-           return $"{description}\n{mpText}\n{damageText}\nNot enough MP. Current MP: {currentMp}";
+            return $"{description}\n{mpText}\n{damageText}\nNot enough MP. Current MP: {currentMp}";
+        }
+
+        private void ClearDescription()
+        {
+            if (descriptionText != null)
+            {
+                descriptionText.text = "";
+            }
         }
 
         private void RefreshHoveredSkillDescription()
