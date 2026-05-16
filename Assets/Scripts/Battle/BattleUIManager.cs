@@ -72,6 +72,7 @@ namespace GameKari.Battle
         private static readonly Color NormalCellColor = new Color(0.95f, 0.96f, 0.98f, 1f);
         private static readonly Color ActiveCellColor = new Color(0.7f, 0.88f, 1f, 1f);
         private static readonly Color TargetPreviewCellColor = new Color(1f, 0.92f, 0.55f, 1f);
+        private static readonly Color EnemyActionPreviewCellColor = new Color(1f, 0.65f, 0.65f, 1f);
 
         private const float EnemyStatusPanelVerticalPadding = 24f;
         private const float EnemyStatusSlotHeight = 135f;
@@ -377,6 +378,7 @@ namespace GameKari.Battle
 
             _phase = BattlePhase.ResolvingAction;
             ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
             SetEnemyActionPreviewVisible(false);
             SetCommandUiVisible(false);
             SetActionOverlayVisible(true);
@@ -403,6 +405,7 @@ namespace GameKari.Battle
             _active = activeUnit;
             EnsureSelectedEnemyActionsForPreview();
             UpdateEnemyActionPreview();
+            RedrawEnemyActionPreviewHighlights();
             SetEnemyActionPreviewVisible(true);
             HideActionOverlay();
             SetCommandUiVisible(true);
@@ -814,6 +817,101 @@ namespace GameKari.Battle
         }
 
 
+        private void RedrawEnemyActionPreviewHighlights()
+        {
+            ResetEnemyActionPreviewHighlights();
+
+            if (_battleEnded || _phase != BattlePhase.CommandSelect)
+            {
+                return;
+            }
+
+            BattleUnit nextEnemy = FindNextUnactedEnemy();
+            if (nextEnemy == null)
+            {
+                return;
+            }
+
+            EnemyActionData action = GetSelectedEnemyAction(nextEnemy);
+            if (action == null)
+            {
+                return;
+            }
+
+            HighlightEnemyActionTargets(nextEnemy, action);
+        }
+
+        private BattleUnit FindNextUnactedEnemy()
+        {
+            if (_turnOrder == null)
+            {
+                return null;
+            }
+
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+            for (int i = 0; i < order.Count; i++)
+            {
+                BattleUnit unit = order[i];
+
+                if (unit == null || unit.IsDead || _actedUnits.Contains(unit))
+                {
+                    continue;
+                }
+
+                if (_enemies.Contains(unit))
+                {
+                    return unit;
+                }
+            }
+
+            return null;
+        }
+
+        private void ResetEnemyActionPreviewHighlights()
+        {
+            ResetAllyBoardHighlights();
+            RedrawActiveHighlights();
+        }
+
+        private void HighlightEnemyActionTargets(BattleUnit enemy, EnemyActionData action)
+        {
+            if (enemy == null || action == null)
+            {
+                return;
+            }
+
+            switch (action.TargetPattern)
+            {
+                case EnemyTargetPattern.SameGridPosAlly:
+                    SetAllyBoardCellColor(enemy.GridPos, EnemyActionPreviewCellColor);
+                    break;
+
+                case EnemyTargetPattern.AllyFrontTop:
+                    SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
+                    break;
+
+                case EnemyTargetPattern.AllyFrontBottom:
+                    SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
+                    break;
+
+                case EnemyTargetPattern.BothFrontAllies:
+                    SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
+                    SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
+                    break;
+
+                case EnemyTargetPattern.AllAllies:
+                    SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
+                    SetAllyBoardCellColor(GridPos.BackTop, EnemyActionPreviewCellColor);
+                    SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
+                    SetAllyBoardCellColor(GridPos.BackBottom, EnemyActionPreviewCellColor);
+                    break;
+            }
+
+            if (_active != null)
+            {
+                SetAllyBoardCellColor(_active.GridPos, ActiveCellColor);
+            }
+        }
         private void HandleSkillHover(SkillData skill)
         {
             if (_battleEnded)
@@ -1280,6 +1378,7 @@ namespace GameKari.Battle
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
             ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
             SetEnemyActionPreviewVisible(false);
             SetCommandUiVisible(false);
             HideActionOverlay();
@@ -1413,6 +1512,7 @@ namespace GameKari.Battle
             if (!_battleEnded && _phase == BattlePhase.CommandSelect)
             {
                 UpdateEnemyActionPreview();
+                RedrawEnemyActionPreviewHighlights();
                 SetEnemyActionPreviewVisible(true);
             }
 
@@ -1720,6 +1820,7 @@ namespace GameKari.Battle
                     return pos.ToString();
             }
         }
+        
         private void UpdateEnemyActionPreview()
         {
             EnsureEnemyActionPreviewPanel();
@@ -2026,6 +2127,11 @@ namespace GameKari.Battle
             RedrawStatusPanels();
             RedrawActiveHighlights();
             RedrawTargetPreview();
+
+            if (!_battleEnded && _phase == BattlePhase.CommandSelect)
+            {
+                RedrawEnemyActionPreviewHighlights();
+            }
         }
 
         private void RedrawStatusPanels()
@@ -2525,6 +2631,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
