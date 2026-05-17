@@ -625,7 +625,48 @@ namespace GameKari.Battle
             return FindAvailableLinkPartner(user) != null;
         }
 
-        private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
+        private BattleUnit GetLinkPartnerForSkill(BattleUnit user, SkillData skill)
+        {
+            if (skill == null || skill.SkillKind != SkillKind.Link)
+            {
+                return null;
+            }
+
+            return FindAvailableLinkPartner(user);
+        }
+
+        private static string BuildSkillUserDisplayName(BattleUnit user, BattleUnit linkPartner)
+        {
+            if (user == null)
+            {
+                return "";
+            }
+
+            if (linkPartner == null)
+            {
+                return user.Name;
+            }
+
+            return $"{user.Name} + {linkPartner.Name}";
+        }
+
+        private static List<GridPos> BuildSkillSourceFlashTargets(BattleUnit user, BattleUnit linkPartner)
+        {
+            var targets = new List<GridPos>();
+
+            if (user != null)
+            {
+                targets.Add(user.GridPos);
+            }
+
+            if (linkPartner != null && !targets.Contains(linkPartner.GridPos))
+            {
+                targets.Add(linkPartner.GridPos);
+            }
+
+            return targets;
+        }
+        private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
         {
             if (user == null || skill == null)
             {
@@ -644,15 +685,13 @@ namespace GameKari.Battle
 
             if (skill.SkillKind == SkillKind.Link && skill.LinkCooldownTurns > 0)
             {
-                BattleUnit partner = FindAvailableLinkPartner(user);
-
                 SetLinkCooldownRemaining(user, skill.LinkCooldownTurns);
                 Debug.Log($"[Link] {user.Name}: LinkCooldown set to {skill.LinkCooldownTurns}.");
 
-                if (partner != null)
+                if (linkPartner != null)
                 {
-                    SetLinkCooldownRemaining(partner, skill.LinkCooldownTurns);
-                    Debug.Log($"[Link] {partner.Name}: LinkCooldown set to {skill.LinkCooldownTurns} as link partner.");
+                    SetLinkCooldownRemaining(linkPartner, skill.LinkCooldownTurns);
+                    Debug.Log($"[Link] {linkPartner.Name}: LinkCooldown set to {skill.LinkCooldownTurns} as link partner.");
                 }
             }
         }
@@ -738,16 +777,18 @@ namespace GameKari.Battle
                 return;
             }
 
+            BattleUnit linkPartner = GetLinkPartnerForSkill(_active, skill);
+
             EnterResolvingAction();
 
-            ShowActionOverlay(skill.SkillName, _active.Name);
+            ShowActionOverlay(skill.SkillName, BuildSkillUserDisplayName(_active, linkPartner));
             PrepareSkillActionFlashTargets(skill);
-            SetPendingActionSourceFlashTargets(true, new List<GridPos> { _active.GridPos });
-            Debug.Log($"[Action] Skill used: {skill.SkillName} by {_active.Name}.");
+            SetPendingActionSourceFlashTargets(true, BuildSkillSourceFlashTargets(_active, linkPartner));
+            Debug.Log($"[Action] Skill used: {skill.SkillName} by {BuildSkillUserDisplayName(_active, linkPartner)}.");
 
             ApplySkillDamage(skill);
             ApplySkillEffect(skill);
-            ApplySkillCooldownAfterUse(_active, skill);
+            ApplySkillCooldownAfterUse(_active, skill, linkPartner);
 
             if (_battleEnded)
             {
@@ -3436,6 +3477,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
