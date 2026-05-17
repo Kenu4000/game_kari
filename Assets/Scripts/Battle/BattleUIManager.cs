@@ -3304,7 +3304,6 @@ namespace GameKari.Battle
                 "Slash",
                 "Attack enemy front top.",
                 SkillTargetPattern.FrontTopEnemy,
-                0,
                 20
             ));
 
@@ -3313,7 +3312,6 @@ namespace GameKari.Battle
                 "Pierce",
                 "Attack enemy front bottom.",
                 SkillTargetPattern.FrontBottomEnemy,
-                5,
                 20
             ));
 
@@ -3322,7 +3320,6 @@ namespace GameKari.Battle
                 "TwinHit",
                 "Attack both front enemies.",
                 SkillTargetPattern.BothFrontEnemies,
-                8,
                 15
             ));
 
@@ -3333,7 +3330,6 @@ namespace GameKari.Battle
                 "Focus",
                 "Apply AttackUp to self.",
                 SkillTargetPattern.Self,
-                6,
                 0,
                 SkillEffectType.ApplyBuff,
                 BuffType.AttackUp,
@@ -3347,7 +3343,6 @@ namespace GameKari.Battle
             string skillName,
             string description,
             SkillTargetPattern targetPattern,
-            int mpCost,
             int damage,
             SkillEffectType effectType = SkillEffectType.None,
             BuffType buffType = BuffType.AttackUp,
@@ -3366,7 +3361,7 @@ namespace GameKari.Battle
                 SkillKind = skillKind,
                 CooldownTurns = cooldownTurns,
                 LinkCooldownTurns = linkCooldownTurns,
-                MpCost = mpCost,
+
                 Damage = damage,
                 EffectType = effectType,
                 EffectTarget = effectTarget,
@@ -3377,6 +3372,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

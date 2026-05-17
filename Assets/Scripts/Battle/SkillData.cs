@@ -41,7 +41,7 @@ namespace GameKari.Battle
         public SkillKind SkillKind;
         public int CooldownTurns;
         public int LinkCooldownTurns;
-        public int MpCost;
+
         public int Damage;
         public SkillEffectType EffectType;
         public SkillEffectTargetType EffectTarget;
@@ -49,6 +49,7 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
+
 
 
 
