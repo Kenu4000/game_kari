@@ -3403,14 +3403,12 @@ namespace GameKari.Battle
                 20
             ));
 
-            unit.Skills.Add(CreateLinkDamageSkill(
+            unit.Skills.Add(CreatePersonalDamageSkill(
                 "s2",
                 "Pierce",
-                "Temporary link skill. Attack enemy front bottom.",
+                "Attack enemy front bottom.",
                 SkillTargetPattern.FrontBottomEnemy,
-                20,
-                0,
-                0
+                20
             ));
 
             unit.Skills.Add(CreateLinkDamageSkill(
@@ -3538,6 +3536,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
