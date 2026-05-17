@@ -26,6 +26,7 @@
 - Buff UI is implemented as text in ally/enemy status slots.
 - Skill descriptions show effect text for ApplyBuff skills.
 - LinkCooldownRemaining is displayed in the same status text area as buffs/debuffs.
+- Link skill action presentation now shows the temporary link partner in the action overlay and source flash.
 - ItemData stores HealAmount and Count.
 - Dummy Potion starts at count 3 and disappears from the item slot as '-' when count reaches 0.
 - Play start clears default skill description text.
@@ -58,11 +59,14 @@
 - Skill CT still ticks at the acting unit's command entry through TickSkillCooldownsAtTurnStart().
 - Successful Link skill use currently applies LinkCooldown to both the user and an automatically selected temporary partner.
 - The temporary partner is the first living ally other than the user whose LinkCooldownRemaining is 0.
-- BattleUIManager has helper methods for reading and writing skill cooldown, LinkCooldown, and Link partner availability state.
+- Link skill ActionOverlay user text now uses `User + Partner` when a temporary partner exists.
+- Link skill source flash now highlights both the user cell and the temporary partner cell.
+- The temporary partner used for action presentation is the same partner passed to ApplySkillCooldownAfterUse().
+- BattleUIManager has helper methods for reading and writing skill cooldown, LinkCooldown, Link partner availability, and Link action presentation state.
 - CommandPanelController reads BattleUnit.SkillCooldowns, LinkCooldownRemaining, and the ally list for skill button and description display.
 - BattleUIManager passes _allies into commandPanel.Setup(_active, _reserves, _allies).
-- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), ClearAllLinkCooldowns(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), CanUseSkillWithCooldowns(), FindAvailableLinkPartner(), HasAvailableLinkPartner(), and ApplySkillCooldownAfterUse().
-- TickLinkCooldown() may still exist as dead code and should be removed later if no remaining references exist.
+- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), ClearAllLinkCooldowns(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), CanUseSkillWithCooldowns(), FindAvailableLinkPartner(), HasAvailableLinkPartner(), GetLinkPartnerForSkill(), BuildSkillUserDisplayName(), BuildSkillSourceFlashTargets(), and ApplySkillCooldownAfterUse().
+- TickLinkCooldown() has been removed as dead code.
 - Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), IsLinkSkillBlocked(), HasAvailableLinkPartner(), ApplySkillButtonVisualState(), ResetButtonVisualState(), and SetButtonAlpha().
 - Skills with remaining CT are blocked in HandleSkillClicked().
 - Link skills are blocked in HandleSkillClicked() while the user has LinkCooldownRemaining.
@@ -73,7 +77,7 @@
 - Skill buttons remain interactable during CT/LinkCooldown/NO PARTNER so clicks are still routed to BattleUIManager and blocked by logic.
 - LinkCooldownRemaining appears in the status text area as `LinkCooldown N`, making it visible which character is under LinkCooldown.
 - CT blocking currently logs the reason to Console and command UI shows state text/dimming, but there is no WAIT icon or dedicated unavailable-reason UI yet.
-- Next implementation step should remove dead TickLinkCooldown() if unused, then continue toward real Link partner selection or Link action presentation.
+- Next implementation step should prepare real Link partner selection or formalize Link skill setup data.
 
 ## Battle phase and UI status
 
@@ -88,6 +92,7 @@
   - CommandPanel is hidden.
   - TopActionPanel is visible.
   - SkillName/UserName, ItemName/UserName, or enemy action/user text is shown.
+  - Link skill user text can show `User + Partner` for temporary Link partner presentation.
   - BossNamePlate is hidden.
   - ResultPanel is hidden.
   - EnemyActionPreviewPanel is hidden.
@@ -120,6 +125,7 @@
 - ResolvingAction now has a minimal source-and-target flash animation.
 - The flash uses pending action source/target positions stored before the action resolve delay.
 - Skill actions flash the acting ally cell in cyan and affected enemy board cells in white.
+- Link skill source flash highlights both the acting ally cell and the temporary link partner ally cell.
 - Self-target skills flash the acting ally cell.
 - Item actions flash the acting ally cell in cyan and healed ally cell in white.
 - Enemy actions flash the acting enemy cell in cyan and actually targeted ally board cells in white.
