@@ -21,9 +21,11 @@
 - Skill4 is currently Focus instead of Wave.
 - Focus does 0 damage, targets Self, has EffectTarget Self, applies AttackUp for 2 turns, and has CooldownTurns 2.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, expiry, CT assignment, CT ticking, CT blocking, command UI CT display, and CT button dimming behave as expected.
+- TwinHit is currently a temporary Link skill for testing: SkillKind.Link, CooldownTurns 2, LinkCooldownTurns 1.
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
 - Skill descriptions show effect text for ApplyBuff skills.
+- LinkCooldownRemaining is displayed in the same status text area as buffs/debuffs.
 - ItemData stores HealAmount and Count.
 - Dummy Potion starts at count 3 and disappears from the item slot as '-' when count reaches 0.
 - Play start clears default skill description text.
@@ -48,21 +50,24 @@
 - LinkCooldownTurns is consumed after successful Link skill use.
 - BattleUnit has SkillCooldowns for per-skill current CT state.
 - BattleUnit has LinkCooldownRemaining for user-side link cooldown state.
-- BattleUIManager has helper methods for reading and writing skill cooldown and LinkCooldown state.
-- CommandPanelController reads BattleUnit.SkillCooldowns and LinkCooldownRemaining for skill button and description display.
-- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), TickLinkCooldown(), CanUseSkillWithCooldowns(), and ApplySkillCooldownAfterUse().
-- Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), IsLinkSkillBlocked(), ApplySkillButtonVisualState(), ResetButtonVisualState(), and SetButtonAlpha().
+- BattleUIManager has helper methods for reading and writing skill cooldown, LinkCooldown, and Link partner availability state.
+- CommandPanelController reads BattleUnit.SkillCooldowns, LinkCooldownRemaining, and the ally list for skill button and description display.
+- BattleUIManager passes _allies into commandPanel.Setup(_active, _reserves, _allies).
+- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), TickLinkCooldown(), CanUseSkillWithCooldowns(), HasAvailableLinkPartner(), and ApplySkillCooldownAfterUse().
+- Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), IsLinkSkillBlocked(), HasAvailableLinkPartner(), ApplySkillButtonVisualState(), ResetButtonVisualState(), and SetButtonAlpha().
 - Successful skill use applies per-skill CT when CooldownTurns is greater than 0.
 - Successful Link skill use applies LinkCooldown when LinkCooldownTurns is greater than 0.
 - Ally turn entry ticks that ally's per-skill CT and LinkCooldown.
 - Skills with remaining CT are blocked in HandleSkillClicked().
 - Link skills are blocked in HandleSkillClicked() while the user has LinkCooldownRemaining.
-- Skill buttons show WAIT / LINK state text when CT or LinkCooldown is active.
-- Skill hover descriptions show cooldown / LinkCooldown status text.
-- CT or LinkCooldown unavailable skill buttons are dimmed by applying alpha 0.45 to the button Graphic and TMP label.
-- Skill buttons remain interactable during CT/LinkCooldown so clicks are still routed to BattleUIManager and blocked by logic.
+- Link skills are also blocked when the acting unit has no other living ally available as a temporary link partner rule.
+- Skill buttons show WAIT / LINK / NO PARTNER state text when CT, LinkCooldown, or missing partner state is active.
+- Skill hover descriptions show cooldown / LinkCooldown / missing partner status text.
+- CT, LinkCooldown, or NO PARTNER unavailable skill buttons are dimmed by applying alpha 0.45 to the button Graphic and TMP label.
+- Skill buttons remain interactable during CT/LinkCooldown/NO PARTNER so clicks are still routed to BattleUIManager and blocked by logic.
+- LinkCooldownRemaining appears in the status text area as `LinkCooldown N`, making it visible which character is under LinkCooldown.
 - CT blocking currently logs the reason to Console and command UI shows state text/dimming, but there is no WAIT icon or dedicated unavailable-reason UI yet.
-- Next implementation step can start preparing real Link skill behavior.
+- Next implementation step can add a second temporary Link skill to verify LINK priority over NO PARTNER, or start preparing real Link skill behavior.
 
 ## Battle phase and UI status
 
