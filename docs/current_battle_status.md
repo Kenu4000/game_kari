@@ -22,7 +22,7 @@
 - Focus does 0 damage, targets Self, has EffectTarget Self, applies AttackUp for 2 turns, and has CooldownTurns 2.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, expiry, CT assignment, CT ticking, CT blocking, command UI CT display, and CT button dimming behave as expected.
 - Slash is created through CreatePersonalDamageSkill().
-- Pierce is currently a temporary Link skill for testing: SkillKind.Link, CooldownTurns 0, LinkCooldownTurns 0.
+- Pierce has been restored as a Personal damage skill through CreatePersonalDamageSkill().
 - TwinHit is currently a temporary Link skill for testing: SkillKind.Link, CooldownTurns 2, LinkCooldownTurns 1.
 - Focus is created through CreateSelfBuffSkill().
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
