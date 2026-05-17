@@ -691,8 +691,8 @@ namespace GameKari.Battle
             {
                 return;
             }
-EnterResolvingAction();
 
+            EnterResolvingAction();
 
             ShowActionOverlay(skill.SkillName, _active.Name);
             PrepareSkillActionFlashTargets(skill);
@@ -3377,6 +3377,7 @@ EnterResolvingAction();
 
     }
 }
+
 
 
 

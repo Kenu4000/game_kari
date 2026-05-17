@@ -239,6 +239,7 @@ namespace GameKari.Battle
 
             return string.Join(System.Environment.NewLine, lines);
         }
+
         private string BuildSkillEffectDescription(SkillData skill)
         {
             if (skill == null || skill.EffectType == SkillEffectType.None)
@@ -298,6 +299,7 @@ namespace GameKari.Battle
 
             return label;
         }
+
         private int GetSkillCooldownRemaining(SkillData skill)
         {
             return GetSkillCooldownRemaining(_activeUnit, skill);
@@ -642,6 +644,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
