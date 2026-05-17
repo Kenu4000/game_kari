@@ -593,13 +593,37 @@ namespace GameKari.Battle
 
             if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner(user))
             {
-                Debug.Log($"[Link] Link skill blocked: {user.Name} cannot use {skill.SkillName}. No available link partner.");
+                string reason = HasLivingLinkPartnerCandidate(user)
+                    ? "No ready link partner."
+                    : "No available link partner.";
+
+                Debug.Log($"[Link] Link skill blocked: {user.Name} cannot use {skill.SkillName}. {reason}");
                 return false;
             }
 
             return true;
         }
         
+        private bool HasLivingLinkPartnerCandidate(BattleUnit user)
+        {
+            if (user == null || user.IsDead)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < _allies.Count; i++)
+            {
+                BattleUnit ally = _allies[i];
+                if (ally == null || ally == user || ally.IsDead)
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
         private BattleUnit FindAvailableLinkPartner(BattleUnit user)
         {
             if (user == null || user.IsDead)
@@ -3536,6 +3560,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

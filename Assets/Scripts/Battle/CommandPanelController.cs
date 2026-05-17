@@ -251,6 +251,7 @@ namespace GameKari.Battle
                 label.color = labelColor;
             }
         }
+
         private string BuildSkillDescription(SkillData skill)
         {
             if (skill == null)
@@ -308,6 +309,12 @@ namespace GameKari.Battle
             }
         }
 
+        private string BuildLinkPartnerUnavailableText()
+        {
+            return HasLivingLinkPartnerCandidate()
+                ? "No ready link partner."
+                : "No available link partner.";
+        }
         private string BuildSkillLinkPartnerDescription(SkillData skill)
         {
             if (skill == null || skill.SkillKind != SkillKind.Link)
@@ -328,6 +335,7 @@ namespace GameKari.Battle
 
             return $"Partner: {partner.Name}";
         }
+
         private string BuildSkillCooldownDescription(SkillData skill)
         {
             if (skill == null)
@@ -348,7 +356,7 @@ namespace GameKari.Battle
 
             if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner())
             {
-                return "No available link partner.";
+                return BuildLinkPartnerUnavailableText();
             }
 
             return string.Empty;
@@ -374,7 +382,9 @@ namespace GameKari.Battle
             }
             else if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner())
             {
-                label += " NO PARTNER";
+                label += HasLivingLinkPartnerCandidate()
+                    ? " NO READY PARTNER"
+                    : " NO PARTNER";
             }
 
             return label;
@@ -441,6 +451,26 @@ namespace GameKari.Battle
             return skill.SkillKind == SkillKind.Link && GetLinkCooldownRemaining() > 0;
         }
 
+        private bool HasLivingLinkPartnerCandidate()
+        {
+            if (_activeUnit == null || _activeUnit.IsDead || _allies == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < _allies.Count; i++)
+            {
+                BattleUnit ally = _allies[i];
+                if (ally == null || ally == _activeUnit || ally.IsDead)
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
         private BattleUnit GetTemporaryLinkPartner()
         {
             if (_activeUnit == null || _activeUnit.IsDead || _allies == null)
@@ -461,10 +491,12 @@ namespace GameKari.Battle
 
             return null;
         }
+
         private bool HasAvailableLinkPartner()
         {
             return GetTemporaryLinkPartner() != null;
         }
+        
         private string BuildItemDescription(ItemData item)
         {
             if (item == null)
@@ -748,6 +780,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
