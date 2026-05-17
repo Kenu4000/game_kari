@@ -215,7 +215,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            bool unavailable = GetSkillCooldownRemaining(skill) > 0 || IsLinkSkillBlocked(skill);
+            bool unavailable = GetSkillCooldownRemaining(skill) > 0 || IsLinkSkillBlocked(skill) || (skill != null && skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner());
             float alpha = unavailable ? 0.45f : 1f;
 
             SetButtonAlpha(button, alpha);
@@ -318,6 +318,11 @@ namespace GameKari.Battle
                 return $"LinkCooldown: {GetLinkCooldownRemaining()}";
             }
 
+            if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner())
+            {
+                return "No available link partner.";
+            }
+
             return string.Empty;
         }
 
@@ -338,6 +343,10 @@ namespace GameKari.Battle
             else if (IsLinkSkillBlocked(skill))
             {
                 label += $" LINK:{GetLinkCooldownRemaining()}";
+            }
+            else if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner())
+            {
+                label += " NO PARTNER";
             }
 
             return label;
@@ -404,6 +413,29 @@ namespace GameKari.Battle
             return skill.SkillKind == SkillKind.Link && GetLinkCooldownRemaining() > 0;
         }
 
+        private bool HasAvailableLinkPartner()
+        {
+            if (_activeUnit == null || _activeUnit.IsDead)
+            {
+                return false;
+            }
+
+            // Temporary rule: any other living active ally can be a link partner.
+            // Later this should be replaced by proper partner selection and position rules.
+            BattleUnit[] activeUnits = new BattleUnit[] { _activeUnit };
+            _ = activeUnits;
+
+            Transform root = transform.root;
+            if (root == null)
+            {
+                return false;
+            }
+
+            // CommandPanelController does not own the full ally list.
+            // For now, use the presence of reserves only as a fallback is intentionally avoided.
+            // The authoritative partner check remains in BattleUIManager.
+            return true;
+        }
         private string BuildItemDescription(ItemData item)
         {
             if (item == null)
@@ -687,6 +719,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

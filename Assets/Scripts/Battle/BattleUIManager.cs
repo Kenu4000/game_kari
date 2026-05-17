@@ -255,9 +255,9 @@ namespace GameKari.Battle
         private void SetupDummyEnemies()
         {
             BattleUnit enemyA = CreateUnit("Goblin A", 70, 10);
-            BattleUnit enemyB = CreateUnit("Archer", 60, 13);
-            BattleUnit enemyC = CreateUnit("Goblin B", 70, 8);
-            BattleUnit enemyD = CreateUnit("Shaman", 55, 7);
+            BattleUnit enemyB = CreateUnit("Archer", 30, 13);
+            BattleUnit enemyC = CreateUnit("Goblin B", 50, 8);
+            BattleUnit enemyD = CreateUnit("Shaman", 25, 7);
             BattleUnit enemyReserve = CreateUnit("Enemy Reserve", 65, 11);
 
             _enemies.Add(enemyA);
@@ -584,9 +584,35 @@ namespace GameKari.Battle
                 return false;
             }
 
+            if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner(user))
+            {
+                Debug.Log($"[Link] Link skill blocked: {user.Name} cannot use {skill.SkillName}. No available link partner.");
+                return false;
+            }
+
             return true;
         }
         
+        private bool HasAvailableLinkPartner(BattleUnit user)
+        {
+            if (user == null || user.IsDead)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < _allies.Count; i++)
+            {
+                BattleUnit ally = _allies[i];
+                if (ally == null || ally == user || ally.IsDead)
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null)
@@ -3373,6 +3399,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
