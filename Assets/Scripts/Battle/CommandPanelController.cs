@@ -264,6 +264,7 @@ namespace GameKari.Battle
 
             string damageText = $"Damage: {skill.Damage}";
             string effectText = BuildSkillEffectDescription(skill);
+            string linkPartnerText = BuildSkillLinkPartnerDescription(skill);
             string cooldownText = BuildSkillCooldownDescription(skill);
 
             var lines = new List<string>
@@ -275,6 +276,11 @@ namespace GameKari.Battle
             if (!string.IsNullOrEmpty(effectText))
             {
                 lines.Add(effectText);
+            }
+
+            if (!string.IsNullOrEmpty(linkPartnerText))
+            {
+                lines.Add(linkPartnerText);
             }
 
             if (!string.IsNullOrEmpty(cooldownText))
@@ -302,6 +308,26 @@ namespace GameKari.Battle
             }
         }
 
+        private string BuildSkillLinkPartnerDescription(SkillData skill)
+        {
+            if (skill == null || skill.SkillKind != SkillKind.Link)
+            {
+                return string.Empty;
+            }
+
+            if (GetSkillCooldownRemaining(skill) > 0 || IsLinkSkillBlocked(skill))
+            {
+                return string.Empty;
+            }
+
+            BattleUnit partner = GetTemporaryLinkPartner();
+            if (partner == null)
+            {
+                return string.Empty;
+            }
+
+            return $"Partner: {partner.Name}";
+        }
         private string BuildSkillCooldownDescription(SkillData skill)
         {
             if (skill == null)
@@ -415,25 +441,29 @@ namespace GameKari.Battle
             return skill.SkillKind == SkillKind.Link && GetLinkCooldownRemaining() > 0;
         }
 
-        private bool HasAvailableLinkPartner()
+        private BattleUnit GetTemporaryLinkPartner()
         {
             if (_activeUnit == null || _activeUnit.IsDead || _allies == null)
             {
-                return false;
+                return null;
             }
 
             for (int i = 0; i < _allies.Count; i++)
             {
                 BattleUnit ally = _allies[i];
-                if (ally == null || ally == _activeUnit || ally.IsDead)
+                if (ally == null || ally == _activeUnit || ally.IsDead || ally.LinkCooldownRemaining > 0)
                 {
                     continue;
                 }
 
-                return true;
+                return ally;
             }
 
-            return false;
+            return null;
+        }
+        private bool HasAvailableLinkPartner()
+        {
+            return GetTemporaryLinkPartner() != null;
         }
         private string BuildItemDescription(ItemData item)
         {
@@ -718,6 +748,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
