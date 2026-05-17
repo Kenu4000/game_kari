@@ -3313,9 +3313,15 @@ namespace GameKari.Battle
             unit.Skills.Add(CreateSkill(
                 "s3",
                 "TwinHit",
-                "Attack both front enemies.",
+                "Temporary link skill. Attack both front enemies.",
                 SkillTargetPattern.BothFrontEnemies,
-                15
+                15,
+                SkillEffectType.None,
+                BuffType.AttackUp,
+                0,
+                2,
+                1,
+                SkillKind.Link
             ));
 
             // Temporary buff test skill.
@@ -3367,6 +3373,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
