@@ -593,9 +593,7 @@ namespace GameKari.Battle
 
             if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner(user))
             {
-                string reason = HasLivingLinkPartnerCandidate(user)
-                    ? "No ready link partner."
-                    : "No available link partner.";
+                string reason = LinkPartnerPolicy.BuildUnavailableReason(user, _allies);
 
                 Debug.Log($"[Link] Link skill blocked: {user.Name} cannot use {skill.SkillName}. {reason}");
                 return false;
@@ -606,45 +604,12 @@ namespace GameKari.Battle
         
         private bool HasLivingLinkPartnerCandidate(BattleUnit user)
         {
-            if (user == null || user.IsDead)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < _allies.Count; i++)
-            {
-                BattleUnit ally = _allies[i];
-                if (ally == null || ally == user || ally.IsDead)
-                {
-                    continue;
-                }
-
-                return true;
-            }
-
-            return false;
+            return LinkPartnerPolicy.HasLivingPartnerCandidate(user, _allies);
         }
         private BattleUnit FindAvailableLinkPartner(BattleUnit user)
         {
-            if (user == null || user.IsDead)
-            {
-                return null;
-            }
-
-            for (int i = 0; i < _allies.Count; i++)
-            {
-                BattleUnit ally = _allies[i];
-                if (ally == null || ally == user || ally.IsDead || ally.LinkCooldownRemaining > 0)
-                {
-                    continue;
-                }
-
-                return ally;
-            }
-
-            return null;
+            return LinkPartnerPolicy.FindFirstAvailablePartner(user, _allies);
         }
-
         private bool HasAvailableLinkPartner(BattleUnit user)
         {
             return FindAvailableLinkPartner(user) != null;
@@ -3560,6 +3525,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

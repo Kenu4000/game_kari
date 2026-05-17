@@ -311,9 +311,7 @@ namespace GameKari.Battle
 
         private string BuildLinkPartnerUnavailableText()
         {
-            return HasLivingLinkPartnerCandidate()
-                ? "No ready link partner."
-                : "No available link partner.";
+            return LinkPartnerPolicy.BuildUnavailableReason(_activeUnit, _allies);
         }
         private string BuildSkillLinkPartnerDescription(SkillData skill)
         {
@@ -453,45 +451,12 @@ namespace GameKari.Battle
 
         private bool HasLivingLinkPartnerCandidate()
         {
-            if (_activeUnit == null || _activeUnit.IsDead || _allies == null)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < _allies.Count; i++)
-            {
-                BattleUnit ally = _allies[i];
-                if (ally == null || ally == _activeUnit || ally.IsDead)
-                {
-                    continue;
-                }
-
-                return true;
-            }
-
-            return false;
+            return LinkPartnerPolicy.HasLivingPartnerCandidate(_activeUnit, _allies);
         }
         private BattleUnit GetTemporaryLinkPartner()
         {
-            if (_activeUnit == null || _activeUnit.IsDead || _allies == null)
-            {
-                return null;
-            }
-
-            for (int i = 0; i < _allies.Count; i++)
-            {
-                BattleUnit ally = _allies[i];
-                if (ally == null || ally == _activeUnit || ally.IsDead || ally.LinkCooldownRemaining > 0)
-                {
-                    continue;
-                }
-
-                return ally;
-            }
-
-            return null;
+            return LinkPartnerPolicy.FindFirstAvailablePartner(_activeUnit, _allies);
         }
-
         private bool HasAvailableLinkPartner()
         {
             return GetTemporaryLinkPartner() != null;
@@ -780,6 +745,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
