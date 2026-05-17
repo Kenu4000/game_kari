@@ -42,32 +42,38 @@
 - Swap button labels do not show MP.
 - Ally status slots no longer update MP bars, and MPBar scene objects have been removed.
 - Code search has no remaining CurrentMP / MaxMP / MpCost / MPBar hits after the MP bar removal check.
-- CooldownTurns / LinkCooldownTurns are now the active skill resource model.
-- SkillKind has been added as a data field and is partially enforced for LinkCooldown blocking.
+- CooldownTurns is the per-skill cooldown model.
+- LinkCooldownTurns defines the temporary turn-scoped link participation lock duration, currently intended as 1 for testing and production.
 - SkillKind.Personal is for ordinary individual skills.
-- SkillKind.Link is reserved for future link/combination skills.
+- SkillKind.Link is reserved for link/combination skills.
 - CooldownTurns is consumed after successful skill use.
-- LinkCooldownTurns is consumed after successful Link skill use.
+- LinkCooldownTurns is applied after successful Link skill use.
 - BattleUnit has SkillCooldowns for per-skill current CT state.
-- BattleUnit has LinkCooldownRemaining for user-side link cooldown state.
+- BattleUnit has LinkCooldownRemaining for turn-scoped link participation state.
+- LinkCooldown means the character has already participated in a Link skill during the current turn cycle.
+- LinkCooldown characters cannot be Link skill users or Link partners during that same turn cycle.
+- LinkCooldown characters can still use Personal skills, use Items, be swapped, be moved by Rotate, and take their normal action order.
+- LinkCooldown is no longer ticked at individual command entry.
+- StartNextTurn() clears LinkCooldown from allies, reserves, enemies, and enemy reserves through ClearAllLinkCooldowns().
+- Skill CT still ticks at the acting unit's command entry through TickSkillCooldownsAtTurnStart().
+- Successful Link skill use currently applies LinkCooldown to both the user and an automatically selected temporary partner.
+- The temporary partner is the first living ally other than the user whose LinkCooldownRemaining is 0.
 - BattleUIManager has helper methods for reading and writing skill cooldown, LinkCooldown, and Link partner availability state.
 - CommandPanelController reads BattleUnit.SkillCooldowns, LinkCooldownRemaining, and the ally list for skill button and description display.
 - BattleUIManager passes _allies into commandPanel.Setup(_active, _reserves, _allies).
-- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), TickLinkCooldown(), CanUseSkillWithCooldowns(), HasAvailableLinkPartner(), and ApplySkillCooldownAfterUse().
+- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), ClearAllLinkCooldowns(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), CanUseSkillWithCooldowns(), FindAvailableLinkPartner(), HasAvailableLinkPartner(), and ApplySkillCooldownAfterUse().
+- TickLinkCooldown() may still exist as dead code and should be removed later if no remaining references exist.
 - Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), IsLinkSkillBlocked(), HasAvailableLinkPartner(), ApplySkillButtonVisualState(), ResetButtonVisualState(), and SetButtonAlpha().
-- Successful skill use applies per-skill CT when CooldownTurns is greater than 0.
-- Successful Link skill use applies LinkCooldown when LinkCooldownTurns is greater than 0.
-- Ally turn entry ticks that ally's per-skill CT and LinkCooldown.
 - Skills with remaining CT are blocked in HandleSkillClicked().
 - Link skills are blocked in HandleSkillClicked() while the user has LinkCooldownRemaining.
-- Link skills are also blocked when the acting unit has no other living ally available as a temporary link partner rule.
+- Link skills are also blocked when there is no living, non-LinkCooldown ally available as a temporary link partner.
 - Skill buttons show WAIT / LINK / NO PARTNER state text when CT, LinkCooldown, or missing partner state is active.
 - Skill hover descriptions show cooldown / LinkCooldown / missing partner status text.
 - CT, LinkCooldown, or NO PARTNER unavailable skill buttons are dimmed by applying alpha 0.45 to the button Graphic and TMP label.
 - Skill buttons remain interactable during CT/LinkCooldown/NO PARTNER so clicks are still routed to BattleUIManager and blocked by logic.
 - LinkCooldownRemaining appears in the status text area as `LinkCooldown N`, making it visible which character is under LinkCooldown.
 - CT blocking currently logs the reason to Console and command UI shows state text/dimming, but there is no WAIT icon or dedicated unavailable-reason UI yet.
-- Next implementation step can add a second temporary Link skill to verify LINK priority over NO PARTNER, or start preparing real Link skill behavior.
+- Next implementation step should remove dead TickLinkCooldown() if unused, then continue toward real Link partner selection or Link action presentation.
 
 ## Battle phase and UI status
 
