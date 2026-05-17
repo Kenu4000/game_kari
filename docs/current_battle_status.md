@@ -64,11 +64,14 @@
 - Skill CT still ticks at the acting unit's command entry through TickSkillCooldownsAtTurnStart().
 - Successful Link skill use currently applies LinkCooldown to both the user and an automatically selected temporary partner.
 - The temporary partner is the first living ally other than the user whose LinkCooldownRemaining is 0.
+- LinkPartnerPolicy centralizes temporary Link partner availability logic.
+- LinkPartnerPolicy exposes HasLivingPartnerCandidate(), FindFirstAvailablePartner(), HasAvailablePartner(), and BuildUnavailableReason().
+- BattleUIManager and CommandPanelController now use LinkPartnerPolicy instead of duplicating partner search logic.
 - Link skill hover description shows the same temporary partner when the skill is not blocked by CT or LinkCooldown.
 - If no living partner exists, Link skill button/description uses NO PARTNER / No available link partner.
 - If living partners exist but all are LinkCooldown, Link skill button/description uses NO READY PARTNER / No ready link partner.
-- BattleUIManager uses HasLivingLinkPartnerCandidate() to distinguish missing partners from blocked partners in logs.
-- CommandPanelController uses HasLivingLinkPartnerCandidate() and BuildLinkPartnerUnavailableText() to distinguish link partner unavailable reasons in UI.
+- BattleUIManager uses LinkPartnerPolicy.BuildUnavailableReason() to distinguish missing partners from blocked partners in logs.
+- CommandPanelController uses LinkPartnerPolicy.BuildUnavailableReason() for unavailable partner text in UI.
 - Link skill ActionOverlay user text now uses `User + Partner` when a temporary partner exists.
 - Link skill source flash now highlights both the user cell and the temporary partner cell.
 - The temporary partner used for action presentation is the same partner passed to ApplySkillCooldownAfterUse().
