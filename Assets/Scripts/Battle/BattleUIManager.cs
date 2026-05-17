@@ -620,6 +620,7 @@ namespace GameKari.Battle
 
             return null;
         }
+
         private bool HasAvailableLinkPartner(BattleUnit user)
         {
             return FindAvailableLinkPartner(user) != null;
@@ -666,6 +667,7 @@ namespace GameKari.Battle
 
             return targets;
         }
+
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
         {
             if (user == null || skill == null)
@@ -817,6 +819,7 @@ namespace GameKari.Battle
 
             ResolveDefeatedEnemies(defeatedEnemies);
         }
+        
         private void ApplySkillEffect(SkillData skill)
         {
             if (skill == null)
@@ -3392,7 +3395,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            unit.Skills.Add(CreateSkill(
+            unit.Skills.Add(CreatePersonalDamageSkill(
                 "s1",
                 "Slash",
                 "Attack enemy front top.",
@@ -3400,49 +3403,107 @@ namespace GameKari.Battle
                 20
             ));
 
-            unit.Skills.Add(CreateSkill(
+            unit.Skills.Add(CreateLinkDamageSkill(
                 "s2",
                 "Pierce",
                 "Temporary link skill. Attack enemy front bottom.",
                 SkillTargetPattern.FrontBottomEnemy,
                 20,
-                SkillEffectType.None,
-                BuffType.AttackUp,
                 0,
-                0,
-                0,
-                SkillKind.Link
+                0
             ));
 
-            unit.Skills.Add(CreateSkill(
+            unit.Skills.Add(CreateLinkDamageSkill(
                 "s3",
                 "TwinHit",
                 "Temporary link skill. Attack both front enemies.",
                 SkillTargetPattern.BothFrontEnemies,
                 15,
-                SkillEffectType.None,
-                BuffType.AttackUp,
-                0,
                 2,
-                1,
-                SkillKind.Link
+                1
             ));
 
             // Temporary buff test skill.
             // Wave is intentionally parked until skill slot/UI handling is expanded.
-            unit.Skills.Add(CreateSkill(
+            unit.Skills.Add(CreateSelfBuffSkill(
                 "s4",
                 "Focus",
                 "Apply AttackUp to self.",
-                SkillTargetPattern.Self,
-                0,
-                SkillEffectType.ApplyBuff,
                 BuffType.AttackUp,
                 2,
                 2
             ));
         }
+        private static SkillData CreatePersonalDamageSkill(
+            string skillId,
+            string skillName,
+            string description,
+            SkillTargetPattern targetPattern,
+            int damage,
+            int cooldownTurns = 0)
+        {
+            return CreateSkill(
+                skillId,
+                skillName,
+                description,
+                targetPattern,
+                damage,
+                SkillEffectType.None,
+                BuffType.AttackUp,
+                0,
+                cooldownTurns,
+                0,
+                SkillKind.Personal
+            );
+        }
 
+        private static SkillData CreateLinkDamageSkill(
+            string skillId,
+            string skillName,
+            string description,
+            SkillTargetPattern targetPattern,
+            int damage,
+            int cooldownTurns,
+            int linkCooldownTurns)
+        {
+            return CreateSkill(
+                skillId,
+                skillName,
+                description,
+                targetPattern,
+                damage,
+                SkillEffectType.None,
+                BuffType.AttackUp,
+                0,
+                cooldownTurns,
+                linkCooldownTurns,
+                SkillKind.Link
+            );
+        }
+
+        private static SkillData CreateSelfBuffSkill(
+            string skillId,
+            string skillName,
+            string description,
+            BuffType buffType,
+            int buffTurns,
+            int cooldownTurns)
+        {
+            return CreateSkill(
+                skillId,
+                skillName,
+                description,
+                SkillTargetPattern.Self,
+                0,
+                SkillEffectType.ApplyBuff,
+                buffType,
+                buffTurns,
+                cooldownTurns,
+                0,
+                SkillKind.Personal,
+                SkillEffectTargetType.Self
+            );
+        }
         private static SkillData CreateSkill(
             string skillId,
             string skillName,
@@ -3477,6 +3538,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
