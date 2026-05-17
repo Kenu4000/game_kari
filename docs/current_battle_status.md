@@ -28,6 +28,7 @@
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
 - Skill descriptions show effect text for ApplyBuff skills.
+- Link skill descriptions show `Partner: Name` when a temporary Link partner is available.
 - LinkCooldownRemaining is displayed in the same status text area as buffs/debuffs.
 - Link skill action presentation now shows the temporary link partner in the action overlay and source flash.
 - ItemData stores HealAmount and Count.
@@ -62,20 +63,22 @@
 - Skill CT still ticks at the acting unit's command entry through TickSkillCooldownsAtTurnStart().
 - Successful Link skill use currently applies LinkCooldown to both the user and an automatically selected temporary partner.
 - The temporary partner is the first living ally other than the user whose LinkCooldownRemaining is 0.
+- Link skill hover description shows the same temporary partner when the skill is not blocked by CT or LinkCooldown.
 - Link skill ActionOverlay user text now uses `User + Partner` when a temporary partner exists.
 - Link skill source flash now highlights both the user cell and the temporary partner cell.
 - The temporary partner used for action presentation is the same partner passed to ApplySkillCooldownAfterUse().
 - BattleUIManager has helper methods for reading and writing skill cooldown, LinkCooldown, Link partner availability, and Link action presentation state.
 - CommandPanelController reads BattleUnit.SkillCooldowns, LinkCooldownRemaining, and the ally list for skill button and description display.
+- CommandPanelController has GetTemporaryLinkPartner() for temporary Link partner hover/availability display.
 - BattleUIManager passes _allies into commandPanel.Setup(_active, _reserves, _allies).
 - Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), ClearAllLinkCooldowns(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), CanUseSkillWithCooldowns(), FindAvailableLinkPartner(), HasAvailableLinkPartner(), GetLinkPartnerForSkill(), BuildSkillUserDisplayName(), BuildSkillSourceFlashTargets(), ApplySkillCooldownAfterUse(), CreatePersonalDamageSkill(), CreateLinkDamageSkill(), CreateSelfBuffSkill(), and CreateSkill().
 - TickLinkCooldown() has been removed as dead code.
-- Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), IsLinkSkillBlocked(), HasAvailableLinkPartner(), ApplySkillButtonVisualState(), ResetButtonVisualState(), and SetButtonAlpha().
+- Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), BuildSkillLinkPartnerDescription(), GetTemporaryLinkPartner(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), IsLinkSkillBlocked(), HasAvailableLinkPartner(), ApplySkillButtonVisualState(), ResetButtonVisualState(), and SetButtonAlpha().
 - Skills with remaining CT are blocked in HandleSkillClicked().
 - Link skills are blocked in HandleSkillClicked() while the user has LinkCooldownRemaining.
 - Link skills are also blocked when there is no living, non-LinkCooldown ally available as a temporary link partner.
 - Skill buttons show WAIT / LINK / NO PARTNER state text when CT, LinkCooldown, or missing partner state is active.
-- Skill hover descriptions show cooldown / LinkCooldown / missing partner status text.
+- Skill hover descriptions show Partner, cooldown, LinkCooldown, or missing partner status text depending on current state.
 - CT, LinkCooldown, or NO PARTNER unavailable skill buttons are dimmed by applying alpha 0.45 to the button Graphic and TMP label.
 - Skill buttons remain interactable during CT/LinkCooldown/NO PARTNER so clicks are still routed to BattleUIManager and blocked by logic.
 - LinkCooldownRemaining appears in the status text area as `LinkCooldown N`, making it visible which character is under LinkCooldown.
