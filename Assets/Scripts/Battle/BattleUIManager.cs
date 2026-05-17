@@ -530,6 +530,7 @@ namespace GameKari.Battle
                 Debug.Log($"[Link] {unit.Name}: LinkCooldown cleared at turn end.");
             }
         }
+
         private void TickSkillCooldownsAtTurnStart(BattleUnit unit)
         {
             if (unit == null || unit.IsDead)
@@ -568,25 +569,6 @@ namespace GameKari.Battle
                     Debug.Log($"[CT] {unit.Name}: {state.SkillId} CT {state.RemainingTurns} remaining.");
                 }
             }
-        }
-
-        private void TickLinkCooldown(BattleUnit unit)
-        {
-            if (unit == null || unit.LinkCooldownRemaining <= 0)
-            {
-                return;
-            }
-
-            unit.LinkCooldownRemaining--;
-
-            if (unit.LinkCooldownRemaining <= 0)
-            {
-                unit.LinkCooldownRemaining = 0;
-                Debug.Log($"[CT] {unit.Name}: LinkCooldown ready.");
-                return;
-            }
-
-            Debug.Log($"[CT] {unit.Name}: LinkCooldown {unit.LinkCooldownRemaining} remaining.");
         }
 
         private bool CanUseSkillWithCooldowns(BattleUnit user, SkillData skill)
@@ -642,6 +624,7 @@ namespace GameKari.Battle
         {
             return FindAvailableLinkPartner(user) != null;
         }
+
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null)
@@ -2210,6 +2193,7 @@ namespace GameKari.Battle
 
             return false;
         }
+
         private void StartNextTurn()
         {
             if (_battleEnded)
@@ -3452,6 +3436,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
