@@ -504,6 +504,32 @@ namespace GameKari.Battle
                 && GetLinkCooldownRemaining(unit) > 0;
         }
 
+        private void ClearAllLinkCooldowns()
+        {
+            ClearLinkCooldownsInUnits(_allies);
+            ClearLinkCooldownsInUnits(_reserves);
+            ClearLinkCooldownsInUnits(_enemies);
+            ClearLinkCooldownsInUnits(_enemyReserves);
+        }
+
+        private void ClearLinkCooldownsInUnits(IEnumerable<BattleUnit> units)
+        {
+            if (units == null)
+            {
+                return;
+            }
+
+            foreach (BattleUnit unit in units)
+            {
+                if (unit == null || unit.LinkCooldownRemaining <= 0)
+                {
+                    continue;
+                }
+
+                unit.LinkCooldownRemaining = 0;
+                Debug.Log($"[Link] {unit.Name}: LinkCooldown cleared at turn end.");
+            }
+        }
         private void TickSkillCooldownsAtTurnStart(BattleUnit unit)
         {
             if (unit == null || unit.IsDead)
@@ -512,7 +538,6 @@ namespace GameKari.Battle
             }
 
             TickSkillCooldowns(unit);
-            TickLinkCooldown(unit);
         }
 
         private void TickSkillCooldowns(BattleUnit unit)
@@ -593,25 +618,29 @@ namespace GameKari.Battle
             return true;
         }
         
-        private bool HasAvailableLinkPartner(BattleUnit user)
+        private BattleUnit FindAvailableLinkPartner(BattleUnit user)
         {
             if (user == null || user.IsDead)
             {
-                return false;
+                return null;
             }
 
             for (int i = 0; i < _allies.Count; i++)
             {
                 BattleUnit ally = _allies[i];
-                if (ally == null || ally == user || ally.IsDead)
+                if (ally == null || ally == user || ally.IsDead || ally.LinkCooldownRemaining > 0)
                 {
                     continue;
                 }
 
-                return true;
+                return ally;
             }
 
-            return false;
+            return null;
+        }
+        private bool HasAvailableLinkPartner(BattleUnit user)
+        {
+            return FindAvailableLinkPartner(user) != null;
         }
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill)
         {
@@ -632,8 +661,16 @@ namespace GameKari.Battle
 
             if (skill.SkillKind == SkillKind.Link && skill.LinkCooldownTurns > 0)
             {
+                BattleUnit partner = FindAvailableLinkPartner(user);
+
                 SetLinkCooldownRemaining(user, skill.LinkCooldownTurns);
-                Debug.Log($"[CT] {user.Name}: LinkCooldown set to {skill.LinkCooldownTurns}.");
+                Debug.Log($"[Link] {user.Name}: LinkCooldown set to {skill.LinkCooldownTurns}.");
+
+                if (partner != null)
+                {
+                    SetLinkCooldownRemaining(partner, skill.LinkCooldownTurns);
+                    Debug.Log($"[Link] {partner.Name}: LinkCooldown set to {skill.LinkCooldownTurns} as link partner.");
+                }
             }
         }
 
@@ -2184,6 +2221,7 @@ namespace GameKari.Battle
 
             _selectedEnemyActions.Clear();
 
+            ClearAllLinkCooldowns();
             TickBuffsAtTurnStart();
 
             RebuildTurnOrder();
@@ -3340,9 +3378,15 @@ namespace GameKari.Battle
             unit.Skills.Add(CreateSkill(
                 "s2",
                 "Pierce",
-                "Attack enemy front bottom.",
+                "Temporary link skill. Attack enemy front bottom.",
                 SkillTargetPattern.FrontBottomEnemy,
-                20
+                20,
+                SkillEffectType.None,
+                BuffType.AttackUp,
+                0,
+                0,
+                0,
+                SkillKind.Link
             ));
 
             unit.Skills.Add(CreateSkill(
@@ -3408,6 +3452,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
