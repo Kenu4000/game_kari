@@ -4,7 +4,7 @@
 
 - SkillData has MpCost, Damage, EffectType, EffectTarget, BuffType, and BuffTurns.
 - SkillData.MpCost is legacy and planned for removal after cooldown logic replaces MP as the main skill resource.
-- BattleUnit.CurrentMP and CharacterData.MaxMP are legacy and planned for removal after MP-dependent behavior is disabled.
+- BattleUnit.CurrentMP and CharacterData.MaxMP are legacy and planned for removal after all remaining references are cleaned up.
 - Do not add new MP-based mechanics.
 - SkillData also has SkillKind, CooldownTurns, and LinkCooldownTurns as preparation fields for skill cooldown and link-skill restrictions.
 - SkillKind exists with Personal and Link.
@@ -17,7 +17,7 @@
 - SkillEffectType.ApplyBuff is processed after skill damage.
 - SkillTargetPattern.Self exists.
 - Skill4 is currently Focus instead of Wave.
-- Focus costs 6 MP for now as a legacy field, does 0 damage, targets Self, has EffectTarget Self, and applies AttackUp for 2 turns.
+- Focus has a legacy MpCost value but MP is no longer checked or consumed, does 0 damage, targets Self, has EffectTarget Self, and applies AttackUp for 2 turns.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, expiry, CT assignment, CT ticking, CT blocking, and command UI CT display behave as expected.
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
@@ -29,8 +29,14 @@
 
 ## Skill resource / cooldown status
 
-- MP is planned for removal.
-- CooldownTurns / LinkCooldownTurns are intended to replace MP as the main skill resource model.
+- MP is planned for field-level removal, but MP behavior has already been disabled.
+- Skill use no longer checks CurrentMP against MpCost.
+- Skill use no longer consumes CurrentMP.
+- Skill use logs no longer show MP values.
+- CommandPanelController no longer shows MP cost in skill button labels.
+- CommandPanelController no longer shows MP Cost or Not enough MP in skill hover descriptions.
+- Swap button labels no longer show MP.
+- CooldownTurns / LinkCooldownTurns are now the active skill resource model.
 - SkillKind has been added as a data field and is partially enforced for LinkCooldown blocking.
 - SkillKind.Personal is for ordinary individual skills.
 - SkillKind.Link is reserved for future link/combination skills.
@@ -47,12 +53,11 @@
 - Ally turn entry ticks that ally's per-skill CT and LinkCooldown.
 - Skills with remaining CT are blocked in HandleSkillClicked().
 - Link skills are blocked in HandleSkillClicked() while the user has LinkCooldownRemaining.
-- Skill buttons now show WAIT / LINK state text when CT or LinkCooldown is active.
-- Skill hover descriptions now show cooldown / LinkCooldown status text.
-- Some non-ASCII cooldown text may not render correctly depending on the current TMP font setup; this is a display/font issue, not a cooldown logic issue.
+- Skill buttons show WAIT / LINK state text when CT or LinkCooldown is active.
+- Skill hover descriptions show cooldown / LinkCooldown status text.
 - CT blocking currently logs the reason to Console and command UI shows state text, but there is no button darkening, WAIT icon, or dedicated unavailable-reason UI yet.
-- Existing MP checks and MP consumption still remain temporarily as legacy behavior.
-- Next implementation step should replace non-ASCII CT display text with ASCII-only labels if TMP font coverage remains unstable, then remove/disable legacy MP checks after verifying CT-only flow.
+- SkillData.MpCost, BattleUnit.CurrentMP, and CharacterData.MaxMP still exist as legacy fields and should be removed later after constructor/data setup references are cleaned up.
+- Next implementation step should fix small formatting issues, then prepare field-level MP cleanup or add CT button visual treatment.
 
 ## Battle phase and UI status
 
