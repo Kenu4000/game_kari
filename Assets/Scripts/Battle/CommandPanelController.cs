@@ -263,6 +263,7 @@ namespace GameKari.Battle
                 ? "-"
                 : skill.Description;
 
+            string skillKindText = BuildSkillKindDescription(skill);
             string damageText = $"Damage: {skill.Damage}";
             string effectText = BuildSkillEffectDescription(skill);
             string linkPartnerText = BuildSkillLinkPartnerDescription(skill);
@@ -270,9 +271,15 @@ namespace GameKari.Battle
 
             var lines = new List<string>
             {
-                description,
-                damageText
+                description
             };
+
+            if (!string.IsNullOrEmpty(skillKindText))
+            {
+                lines.Add(skillKindText);
+            }
+
+            lines.Add(damageText);
 
             if (!string.IsNullOrEmpty(effectText))
             {
@@ -292,6 +299,15 @@ namespace GameKari.Battle
             return string.Join(System.Environment.NewLine, lines);
         }
 
+        private static string BuildSkillKindDescription(SkillData skill)
+        {
+            if (skill == null || skill.SkillKind != SkillKind.Link)
+            {
+                return string.Empty;
+            }
+
+            return "[LINK]";
+        }
         private string BuildSkillEffectDescription(SkillData skill)
         {
             if (skill == null || skill.EffectType == SkillEffectType.None)
@@ -745,6 +761,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
