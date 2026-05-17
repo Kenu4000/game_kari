@@ -6,7 +6,7 @@
 - SkillData.MpCost has been removed.
 - BattleUnit.CurrentMP has been removed.
 - CharacterData.MaxMP has been removed.
-- MP behavior and MP data fields have been removed from the active battle prototype.
+- MP behavior, MP data fields, and MP bar UI objects have been removed from the active battle prototype.
 - Do not add new MP-based mechanics.
 - SkillData also has SkillKind, CooldownTurns, and LinkCooldownTurns for skill cooldown and link-skill restrictions.
 - SkillKind exists with Personal and Link.
@@ -31,13 +31,15 @@
 
 ## Skill resource / cooldown status
 
-- MP has been removed from active battle logic and data fields.
+- MP has been removed from active battle logic, data fields, and visible status UI.
 - Skill use does not check MP.
 - Skill use does not consume MP.
 - Skill use logs do not show MP values.
 - CommandPanelController does not show MP cost in skill button labels.
 - CommandPanelController does not show MP Cost or Not enough MP in skill hover descriptions.
 - Swap button labels do not show MP.
+- Ally status slots no longer update MP bars, and MPBar scene objects have been removed.
+- Code search has no remaining CurrentMP / MaxMP / MpCost / MPBar hits after the MP bar removal check.
 - CooldownTurns / LinkCooldownTurns are now the active skill resource model.
 - SkillKind has been added as a data field and is partially enforced for LinkCooldown blocking.
 - SkillKind.Personal is for ordinary individual skills.
