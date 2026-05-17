@@ -157,6 +157,7 @@ namespace GameKari.Battle
                 if (skill == null)
                 {
                     SetButtonLabel(button, $"Skill {i + 1}");
+                    ResetButtonVisualState(button);
                     button.interactable = false;
                     button.gameObject.SetActive(true);
                     continue;
@@ -170,6 +171,7 @@ namespace GameKari.Battle
 
                 string label = BuildSkillButtonLabel(skill);
                 SetButtonLabel(button, label);
+                ApplySkillButtonVisualState(button, skill);
 
                 button.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
 
@@ -206,6 +208,47 @@ namespace GameKari.Battle
         }
 
 
+        private void ApplySkillButtonVisualState(Button button, SkillData skill)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            bool unavailable = GetSkillCooldownRemaining(skill) > 0 || IsLinkSkillBlocked(skill);
+            float alpha = unavailable ? 0.45f : 1f;
+
+            SetButtonAlpha(button, alpha);
+        }
+
+        private void ResetButtonVisualState(Button button)
+        {
+            SetButtonAlpha(button, 1f);
+        }
+
+        private void SetButtonAlpha(Button button, float alpha)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            Graphic targetGraphic = button.targetGraphic;
+            if (targetGraphic != null)
+            {
+                Color color = targetGraphic.color;
+                color.a = alpha;
+                targetGraphic.color = color;
+            }
+
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                Color labelColor = label.color;
+                labelColor.a = alpha;
+                label.color = labelColor;
+            }
+        }
         private string BuildSkillDescription(SkillData skill)
         {
             if (skill == null)
@@ -644,6 +687,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
