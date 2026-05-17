@@ -231,11 +231,11 @@ namespace GameKari.Battle
 
         private BattleUnit SetupDummyAllies()
         {
-            BattleUnit heroA = CreateUnit("Knight", 130, 20, 12);
-            BattleUnit heroB = CreateUnit("Mage", 80, 60, 15);
-            BattleUnit heroC = CreateUnit("Cleric", 90, 50, 9);
-            BattleUnit heroD = CreateUnit("Rogue", 95, 25, 18);
-            BattleUnit reserve = CreateUnit("Reserve", 100, 40, 11);
+            BattleUnit heroA = CreateUnit("Knight", 130, 12);
+            BattleUnit heroB = CreateUnit("Mage", 80, 15);
+            BattleUnit heroC = CreateUnit("Cleric", 90, 9);
+            BattleUnit heroD = CreateUnit("Rogue", 95, 18);
+            BattleUnit reserve = CreateUnit("Reserve", 100, 11);
 
             _grid.SetUnit(true, GridPos.FrontTop, heroA);
             _grid.SetUnit(true, GridPos.BackTop, heroB);
@@ -254,11 +254,11 @@ namespace GameKari.Battle
 
         private void SetupDummyEnemies()
         {
-            BattleUnit enemyA = CreateUnit("Goblin A", 70, 0, 10);
-            BattleUnit enemyB = CreateUnit("Archer", 60, 0, 13);
-            BattleUnit enemyC = CreateUnit("Goblin B", 70, 0, 8);
-            BattleUnit enemyD = CreateUnit("Shaman", 55, 20, 7);
-            BattleUnit enemyReserve = CreateUnit("Enemy Reserve", 65, 0, 11);
+            BattleUnit enemyA = CreateUnit("Goblin A", 70, 10);
+            BattleUnit enemyB = CreateUnit("Archer", 60, 13);
+            BattleUnit enemyC = CreateUnit("Goblin B", 70, 8);
+            BattleUnit enemyD = CreateUnit("Shaman", 55, 7);
+            BattleUnit enemyReserve = CreateUnit("Enemy Reserve", 65, 11);
 
             _enemies.Add(enemyA);
             _enemies.Add(enemyB);
@@ -3085,11 +3085,7 @@ namespace GameKari.Battle
 
             int currentHp = unit.IsDead ? 0 : unit.CurrentHP;
             int maxHp = unit.Data.MaxHP;
-            int currentMp = unit.CurrentMP;
-            int maxMp = unit.Data.MaxMP;
-
             SetBarFill(slot, "HPBar", currentHp, maxHp);
-            SetBarFill(slot, "MPBar", currentMp, maxMp);
             SetOrCreateLabel(slot, "Buffs", BuildBuffText(unit));
         }
 
@@ -3275,14 +3271,13 @@ namespace GameKari.Battle
             return unit.IsDead ? $"{unit.Name} KO" : unit.Name;
         }
 
-        private static BattleUnit CreateUnit(string name, int hp, int mp, int speed)
+        private static BattleUnit CreateUnit(string name, int hp, int speed)
         {
             var data = new CharacterData
             {
                 Id = name.ToLower().Replace(" ", "_"),
                 DisplayName = name,
                 MaxHP = hp,
-                MaxMP = mp,
                 Speed = speed
             };
 
@@ -3372,6 +3367,9 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
 
 
 

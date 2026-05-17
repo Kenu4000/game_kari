@@ -29,7 +29,7 @@ namespace GameKari.Battle
     {
         public CharacterData Data;
         public int CurrentHP;
-        public int CurrentMP;
+
         public bool IsDead;
         public bool IsAlly;
         public GridPos GridPos;
@@ -42,10 +42,12 @@ namespace GameKari.Battle
         {
             Data = data;
             CurrentHP = data.MaxHP;
-            CurrentMP = data.MaxMP;
+
         }
 
         public string Name => Data.DisplayName;
     }
 }
+
+
 
