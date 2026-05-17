@@ -41,6 +41,7 @@ namespace GameKari.Battle
 
         private BattleUnit _activeUnit;
         private List<BattleUnit> _reserves;
+        private List<BattleUnit> _allies;
 
         private int _hoveredSkillIndex = -1;
 
@@ -58,10 +59,11 @@ namespace GameKari.Battle
             ShowSkills();
         }
 
-        public void Setup(BattleUnit activeUnit, List<BattleUnit> reserves)
+        public void Setup(BattleUnit activeUnit, List<BattleUnit> reserves, List<BattleUnit> allies)
         {
             _activeUnit = activeUnit;
             _reserves = reserves;
+            _allies = allies;
 
             BindSkillButtons();
             BindSwapButtons();
@@ -415,26 +417,23 @@ namespace GameKari.Battle
 
         private bool HasAvailableLinkPartner()
         {
-            if (_activeUnit == null || _activeUnit.IsDead)
+            if (_activeUnit == null || _activeUnit.IsDead || _allies == null)
             {
                 return false;
             }
 
-            // Temporary rule: any other living active ally can be a link partner.
-            // Later this should be replaced by proper partner selection and position rules.
-            BattleUnit[] activeUnits = new BattleUnit[] { _activeUnit };
-            _ = activeUnits;
-
-            Transform root = transform.root;
-            if (root == null)
+            for (int i = 0; i < _allies.Count; i++)
             {
-                return false;
+                BattleUnit ally = _allies[i];
+                if (ally == null || ally == _activeUnit || ally.IsDead)
+                {
+                    continue;
+                }
+
+                return true;
             }
 
-            // CommandPanelController does not own the full ally list.
-            // For now, use the presence of reserves only as a fallback is intentionally avoided.
-            // The authoritative partner check remains in BattleUIManager.
-            return true;
+            return false;
         }
         private string BuildItemDescription(ItemData item)
         {
@@ -719,6 +718,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

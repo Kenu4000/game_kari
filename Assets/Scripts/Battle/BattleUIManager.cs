@@ -370,7 +370,7 @@ namespace GameKari.Battle
 
         private void BindUI()
         {
-            commandPanel.Setup(_active, _reserves);
+            commandPanel.Setup(_active, _reserves, _allies);
             commandPanel.OnSkillClicked += HandleSkillClicked;
             commandPanel.OnSkillHovered += HandleSkillHover;
             commandPanel.OnHoverExit += ClearTargetPreview;
@@ -695,7 +695,7 @@ namespace GameKari.Battle
 
             if (commandPanel != null)
             {
-                commandPanel.Setup(_active, _reserves);
+                commandPanel.Setup(_active, _reserves, _allies);
                 commandPanel.SetInteractable(true);
             }
 
@@ -2051,7 +2051,7 @@ namespace GameKari.Battle
             if (_active == defeatedAlly)
             {
                 _active = replacement;
-                commandPanel.Setup(_active, _reserves);
+                commandPanel.Setup(_active, _reserves, _allies);
             }
 
             Debug.Log($"[KO] {replacement.Name} replaced {defeatedAlly.Name} at {position}. Replacement cannot act this turn.");
@@ -2791,7 +2791,7 @@ namespace GameKari.Battle
 
             if (commandPanel != null)
             {
-                commandPanel.Setup(_active, _reserves);
+                commandPanel.Setup(_active, _reserves, _allies);
                 commandPanel.SetInteractable(true);
             }
 
@@ -3190,26 +3190,35 @@ namespace GameKari.Battle
 
         private static string BuildBuffText(BattleUnit unit)
         {
-            if (unit == null || unit.Buffs == null || unit.Buffs.Count == 0)
+            if (unit == null)
             {
                 return "";
             }
 
             var lines = new List<string>();
 
-            for (int i = 0; i < unit.Buffs.Count; i++)
+            if (unit.Buffs != null)
             {
-                BuffState buff = unit.Buffs[i];
-                if (buff == null)
+                for (int i = 0; i < unit.Buffs.Count; i++)
                 {
-                    continue;
-                }
+                    BuffState buff = unit.Buffs[i];
+                    if (buff == null)
+                    {
+                        continue;
+                    }
 
-                lines.Add($"{buff.Type} {buff.RemainingTurns}");
+                    lines.Add($"{buff.Type} {buff.RemainingTurns}");
+                }
+            }
+
+            if (unit.LinkCooldownRemaining > 0)
+            {
+                lines.Add($"LinkCooldown {unit.LinkCooldownRemaining}");
             }
 
             return string.Join("\n", lines);
         }
+
         // Utility
         private static void SetLabel(Transform root, string childName, string text)
         {
@@ -3399,6 +3408,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
