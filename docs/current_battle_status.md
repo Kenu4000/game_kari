@@ -2,11 +2,13 @@
 
 ## Latest confirmed implementation notes
 
-- SkillData has MpCost, Damage, EffectType, EffectTarget, BuffType, and BuffTurns.
-- SkillData.MpCost is legacy and planned for removal after cooldown logic replaces MP as the main skill resource.
-- BattleUnit.CurrentMP and CharacterData.MaxMP are legacy and planned for removal after all remaining references are cleaned up.
+- SkillData has Damage, EffectType, EffectTarget, BuffType, and BuffTurns.
+- SkillData.MpCost has been removed.
+- BattleUnit.CurrentMP has been removed.
+- CharacterData.MaxMP has been removed.
+- MP behavior and MP data fields have been removed from the active battle prototype.
 - Do not add new MP-based mechanics.
-- SkillData also has SkillKind, CooldownTurns, and LinkCooldownTurns as preparation fields for skill cooldown and link-skill restrictions.
+- SkillData also has SkillKind, CooldownTurns, and LinkCooldownTurns for skill cooldown and link-skill restrictions.
 - SkillKind exists with Personal and Link.
 - SkillEffectTargetType exists with Self, Target, AllAllies, and AllEnemies.
 - Skill damage is routed through BattleUIManager.CalculateDamage().
@@ -17,7 +19,7 @@
 - SkillEffectType.ApplyBuff is processed after skill damage.
 - SkillTargetPattern.Self exists.
 - Skill4 is currently Focus instead of Wave.
-- Focus has a legacy MpCost value but MP is no longer checked or consumed, does 0 damage, targets Self, has EffectTarget Self, and applies AttackUp for 2 turns.
+- Focus does 0 damage, targets Self, has EffectTarget Self, applies AttackUp for 2 turns, and has CooldownTurns 2.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, expiry, CT assignment, CT ticking, CT blocking, and command UI CT display behave as expected.
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
@@ -29,13 +31,13 @@
 
 ## Skill resource / cooldown status
 
-- MP is planned for field-level removal, but MP behavior has already been disabled.
-- Skill use no longer checks CurrentMP against MpCost.
-- Skill use no longer consumes CurrentMP.
-- Skill use logs no longer show MP values.
-- CommandPanelController no longer shows MP cost in skill button labels.
-- CommandPanelController no longer shows MP Cost or Not enough MP in skill hover descriptions.
-- Swap button labels no longer show MP.
+- MP has been removed from active battle logic and data fields.
+- Skill use does not check MP.
+- Skill use does not consume MP.
+- Skill use logs do not show MP values.
+- CommandPanelController does not show MP cost in skill button labels.
+- CommandPanelController does not show MP Cost or Not enough MP in skill hover descriptions.
+- Swap button labels do not show MP.
 - CooldownTurns / LinkCooldownTurns are now the active skill resource model.
 - SkillKind has been added as a data field and is partially enforced for LinkCooldown blocking.
 - SkillKind.Personal is for ordinary individual skills.
@@ -56,8 +58,7 @@
 - Skill buttons show WAIT / LINK state text when CT or LinkCooldown is active.
 - Skill hover descriptions show cooldown / LinkCooldown status text.
 - CT blocking currently logs the reason to Console and command UI shows state text, but there is no button darkening, WAIT icon, or dedicated unavailable-reason UI yet.
-- SkillData.MpCost, BattleUnit.CurrentMP, and CharacterData.MaxMP still exist as legacy fields and should be removed later after constructor/data setup references are cleaned up.
-- Next implementation step should fix small formatting issues, then prepare field-level MP cleanup or add CT button visual treatment.
+- Next implementation step can add CT button visual treatment or start preparing real Link skill behavior.
 
 ## Battle phase and UI status
 
@@ -145,7 +146,7 @@
   - ResultPanel hides.
   - CommandPanel returns.
   - The dummy battle restarts from the first ally turn.
-  - HP, MP, buffs, Potion count, and enemy state return to their initial dummy battle state.
+  - HP, buffs, Potion count, cooldown state, and enemy state return to their initial dummy battle state.
   - Skill, Swap, Item, and Rotate are usable after restart.
 
 ## Stable reference
