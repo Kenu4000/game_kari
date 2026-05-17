@@ -21,7 +21,10 @@
 - Skill4 is currently Focus instead of Wave.
 - Focus does 0 damage, targets Self, has EffectTarget Self, applies AttackUp for 2 turns, and has CooldownTurns 2.
 - Focus behavior has been tested and confirmed: buff application, damage increase, opposite-buff cancellation, expiry, CT assignment, CT ticking, CT blocking, command UI CT display, and CT button dimming behave as expected.
+- Slash is created through CreatePersonalDamageSkill().
+- Pierce is currently a temporary Link skill for testing: SkillKind.Link, CooldownTurns 0, LinkCooldownTurns 0.
 - TwinHit is currently a temporary Link skill for testing: SkillKind.Link, CooldownTurns 2, LinkCooldownTurns 1.
+- Focus is created through CreateSelfBuffSkill().
 - Focus does not deal 0 damage to the enemy cell at the same grid position.
 - Buff UI is implemented as text in ally/enemy status slots.
 - Skill descriptions show effect text for ApplyBuff skills.
@@ -65,7 +68,7 @@
 - BattleUIManager has helper methods for reading and writing skill cooldown, LinkCooldown, Link partner availability, and Link action presentation state.
 - CommandPanelController reads BattleUnit.SkillCooldowns, LinkCooldownRemaining, and the ally list for skill button and description display.
 - BattleUIManager passes _allies into commandPanel.Setup(_active, _reserves, _allies).
-- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), ClearAllLinkCooldowns(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), CanUseSkillWithCooldowns(), FindAvailableLinkPartner(), HasAvailableLinkPartner(), GetLinkPartnerForSkill(), BuildSkillUserDisplayName(), BuildSkillSourceFlashTargets(), and ApplySkillCooldownAfterUse().
+- Current BattleUIManager helpers include GetSkillCooldownRemaining(), SetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), SetLinkCooldownRemaining(), IsLinkSkillBlocked(), ClearAllLinkCooldowns(), TickSkillCooldownsAtTurnStart(), TickSkillCooldowns(), CanUseSkillWithCooldowns(), FindAvailableLinkPartner(), HasAvailableLinkPartner(), GetLinkPartnerForSkill(), BuildSkillUserDisplayName(), BuildSkillSourceFlashTargets(), ApplySkillCooldownAfterUse(), CreatePersonalDamageSkill(), CreateLinkDamageSkill(), CreateSelfBuffSkill(), and CreateSkill().
 - TickLinkCooldown() has been removed as dead code.
 - Current CommandPanelController helpers include BuildSkillButtonLabel(), BuildSkillCooldownDescription(), GetSkillCooldownRemaining(), FindSkillCooldownState(), GetSkillCooldownKey(), GetLinkCooldownRemaining(), IsLinkSkillBlocked(), HasAvailableLinkPartner(), ApplySkillButtonVisualState(), ResetButtonVisualState(), and SetButtonAlpha().
 - Skills with remaining CT are blocked in HandleSkillClicked().
@@ -77,7 +80,7 @@
 - Skill buttons remain interactable during CT/LinkCooldown/NO PARTNER so clicks are still routed to BattleUIManager and blocked by logic.
 - LinkCooldownRemaining appears in the status text area as `LinkCooldown N`, making it visible which character is under LinkCooldown.
 - CT blocking currently logs the reason to Console and command UI shows state text/dimming, but there is no WAIT icon or dedicated unavailable-reason UI yet.
-- Next implementation step should prepare real Link partner selection or formalize Link skill setup data.
+- Next implementation step should prepare real Link partner selection or move temporary skill setup toward ScriptableObject/Inspector-driven data later.
 
 ## Battle phase and UI status
 
