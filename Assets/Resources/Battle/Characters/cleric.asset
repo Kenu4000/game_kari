@@ -22,3 +22,4 @@ MonoBehaviour:
   DefaultSkills:
   - {fileID: 11400000, guid: 6008f55b533831c4d8016323e2eb5f12, type: 2}
   - {fileID: 11400000, guid: 25b0f4f9081881c45b8658309b1732b7, type: 2}
+  EnemyActionSlots: []

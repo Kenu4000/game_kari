@@ -96,6 +96,10 @@ namespace GameKari.Battle.Editor
                 new[]
                 {
                     DefaultSkillAssetProvider.GetEnemyClaw()
+                },
+                new[]
+                {
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyClaw(), 100)
                 }
             );
 
@@ -109,6 +113,10 @@ namespace GameKari.Battle.Editor
                 new[]
                 {
                     DefaultSkillAssetProvider.GetEnemyArrow()
+                },
+                new[]
+                {
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyArrow(), 100)
                 }
             );
 
@@ -122,6 +130,10 @@ namespace GameKari.Battle.Editor
                 new[]
                 {
                     DefaultSkillAssetProvider.GetEnemyBite()
+                },
+                new[]
+                {
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyBite(), 100)
                 }
             );
 
@@ -135,6 +147,10 @@ namespace GameKari.Battle.Editor
                 new[]
                 {
                     DefaultSkillAssetProvider.GetEnemyHex()
+                },
+                new[]
+                {
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyHex(), 100)
                 }
             );
 
@@ -148,6 +164,10 @@ namespace GameKari.Battle.Editor
                 new[]
                 {
                     DefaultSkillAssetProvider.GetEnemyStrike()
+                },
+                new[]
+                {
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyStrike(), 100)
                 }
             );
 
@@ -163,7 +183,8 @@ namespace GameKari.Battle.Editor
             int maxHp,
             int maxMp,
             int speed,
-            SkillData[] defaultSkills)
+            SkillData[] defaultSkills,
+            EnemyActionSlot[] enemyActionSlots = null)
         {
             string path = $"{CharacterAssetDirectory}/{assetName}.asset";
             CharacterData character = AssetDatabase.LoadAssetAtPath<CharacterData>(path);
@@ -192,7 +213,28 @@ namespace GameKari.Battle.Editor
                 }
             }
 
+            character.EnemyActionSlots.Clear();
+            if (enemyActionSlots != null)
+            {
+                for (int i = 0; i < enemyActionSlots.Length; i++)
+                {
+                    if (enemyActionSlots[i] != null && enemyActionSlots[i].Skill != null && enemyActionSlots[i].Weight > 0)
+                    {
+                        character.EnemyActionSlots.Add(enemyActionSlots[i]);
+                    }
+                }
+            }
+
             EditorUtility.SetDirty(character);
+        }
+
+        private static EnemyActionSlot CreateEnemyActionSlot(SkillData skill, int weight)
+        {
+            return new EnemyActionSlot
+            {
+                Skill = skill,
+                Weight = weight
+            };
         }
 
         private static void EnsureDirectory(string directory)
@@ -218,5 +260,6 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 
 

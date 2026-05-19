@@ -21,3 +21,6 @@ MonoBehaviour:
   StandingSprite: {fileID: 0}
   DefaultSkills:
   - {fileID: 11400000, guid: 3e05c2a7e16864c4e9a8556b0f4d8969, type: 2}
+  EnemyActionSlots:
+  - Skill: {fileID: 11400000, guid: 3e05c2a7e16864c4e9a8556b0f4d8969, type: 2}
+    Weight: 100

@@ -21,3 +21,4 @@ MonoBehaviour:
   StandingSprite: {fileID: 0}
   DefaultSkills:
   - {fileID: 11400000, guid: 6008f55b533831c4d8016323e2eb5f12, type: 2}
+  EnemyActionSlots: []

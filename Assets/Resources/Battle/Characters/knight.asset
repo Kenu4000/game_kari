@@ -24,3 +24,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 59ee788ad5b9da74fa9fcc3054bb5b8e, type: 2}
   - {fileID: 11400000, guid: 595973c53cdac92418e0760af1ebc66d, type: 2}
   - {fileID: 11400000, guid: 25b0f4f9081881c45b8658309b1732b7, type: 2}
+  EnemyActionSlots: []
