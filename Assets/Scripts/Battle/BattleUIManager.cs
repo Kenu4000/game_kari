@@ -2941,7 +2941,9 @@ namespace GameKari.Battle
             spriteImage.preserveAspect = true;
             spriteImage.sprite = sprite;
             spriteImage.enabled = sprite != null;
-            spriteImage.color = Color.white;
+            spriteImage.color = unit != null && unit.IsDead
+                ? new Color(1f, 1f, 1f, 0.45f)
+                : Color.white;
         }
         private static void SetCellImageColor(TMP_Text cellLabel, Color color)
         {
@@ -3317,6 +3319,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

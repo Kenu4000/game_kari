@@ -1,4 +1,4 @@
-# MP Policy
+﻿# MP Policy
 
 ## Status
 
@@ -11,6 +11,8 @@ Current implementation status:
 - `CharacterData.MaxMP` exists and currently defaults to 4.
 - `CharacterData.DefaultSkills` exists and stores default player skill ownership.
 - `CharacterData.EnemyActionSlots` exists and stores enemy AI action candidates as `SkillData` + weight.
+- `CharacterData.BattleSprite` exists for one-image board display.
+- `CharacterData.BattleSpriteScale` and `CharacterData.BattleSpriteOffset` exist for per-character board sprite layout adjustment.
 - Default ally and enemy `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
 - `CharacterAssetProvider.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
 - `CharacterAssetProvider` does not have a runtime character fallback path; battle participants are expected to have `CharacterData` assets.
@@ -31,6 +33,9 @@ Current implementation status:
 - `SkillData.TargetPattern` uses opponent-relative names such as `FrontTopOpponent`, `BothFrontOpponents`, and `SameGridPosOpponent` so player and enemy actions can share the same targeting model.
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
+- Board cells display `CharacterData.BattleSprite` when assigned; if no battle sprite is assigned, the cell falls back to the unit name text.
+- Board cell names are hidden when a battle sprite is available.
+- Board sprite draw order is kept behind the cell text, and dead units are displayed with reduced sprite opacity.
 - Default player skill MP costs and enemy skill target patterns are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
 - Ally skills are assigned through `CharacterData.DefaultSkills`.
 - Enemy action candidates are assigned through `CharacterData.EnemyActionSlots`.
@@ -246,3 +251,4 @@ Temporary default enemy skills:
 - Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
 - Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
+
