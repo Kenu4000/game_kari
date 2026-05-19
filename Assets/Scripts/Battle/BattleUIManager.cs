@@ -231,11 +231,11 @@ namespace GameKari.Battle
 
         private BattleUnit SetupDummyAllies()
         {
-            BattleUnit heroA = CreateUnit("Knight", 130, 12);
-            BattleUnit heroB = CreateUnit("Mage", 80, 15);
-            BattleUnit heroC = CreateUnit("Cleric", 90, 9);
-            BattleUnit heroD = CreateUnit("Rogue", 95, 18);
-            BattleUnit reserve = CreateUnit("Reserve", 100, 11);
+            BattleUnit heroA = DummyBattleFactory.CreateUnit("Knight", 130, 12);
+            BattleUnit heroB = DummyBattleFactory.CreateUnit("Mage", 80, 15);
+            BattleUnit heroC = DummyBattleFactory.CreateUnit("Cleric", 90, 9);
+            BattleUnit heroD = DummyBattleFactory.CreateUnit("Rogue", 95, 18);
+            BattleUnit reserve = DummyBattleFactory.CreateUnit("Reserve", 100, 11);
 
             _grid.SetUnit(true, GridPos.FrontTop, heroA);
             _grid.SetUnit(true, GridPos.BackTop, heroB);
@@ -254,11 +254,11 @@ namespace GameKari.Battle
 
         private void SetupDummyEnemies()
         {
-            BattleUnit enemyA = CreateUnit("Goblin A", 70, 10);
-            BattleUnit enemyB = CreateUnit("Archer", 30, 13);
-            BattleUnit enemyC = CreateUnit("Goblin B", 50, 8);
-            BattleUnit enemyD = CreateUnit("Shaman", 25, 7);
-            BattleUnit enemyReserve = CreateUnit("Enemy Reserve", 65, 11);
+            BattleUnit enemyA = DummyBattleFactory.CreateUnit("Goblin A", 70, 10);
+            BattleUnit enemyB = DummyBattleFactory.CreateUnit("Archer", 30, 13);
+            BattleUnit enemyC = DummyBattleFactory.CreateUnit("Goblin B", 50, 8);
+            BattleUnit enemyD = DummyBattleFactory.CreateUnit("Shaman", 25, 7);
+            BattleUnit enemyReserve = DummyBattleFactory.CreateUnit("Enemy Reserve", 65, 11);
 
             _enemies.Add(enemyA);
             _enemies.Add(enemyB);
@@ -3361,170 +3361,10 @@ namespace GameKari.Battle
             return unit.IsDead ? $"{unit.Name} KO" : unit.Name;
         }
 
-        private static BattleUnit CreateUnit(string name, int hp, int speed)
-        {
-            var data = new CharacterData
-            {
-                Id = name.ToLower().Replace(" ", "_"),
-                DisplayName = name,
-                MaxHP = hp,
-                Speed = speed
-            };
-
-            var unit = new BattleUnit(data);
-            AddDefaultSkills(unit);
-
-            return unit;
-        }
-
-        private static void AddDefaultSkills(BattleUnit unit)
-        {
-            if (unit == null)
-            {
-                return;
-            }
-
-            unit.Skills.Add(CreatePersonalDamageSkill(
-                "s1",
-                "Slash",
-                "Attack enemy front top.",
-                SkillTargetPattern.FrontTopEnemy,
-                20
-            ));
-
-            unit.Skills.Add(CreatePersonalDamageSkill(
-                "s2",
-                "Pierce",
-                "Attack enemy front bottom.",
-                SkillTargetPattern.FrontBottomEnemy,
-                20
-            ));
-
-            unit.Skills.Add(CreateLinkDamageSkill(
-                "s3",
-                "TwinHit",
-                "Temporary link skill. Attack both front enemies.",
-                SkillTargetPattern.BothFrontEnemies,
-                15,
-                2,
-                1
-            ));
-
-            // Temporary buff test skill.
-            // Wave is intentionally parked until skill slot/UI handling is expanded.
-            unit.Skills.Add(CreateSelfBuffSkill(
-                "s4",
-                "Focus",
-                "Apply AttackUp to self.",
-                BuffType.AttackUp,
-                2,
-                2
-            ));
-        }
-        private static SkillData CreatePersonalDamageSkill(
-            string skillId,
-            string skillName,
-            string description,
-            SkillTargetPattern targetPattern,
-            int damage,
-            int cooldownTurns = 0)
-        {
-            return CreateSkill(
-                skillId,
-                skillName,
-                description,
-                targetPattern,
-                damage,
-                SkillEffectType.None,
-                BuffType.AttackUp,
-                0,
-                cooldownTurns,
-                0,
-                SkillKind.Personal
-            );
-        }
-
-        private static SkillData CreateLinkDamageSkill(
-            string skillId,
-            string skillName,
-            string description,
-            SkillTargetPattern targetPattern,
-            int damage,
-            int cooldownTurns,
-            int linkCooldownTurns)
-        {
-            return CreateSkill(
-                skillId,
-                skillName,
-                description,
-                targetPattern,
-                damage,
-                SkillEffectType.None,
-                BuffType.AttackUp,
-                0,
-                cooldownTurns,
-                linkCooldownTurns,
-                SkillKind.Link
-            );
-        }
-
-        private static SkillData CreateSelfBuffSkill(
-            string skillId,
-            string skillName,
-            string description,
-            BuffType buffType,
-            int buffTurns,
-            int cooldownTurns)
-        {
-            return CreateSkill(
-                skillId,
-                skillName,
-                description,
-                SkillTargetPattern.Self,
-                0,
-                SkillEffectType.ApplyBuff,
-                buffType,
-                buffTurns,
-                cooldownTurns,
-                0,
-                SkillKind.Personal,
-                SkillEffectTargetType.Self
-            );
-        }
-        private static SkillData CreateSkill(
-            string skillId,
-            string skillName,
-            string description,
-            SkillTargetPattern targetPattern,
-            int damage,
-            SkillEffectType effectType = SkillEffectType.None,
-            BuffType buffType = BuffType.AttackUp,
-            int buffTurns = 0,
-            int cooldownTurns = 0,
-            int linkCooldownTurns = 0,
-            SkillKind skillKind = SkillKind.Personal,
-            SkillEffectTargetType effectTarget = SkillEffectTargetType.Self)
-        {
-            return new SkillData
-            {
-                SkillId = skillId,
-                SkillName = skillName,
-                Description = description,
-                TargetPattern = targetPattern,
-                SkillKind = skillKind,
-                CooldownTurns = cooldownTurns,
-                LinkCooldownTurns = linkCooldownTurns,
-
-                Damage = damage,
-                EffectType = effectType,
-                EffectTarget = effectTarget,
-                BuffType = buffType,
-                BuffTurns = buffTurns
-            };
-        }
 
     }
 }
+
 
 
 
