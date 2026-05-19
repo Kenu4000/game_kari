@@ -19,6 +19,8 @@ Current implementation status:
 - Accepted skill use consumes user MP when the skill action begins.
 - Link skills also require the specified partner to have enough MP.
 - Accepted Link skill use consumes MP from both the user and the specified partner.
+- Link partner resolution excludes the active user from being their own partner.
+- Reserve partners can pay MP for Link skills, but only active-grid partners are used for source flash cells.
 - `StartNextTurn()` recovers MP +1 for ally front-line and reserve characters.
 - Skill CT and LinkCooldown data fields have been removed from the active data model.
 - `WAIT:N`, `LINK:N`, and LinkCooldown status display are no longer part of the active UI flow.
@@ -105,6 +107,9 @@ Temporary dummy skill costs:
 - TwinHit currently requires user MP 2 + specified partner MP 2.
 - If either the user or the specified partner lacks MP, the Link skill is blocked.
 - Current implementation consumes the same `MpCost` from both the user and the specified partner.
+- A character cannot be their own Link partner.
+- A reserve character may be a Link partner and pay MP.
+- Reserve Link partners are not shown as source flash cells because they are not placed on the active grid.
 - Future Link skill cost values may be split into separate user/partner costs if needed.
 
 ## Remaining cleanup
