@@ -46,3 +46,4 @@ public class TruckRideMotion : MonoBehaviour
         truckRoot.localRotation = baseRotation * Quaternion.Euler(0f, 0f, rot);
     }
 }
+

@@ -2,10 +2,10 @@
 
 namespace GameKari.Battle
 {
-    public sealed class DummyBattleSetupData
+    public sealed class BattleSetupData
     {
-        public readonly List<DummyBattleUnitPlacement> AllyPlacements = new();
-        public readonly List<DummyBattleUnitPlacement> EnemyPlacements = new();
+        public readonly List<BattleUnitPlacement> AllyPlacements = new();
+        public readonly List<BattleUnitPlacement> EnemyPlacements = new();
         public readonly List<BattleUnit> AllyReserves = new();
         public readonly List<BattleUnit> EnemyReserves = new();
         public readonly List<InventoryItem> InventoryItems = new();
@@ -19,23 +19,23 @@ namespace GameKari.Battle
         public BattleUnit EnemyReserve;
     }
 
-    public sealed class DummyBattleUnitPlacement
+    public sealed class BattleUnitPlacement
     {
         public GridPos Position;
         public BattleUnit Unit;
 
-        public DummyBattleUnitPlacement(GridPos position, BattleUnit unit)
+        public BattleUnitPlacement(GridPos position, BattleUnit unit)
         {
             Position = position;
             Unit = unit;
         }
     }
 
-    public static class DummyBattleSetupFactory
+    public static class DefaultBattleSetupFactory
     {
-        public static DummyBattleSetupData CreateDefaultSetup()
+        public static BattleSetupData CreateDefaultSetup()
         {
-            DummyBattleSetupData setup = new DummyBattleSetupData();
+            BattleSetupData setup = new BattleSetupData();
 
             CreateAllies(setup);
             CreateEnemies(setup);
@@ -44,7 +44,7 @@ namespace GameKari.Battle
             return setup;
         }
 
-        private static void CreateAllies(DummyBattleSetupData setup)
+        private static void CreateAllies(BattleSetupData setup)
         {
             BattleUnit heroA = DummyBattleFactory.CreateAllyUnitById("knight");
             BattleUnit heroB = DummyBattleFactory.CreateAllyUnitById("mage");
@@ -52,16 +52,16 @@ namespace GameKari.Battle
             BattleUnit heroD = DummyBattleFactory.CreateAllyUnitById("rogue");
             BattleUnit reserve = DummyBattleFactory.CreateAllyUnitById("reserve");
 
-            setup.AllyPlacements.Add(new DummyBattleUnitPlacement(GridPos.FrontTop, heroA));
-            setup.AllyPlacements.Add(new DummyBattleUnitPlacement(GridPos.BackTop, heroB));
-            setup.AllyPlacements.Add(new DummyBattleUnitPlacement(GridPos.FrontBottom, heroC));
-            setup.AllyPlacements.Add(new DummyBattleUnitPlacement(GridPos.BackBottom, heroD));
+            setup.AllyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, heroA));
+            setup.AllyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, heroB));
+            setup.AllyPlacements.Add(new BattleUnitPlacement(GridPos.FrontBottom, heroC));
+            setup.AllyPlacements.Add(new BattleUnitPlacement(GridPos.BackBottom, heroD));
 
             setup.AllyReserves.Add(reserve);
             setup.FallbackActive = heroA;
         }
 
-        private static void CreateInventory(DummyBattleSetupData setup)
+        private static void CreateInventory(BattleSetupData setup)
         {
             if (setup == null)
             {
@@ -71,7 +71,7 @@ namespace GameKari.Battle
             setup.InventoryItems.AddRange(DefaultInventoryProvider.CreateDefaultItems());
         }
 
-        private static void CreateEnemies(DummyBattleSetupData setup)
+        private static void CreateEnemies(BattleSetupData setup)
         {
             BattleUnit enemyA = DummyBattleFactory.CreateEnemyUnitById("goblin_a");
             BattleUnit enemyB = DummyBattleFactory.CreateEnemyUnitById("archer");
@@ -79,10 +79,10 @@ namespace GameKari.Battle
             BattleUnit enemyD = DummyBattleFactory.CreateEnemyUnitById("shaman");
             BattleUnit enemyReserve = DummyBattleFactory.CreateEnemyUnitById("enemy_reserve");
 
-            setup.EnemyPlacements.Add(new DummyBattleUnitPlacement(GridPos.FrontTop, enemyA));
-            setup.EnemyPlacements.Add(new DummyBattleUnitPlacement(GridPos.BackTop, enemyB));
-            setup.EnemyPlacements.Add(new DummyBattleUnitPlacement(GridPos.FrontBottom, enemyC));
-            setup.EnemyPlacements.Add(new DummyBattleUnitPlacement(GridPos.BackBottom, enemyD));
+            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, enemyA));
+            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, enemyB));
+            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontBottom, enemyC));
+            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackBottom, enemyD));
 
             setup.EnemyReserves.Add(enemyReserve);
 
@@ -94,6 +94,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

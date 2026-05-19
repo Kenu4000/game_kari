@@ -197,7 +197,7 @@ namespace GameKari.Battle
 
             ClearBattleLists();
 
-            DummyBattleSetupData setup = DummyBattleSetupFactory.CreateDefaultSetup();
+            BattleSetupData setup = DefaultBattleSetupFactory.CreateDefaultSetup();
             ApplyDummyBattleSetup(setup);
             SetupInitialTurnState(setup.FallbackActive);
         }
@@ -215,7 +215,7 @@ namespace GameKari.Battle
             _actedUnits.Clear();
         }
 
-        private void ApplyDummyBattleSetup(DummyBattleSetupData setup)
+        private void ApplyDummyBattleSetup(BattleSetupData setup)
         {
             if (setup == null)
             {
@@ -240,7 +240,7 @@ namespace GameKari.Battle
 
         private void ApplyDummyUnitPlacements(
             bool isAlly,
-            List<DummyBattleUnitPlacement> placements,
+            List<BattleUnitPlacement> placements,
             List<BattleUnit> units)
         {
             if (placements == null || units == null)
@@ -250,7 +250,7 @@ namespace GameKari.Battle
 
             for (int i = 0; i < placements.Count; i++)
             {
-                DummyBattleUnitPlacement placement = placements[i];
+                BattleUnitPlacement placement = placements[i];
 
                 if (placement == null || placement.Unit == null)
                 {
@@ -3226,6 +3226,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 
