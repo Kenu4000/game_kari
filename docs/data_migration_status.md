@@ -13,8 +13,10 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 - `DummyCharacterFactory.CreateCharacterData(...)` sets character id, display name, max HP, and speed.
 - `DummyBattleFactory` owns temporary `BattleUnit` creation.
 - `DummyBattleFactory.CreateUnit(...)` creates `CharacterData` through `DummyCharacterFactory`, creates a `BattleUnit`, and delegates default skill assignment to `DummySkillFactory`.
-- `DummySkillFactory` owns temporary default skill creation.
-- `DummySkillFactory.AddDefaultSkills(...)` adds the current Slash, Pierce, TwinHit, and Focus dummy skills.
+- `DummySkillCatalog` owns the current temporary dummy skill definitions.
+- `DummySkillCatalog.CreateDefaultSkills()` creates the current Slash, Pierce, TwinHit, and Focus dummy skill list.
+- `DummySkillFactory` owns temporary default skill assignment to a `BattleUnit`.
+- `DummySkillFactory.AddDefaultSkills(...)` obtains the default skill list from `DummySkillCatalog` and adds non-null skills to `BattleUnit.Skills`.
 - `DummyEnemyActionFactory` owns temporary enemy action data.
 - `EnemyTargetPattern` and `EnemyActionData` have been moved out of `BattleUIManager`.
 - `DummyBattleSetupFactory` owns the current temporary battle setup data.
@@ -61,10 +63,10 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 ## Not yet migrated
 
 - CharacterData is still constructed in code through `DummyCharacterFactory`.
-- SkillData is still constructed in code through `DummySkillFactory`.
+- SkillData is still constructed in code through `DummySkillCatalog`.
 - Dummy battle setup is still hardcoded in `DummyBattleSetupFactory`.
 - No ScriptableObject asset migration has started yet.
 
 ## Next suggested step
 
-The factory-based dummy setup is now separated enough for the next phase. The next data migration step should be planned carefully before changing runtime behavior: either move `CharacterData` toward Inspector/ScriptableObject-backed assets first, or move `SkillData` toward ScriptableObject-backed assets first.
+The factory/catalog-based dummy setup is now separated enough for the next phase. The next data migration step should be planned carefully before changing runtime behavior: either move `CharacterData` toward Inspector/ScriptableObject-backed assets first, or move `SkillData` toward ScriptableObject-backed assets first.
