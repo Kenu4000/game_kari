@@ -2894,6 +2894,17 @@ namespace GameKari.Battle
                 }
             }
 
+            RectTransform imageRect = spriteImage.GetComponent<RectTransform>();
+            if (imageRect != null)
+            {
+                imageRect.anchorMin = new Vector2(-0.10f, -0.10f);
+                imageRect.anchorMax = new Vector2(1.10f, 1.10f);
+                imageRect.offsetMin = Vector2.zero;
+                imageRect.offsetMax = Vector2.zero;
+            }
+
+            spriteImage.raycastTarget = false;
+            spriteImage.preserveAspect = true;
             spriteImage.sprite = sprite;
             spriteImage.enabled = sprite != null;
             spriteImage.color = Color.white;
@@ -3272,6 +3283,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
