@@ -11,15 +11,15 @@ Current implementation status:
 - `CharacterData.MaxMP` exists and currently defaults to 4.
 - `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
 - Default ally and enemy `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
-- `DummyCharacterFactory.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
-- `DummyCharacterFactory` no longer has a runtime character fallback path; dummy battle participants are expected to have `CharacterData` assets.
+- `CharacterAssetProvider.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
+- `CharacterAssetProvider` does not have a runtime character fallback path; battle participants are expected to have `CharacterData` assets.
 - `DefaultBattleUnitFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
 - `DefaultBattleUnitFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
 - `DefaultBattleSetupFactory` now creates default ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
 - `DefaultBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
 - `BattleSetupData` stores default battle unit placements, reserves, fallback active unit, enemy references, and runtime inventory.
 - Enemy `CharacterData` assets currently have empty `DefaultSkills` lists.
-- Legacy `DummyBattleFactory.CreateAllyUnit(...)`, `CreateEnemyUnit(...)`, and `CreateBaseUnit(...)` have been removed.
+- Legacy dummy battle factory/setup/helper names have been removed from the battle scripts.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
 - Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
@@ -31,8 +31,7 @@ Current implementation status:
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
 - Dummy skill MP costs are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
 - Temporary dummy skills are assigned per character through `CharacterData.DefaultSkills`.
-- `DummySkillFactory` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
-- Legacy `DummyBattleFactory.CreateUnit(...)` has been removed to avoid ambiguous ally/enemy unit creation.
+- `UnitSkillInitializer` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
 - Knight currently owns the dummy Link skill `TwinHit`.
 - Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
@@ -142,16 +141,16 @@ Temporary dummy skill costs:
 
 - `CharacterData` is character definition data.
 - `CharacterData` is a `ScriptableObject` type.
-- Default dummy ally and enemy characters currently exist as assets in `Assets/Resources/Battle/Characters`.
-- `DummyCharacterFactory.CreateCharacterDataById(...)` first tries to load character assets by character id and fails loudly when missing.
+- Default ally and enemy characters currently exist as assets in `Assets/Resources/Battle/Characters`.
+- `CharacterAssetProvider.CreateCharacterDataById(...)` first tries to load character assets by character id and fails loudly when missing.
 - Default battle setup now uses character ids for ally/enemy creation, so HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
-- Dummy enemies currently keep `DefaultSkills` empty and continue to act through the existing enemy action flow.
+- Enemies currently keep `DefaultSkills` empty and continue to act through the existing enemy action flow.
 
 ## Skill model
 
 - `SkillData` is skill definition data.
 - `SkillData` is a `ScriptableObject` type.
-- Default dummy skills currently exist as assets in `Assets/Resources/Battle/Skills`.
+- Default skills currently exist as assets in `Assets/Resources/Battle/Skills`.
 - `CharacterData.DefaultSkills` currently controls temporary character skill ownership.
 - `DefaultSkillAssetProvider` currently acts as the required skill asset lookup.
 - Runtime cooldown state is not part of the current design.
@@ -159,13 +158,19 @@ Temporary dummy skill costs:
 - The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
 - This separation is intended to make future ScriptableObject-based skill definitions safer.
 
+## Enemy action model
+
+- `EnemyActionData` currently remains code-defined runtime data.
+- `DefaultEnemyActionProvider` currently provides default enemy actions and fallback enemy action behavior.
+- Enemy action definitions have not yet been moved to ScriptableObject assets.
+
 ## Item model
 
 - `ItemData` is item definition data.
 - `ItemData` is a `ScriptableObject` type.
-- Default dummy items currently exist as assets in `Assets/Resources/Battle/Items`.
+- Default items currently exist as assets in `Assets/Resources/Battle/Items`.
 - `InventoryLoadoutData` is initial inventory ownership/count data.
-- Default dummy inventory currently exists as `Assets/Resources/Battle/Inventory/default_inventory.asset`.
+- Default inventory currently exists as `Assets/Resources/Battle/Inventory/default_inventory.asset`.
 - `DefaultInventoryProvider` currently acts as the required inventory loadout asset lookup.
 - `InventoryItem` is runtime inventory state.
 - Runtime count is stored in `InventoryItem.Count`, not `ItemData` or `InventoryLoadoutData`.
@@ -196,4 +201,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
-- Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
+- Move enemy action definitions from `DefaultEnemyActionProvider` to asset-backed data later if enemy behavior grows.
+- Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
