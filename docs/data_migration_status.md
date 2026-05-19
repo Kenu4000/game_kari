@@ -9,7 +9,10 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 ## Confirmed steps
 
 - Battle MVP v0.1 is complete.
-- `DummyBattleFactory` owns temporary unit creation and default skill creation.
+- `DummyBattleFactory` owns temporary `CharacterData` and `BattleUnit` creation.
+- `DummySkillFactory` owns temporary default skill creation.
+- `DummySkillFactory.AddDefaultSkills(...)` adds the current Slash, Pierce, TwinHit, and Focus dummy skills.
+- `DummyBattleFactory.CreateUnit(...)` creates a `CharacterData`, creates a `BattleUnit`, and delegates default skill assignment to `DummySkillFactory`.
 - `DummyEnemyActionFactory` owns temporary enemy action data.
 - `EnemyTargetPattern` and `EnemyActionData` have been moved out of `BattleUIManager`.
 - `DummyBattleSetupFactory` owns the current temporary battle setup data.
@@ -28,6 +31,13 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 - Rogue: HP 95, speed 18, position `BackBottom`
 - Reserve: HP 100, speed 11, ally reserve
 - Fallback active unit: Knight
+
+## Current dummy skills
+
+- Slash: `s1`, Personal, damage 20, target `FrontTopEnemy`, CT 0
+- Pierce: `s2`, Personal, damage 20, target `FrontBottomEnemy`, CT 0
+- TwinHit: `s3`, Link, damage 15, target `BothFrontEnemies`, CT 2, LinkCooldown 1
+- Focus: `s4`, Personal, damage 0, target `Self`, effect `ApplyBuff`, effect target `Self`, buff `AttackUp`, buff turns 2, CT 2
 
 ## Current dummy enemy setup
 
@@ -48,8 +58,8 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 
 ## Not yet migrated
 
-- CharacterData is still constructed in code through dummy factories.
-- SkillData is still constructed in code through dummy factories.
+- CharacterData is still constructed in code through `DummyBattleFactory`.
+- SkillData is still constructed in code through `DummySkillFactory`.
 - Dummy battle setup is still hardcoded in `DummyBattleSetupFactory`.
 - No ScriptableObject asset migration has started yet.
 
