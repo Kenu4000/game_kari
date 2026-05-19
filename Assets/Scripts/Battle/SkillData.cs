@@ -31,8 +31,10 @@ namespace GameKari.Battle
         Link
     }
 
-    [System.Serializable]
-    public class SkillData
+    [CreateAssetMenu(
+        fileName = "SkillData",
+        menuName = "GameKari/Battle/Skill Data")]
+    public class SkillData : ScriptableObject
     {
         public string SkillId;
         public string SkillName;
@@ -49,4 +51,3 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
-

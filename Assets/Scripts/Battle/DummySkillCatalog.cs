@@ -187,21 +187,23 @@ namespace GameKari.Battle
             SkillEffectTargetType effectTarget = SkillEffectTargetType.Self,
             string linkPartnerCharacterId = "")
         {
-            return new SkillData
-            {
-                SkillId = skillId,
-                SkillName = skillName,
-                Description = description,
-                TargetPattern = targetPattern,
-                SkillKind = skillKind,
-                MpCost = mpCost,
-                LinkPartnerCharacterId = linkPartnerCharacterId,
-                Damage = damage,
-                EffectType = effectType,
-                EffectTarget = effectTarget,
-                BuffType = buffType,
-                BuffTurns = buffTurns
-            };
+            SkillData skill = UnityEngine.ScriptableObject.CreateInstance<SkillData>();
+
+            skill.SkillId = skillId;
+            skill.SkillName = skillName;
+            skill.Description = description;
+            skill.TargetPattern = targetPattern;
+            skill.SkillKind = skillKind;
+            skill.MpCost = mpCost;
+            skill.LinkPartnerCharacterId = linkPartnerCharacterId;
+            skill.Damage = damage;
+            skill.EffectType = effectType;
+            skill.EffectTarget = effectTarget;
+            skill.BuffType = buffType;
+            skill.BuffTurns = buffTurns;
+
+            return skill;
         }
     }
 }
+
