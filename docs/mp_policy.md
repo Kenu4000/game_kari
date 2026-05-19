@@ -12,11 +12,12 @@ Current implementation status:
 - `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
 - Default ally and enemy `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
 - `DummyCharacterFactory.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
+- `DummyCharacterFactory` no longer has a runtime character fallback path; dummy battle participants are expected to have `CharacterData` assets.
 - `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
 - `DummyBattleFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
 - `DummyBattleSetupFactory` now creates dummy ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
 - Enemy `CharacterData` assets currently have empty `DefaultSkills` lists.
-- Legacy `DummyBattleFactory.CreateAllyUnit(...)` has been removed; ally dummy setup now uses `CreateAllyUnitById(...)`.
+- Legacy `DummyBattleFactory.CreateAllyUnit(...)`, `CreateEnemyUnit(...)`, and `CreateBaseUnit(...)` have been removed.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
 - Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
@@ -180,5 +181,4 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
-- Remove remaining enemy/name/HP/speed runtime character creation path if no longer needed.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
