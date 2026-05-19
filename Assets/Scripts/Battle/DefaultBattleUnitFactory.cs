@@ -13,11 +13,9 @@
         public static BattleUnit CreateEnemyUnitById(string characterId)
         {
             CharacterData data = CharacterAssetProvider.CreateCharacterDataById(characterId);
-            return new BattleUnit(data);
+            BattleUnit unit = new BattleUnit(data);
+            UnitSkillInitializer.AddDefaultSkills(unit);
+            return unit;
         }
     }
 }
-
-
-
-

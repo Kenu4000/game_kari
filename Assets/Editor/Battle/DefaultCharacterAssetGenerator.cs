@@ -93,7 +93,10 @@ namespace GameKari.Battle.Editor
                 70,
                 4,
                 10,
-                null
+                new[]
+                {
+                    DefaultSkillAssetProvider.GetEnemyClaw()
+                }
             );
 
             CreateOrUpdateCharacter(
@@ -103,7 +106,10 @@ namespace GameKari.Battle.Editor
                 30,
                 4,
                 13,
-                null
+                new[]
+                {
+                    DefaultSkillAssetProvider.GetEnemyArrow()
+                }
             );
 
             CreateOrUpdateCharacter(
@@ -113,7 +119,10 @@ namespace GameKari.Battle.Editor
                 50,
                 4,
                 8,
-                null
+                new[]
+                {
+                    DefaultSkillAssetProvider.GetEnemyBite()
+                }
             );
 
             CreateOrUpdateCharacter(
@@ -123,7 +132,10 @@ namespace GameKari.Battle.Editor
                 25,
                 4,
                 7,
-                null
+                new[]
+                {
+                    DefaultSkillAssetProvider.GetEnemyHex()
+                }
             );
 
             CreateOrUpdateCharacter(
@@ -133,7 +145,10 @@ namespace GameKari.Battle.Editor
                 65,
                 4,
                 11,
-                null
+                new[]
+                {
+                    DefaultSkillAssetProvider.GetEnemyStrike()
+                }
             );
 
             AssetDatabase.SaveAssets();
@@ -203,4 +218,5 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 

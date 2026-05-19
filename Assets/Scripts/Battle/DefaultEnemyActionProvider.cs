@@ -22,11 +22,11 @@ namespace GameKari.Battle
                 return;
             }
 
-            SetEnemyAction(enemyActions, enemyA, DefaultSkillAssetProvider.GetEnemyClaw());
-            SetEnemyAction(enemyActions, enemyB, DefaultSkillAssetProvider.GetEnemyArrow());
-            SetEnemyAction(enemyActions, enemyC, DefaultSkillAssetProvider.GetEnemyBite());
-            SetEnemyAction(enemyActions, enemyD, DefaultSkillAssetProvider.GetEnemyHex());
-            SetEnemyAction(enemyActions, enemyReserve, DefaultSkillAssetProvider.GetEnemyStrike());
+            SetEnemyAction(enemyActions, enemyA);
+            SetEnemyAction(enemyActions, enemyB);
+            SetEnemyAction(enemyActions, enemyC);
+            SetEnemyAction(enemyActions, enemyD);
+            SetEnemyAction(enemyActions, enemyReserve);
         }
 
         public static EnemyActionData SelectEnemyAction(
@@ -38,17 +38,16 @@ namespace GameKari.Battle
 
         private static void SetEnemyAction(
             Dictionary<BattleUnit, EnemyActionData> enemyActions,
-            BattleUnit enemy,
-            SkillData skill)
+            BattleUnit enemy)
         {
-            if (enemyActions == null || enemy == null || skill == null)
+            if (enemyActions == null || enemy == null)
             {
                 return;
             }
 
             enemyActions[enemy] = new EnemyActionData
             {
-                Skill = skill
+                Skill = GetPrimaryEnemySkill(enemy)
             };
         }
 
@@ -67,8 +66,18 @@ namespace GameKari.Battle
 
             return new EnemyActionData
             {
-                Skill = DefaultSkillAssetProvider.GetEnemyStrike()
+                Skill = GetPrimaryEnemySkill(enemy)
             };
+        }
+
+        private static SkillData GetPrimaryEnemySkill(BattleUnit enemy)
+        {
+            if (enemy != null && enemy.Skills != null && enemy.Skills.Count > 0 && enemy.Skills[0] != null)
+            {
+                return enemy.Skills[0];
+            }
+
+            return DefaultSkillAssetProvider.GetEnemyStrike();
         }
     }
 }

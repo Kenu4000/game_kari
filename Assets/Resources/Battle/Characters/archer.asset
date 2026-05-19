@@ -19,4 +19,5 @@ MonoBehaviour:
   Speed: 13
   FaceIcon: {fileID: 0}
   StandingSprite: {fileID: 0}
-  DefaultSkills: []
+  DefaultSkills:
+  - {fileID: 11400000, guid: 5e2c1959c3d4c5a4aa42841dac7520e4, type: 2}
