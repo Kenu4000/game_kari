@@ -10,7 +10,8 @@ Current implementation status:
 
 - `CharacterData.MaxMP` exists and currently defaults to 4.
 - `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
-- Runtime dummy `CharacterData` instances are populated with default skills by `DummyCharacterFactory`.
+- Default `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
+- `DummyCharacterFactory` loads default character assets through `Resources.Load<CharacterData>(...)` and falls back to runtime `ScriptableObject.CreateInstance<CharacterData>()` when assets are missing.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
 - Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
@@ -125,6 +126,14 @@ Temporary dummy skill costs:
 - `BattleUIManager` is responsible for blocking insufficient-MP skill execution.
 - This follows the previous CT-style defensive blocking pattern rather than disabling the button entirely.
 
+## Character model
+
+- `CharacterData` is character definition data.
+- `CharacterData` is a `ScriptableObject` type.
+- Default dummy ally characters currently exist as assets in `Assets/Resources/Battle/Characters`.
+- `DummyCharacterFactory` first tries to load character assets by character id.
+- Runtime-generated `CharacterData` remains only as fallback when an asset is missing.
+
 ## Skill model
 
 - `SkillData` is skill definition data.
@@ -167,5 +176,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
-- Replace runtime dummy `CharacterData` generation with asset-backed CharacterData when stable.
+- Remove runtime `CharacterData` fallback after asset-backed setup is stable.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
