@@ -92,6 +92,11 @@ namespace GameKari.Battle
         private const float EnemyStatusSlotHeight = 135f;
         private const float EnemyStatusSlotSpacing = 16f;
         private const float EnemyStatusSlotWidth = 240f;
+        private const float BoardSpriteMinAnchor = -0.10f;
+        private const float BoardSpriteMaxAnchor = 1.10f;
+        private const float BoardSpriteLabelHeight = 0.22f;
+        private const float BoardSpriteLabelFontSize = 16f;
+        private const float BoardTextOnlyFontSize = 24f;
 
         private sealed class ActionValuePopup
         {
@@ -3317,6 +3322,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
