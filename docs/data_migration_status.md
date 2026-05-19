@@ -9,10 +9,12 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 ## Confirmed steps
 
 - Battle MVP v0.1 is complete.
-- `DummyBattleFactory` owns temporary `CharacterData` and `BattleUnit` creation.
+- `DummyCharacterFactory` owns temporary `CharacterData` creation.
+- `DummyCharacterFactory.CreateCharacterData(...)` sets character id, display name, max HP, and speed.
+- `DummyBattleFactory` owns temporary `BattleUnit` creation.
+- `DummyBattleFactory.CreateUnit(...)` creates `CharacterData` through `DummyCharacterFactory`, creates a `BattleUnit`, and delegates default skill assignment to `DummySkillFactory`.
 - `DummySkillFactory` owns temporary default skill creation.
 - `DummySkillFactory.AddDefaultSkills(...)` adds the current Slash, Pierce, TwinHit, and Focus dummy skills.
-- `DummyBattleFactory.CreateUnit(...)` creates a `CharacterData`, creates a `BattleUnit`, and delegates default skill assignment to `DummySkillFactory`.
 - `DummyEnemyActionFactory` owns temporary enemy action data.
 - `EnemyTargetPattern` and `EnemyActionData` have been moved out of `BattleUIManager`.
 - `DummyBattleSetupFactory` owns the current temporary battle setup data.
@@ -58,11 +60,11 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 
 ## Not yet migrated
 
-- CharacterData is still constructed in code through `DummyBattleFactory`.
+- CharacterData is still constructed in code through `DummyCharacterFactory`.
 - SkillData is still constructed in code through `DummySkillFactory`.
 - Dummy battle setup is still hardcoded in `DummyBattleSetupFactory`.
 - No ScriptableObject asset migration has started yet.
 
 ## Next suggested step
 
-Keep the current factory-based dummy setup stable, then consider moving from code-built `CharacterData` / `SkillData` toward Inspector or ScriptableObject-backed data in a separate, small step.
+The factory-based dummy setup is now separated enough for the next phase. The next data migration step should be planned carefully before changing runtime behavior: either move `CharacterData` toward Inspector/ScriptableObject-backed assets first, or move `SkillData` toward ScriptableObject-backed assets first.
