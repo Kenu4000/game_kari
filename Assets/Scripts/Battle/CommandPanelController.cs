@@ -37,7 +37,7 @@ namespace GameKari.Battle
         public Action<SkillData> OnSkillHovered;
         public Action OnHoverExit;
         public Action<BattleUnit> OnReserveClicked;
-        public Action<ItemData> OnItemClicked;
+        public Action<InventoryItem> OnItemClicked;
 
         private BattleUnit _activeUnit;
         private List<BattleUnit> _reserves;
@@ -45,7 +45,7 @@ namespace GameKari.Battle
 
         private int _hoveredSkillIndex = -1;
 
-        private readonly List<ItemData> _dummyItems = DummyItemCatalog.CreateDefaultItems();
+        private readonly List<InventoryItem> _dummyItems = DummyItemCatalog.CreateDefaultItems();
 
         private void Awake()
         {
@@ -505,18 +505,20 @@ namespace GameKari.Battle
             return null;
         }
 
-        private string BuildItemDescription(ItemData item)
+        private string BuildItemDescription(InventoryItem inventoryItem)
         {
-            if (item == null)
+            if (inventoryItem == null || inventoryItem.Item == null)
             {
                 return string.Empty;
             }
+
+            ItemData item = inventoryItem.Item;
 
             string description = string.IsNullOrWhiteSpace(item.Description)
                 ? "-"
                 : item.Description;
 
-            string countText = $"Count: {item.Count}";
+            string countText = $"Count: {inventoryItem.Count}";
 
             switch (item.Kind)
             {
@@ -525,7 +527,7 @@ namespace GameKari.Battle
 
                 case ItemKind.Heal:
                 default:
-                    if (item.Count > 0)
+                    if (inventoryItem.Count > 0)
                     {
                         return $"{description}\nHeal: {item.HealAmount}\n{countText}";
                     }
@@ -533,6 +535,7 @@ namespace GameKari.Battle
                     return $"{description}\nHeal: {item.HealAmount}\n{countText}\nNo items left.";
             }
         }
+
         private void ClearDescription()
         {
             if (descriptionText != null)
@@ -616,8 +619,8 @@ namespace GameKari.Battle
                 button.onClick.RemoveAllListeners();
                 RemoveHoverEvents(button.gameObject);
 
-                ItemData item = GetItemAt(i);
-                if (item == null)
+                InventoryItem inventoryItem = GetItemAt(i);
+                if (inventoryItem == null || inventoryItem.Item == null)
                 {
                     button.gameObject.SetActive(true);
                     button.interactable = false;
@@ -627,7 +630,7 @@ namespace GameKari.Battle
 
                 button.gameObject.SetActive(true);
 
-                if (item.Count <= 0)
+                if (inventoryItem.Count <= 0)
                 {
                     button.interactable = false;
                     SetButtonLabel(button, "-");
@@ -635,9 +638,9 @@ namespace GameKari.Battle
                 }
 
                 button.interactable = true;
-                SetButtonLabel(button, BuildItemButtonLabel(item));
+                SetButtonLabel(button, BuildItemButtonLabel(inventoryItem));
 
-                button.onClick.AddListener(() => OnItemClicked?.Invoke(item));
+                button.onClick.AddListener(() => OnItemClicked?.Invoke(inventoryItem));
 
                 EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
                 if (trigger == null)
@@ -649,7 +652,7 @@ namespace GameKari.Battle
                 {
                     if (descriptionText != null)
                     {
-                        descriptionText.text = BuildItemDescription(item);
+                        descriptionText.text = BuildItemDescription(inventoryItem);
                     }
                 });
 
@@ -662,47 +665,54 @@ namespace GameKari.Battle
 
         private void EnsureItemButtonCapacity()
         {
-            if (itemButtons == null)
-            {
-                itemButtons = new Button[0];
-            }
-
             int requiredCount = _dummyItems == null ? 0 : _dummyItems.Count;
             if (requiredCount <= 0)
             {
                 return;
             }
 
-            Button[] expanded = new Button[requiredCount];
-
-            for (int i = 0; i < itemButtons.Length && i < expanded.Length; i++)
+            if (itemButtons == null)
             {
-                expanded[i] = itemButtons[i];
+                itemButtons = new Button[0];
             }
 
-            Button template = FindItemButtonTemplate(expanded);
+            Button template = FindItemButtonTemplate(itemButtons);
             Transform parent = itemListPanel != null
                 ? itemListPanel.transform
                 : template == null ? null : template.transform.parent;
 
             if (parent == null)
             {
-                itemButtons = expanded;
                 return;
             }
 
+            Button[] expanded = new Button[requiredCount];
+
             for (int i = 0; i < requiredCount; i++)
             {
-                if (expanded[i] != null)
+                Button existing = i < itemButtons.Length ? itemButtons[i] : null;
+
+                if (existing != null)
                 {
-                    expanded[i].transform.SetParent(parent, false);
-                    PositionItemButton(expanded[i], i);
+                    expanded[i] = existing;
+                }
+                else if (template != null)
+                {
+                    expanded[i] = CreateItemButtonFromTemplate(template, parent, i);
+                }
+                else
+                {
+                    expanded[i] = CreateItemButton(parent, i);
+                }
+
+                if (expanded[i] == null)
+                {
                     continue;
                 }
 
-                expanded[i] = template != null
-                    ? CreateItemButtonFromTemplate(template, parent, i)
-                    : CreateItemButton(parent, i);
+                expanded[i].transform.SetParent(parent, false);
+                expanded[i].gameObject.SetActive(true);
+                PositionItemButton(expanded[i], i);
             }
 
             itemButtons = expanded;
@@ -795,10 +805,11 @@ namespace GameKari.Battle
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
+            rect.sizeDelta = new Vector2(180f, 36f);
             rect.anchoredPosition = new Vector2(0f, -44f * index);
         }
 
-        private ItemData GetItemAt(int index)
+        private InventoryItem GetItemAt(int index)
         {
             if (_dummyItems == null)
             {
@@ -813,21 +824,23 @@ namespace GameKari.Battle
             return _dummyItems[index];
         }
 
-        private static string BuildItemButtonLabel(ItemData item)
+        private static string BuildItemButtonLabel(InventoryItem inventoryItem)
         {
-            if (item == null)
+            if (inventoryItem == null || inventoryItem.Item == null)
             {
                 return "-";
             }
 
+            ItemData item = inventoryItem.Item;
+
             switch (item.Kind)
             {
                 case ItemKind.Pass:
-                    return $"{item.ItemName} x{item.Count}";
+                    return $"{item.ItemName} x{inventoryItem.Count}";
 
                 case ItemKind.Heal:
                 default:
-                    return $"{item.ItemName} HP:{item.HealAmount} x{item.Count}";
+                    return $"{item.ItemName} HP:{item.HealAmount} x{inventoryItem.Count}";
             }
         }
 
@@ -955,6 +968,8 @@ namespace GameKari.Battle
         }
     }
 }
+
+
 
 
 

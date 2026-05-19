@@ -14,6 +14,5 @@
         public string Description;
         public ItemKind Kind;
         public int HealAmount;
-        public int Count;
     }
 }

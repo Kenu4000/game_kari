@@ -1147,42 +1147,44 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             }
         }
 
-        private void HandleItemClicked(ItemData item)
+        private void HandleItemClicked(InventoryItem inventoryItem)
         {
             if (!CanAcceptPlayerCommand())
             {
                 return;
             }
 
-            if (item == null)
+            if (inventoryItem == null || inventoryItem.Item == null)
             {
                 return;
             }
 
-            if (item.Count <= 0)
+            if (inventoryItem.Count <= 0)
             {
-                Debug.Log($"[Item] No {item.ItemName} left. Item cannot be used.");
+                Debug.Log($"[Item] No {inventoryItem.Item.ItemName} left. Item cannot be used.");
                 return;
             }
 
-            switch (item.Kind)
+            switch (inventoryItem.Item.Kind)
             {
                 case ItemKind.Pass:
-                    HandlePassItem(item);
+                    HandlePassItem(inventoryItem);
                     return;
 
                 case ItemKind.Heal:
                 default:
-                    HandleHealItem(item);
+                    HandleHealItem(inventoryItem);
                     return;
             }
         }
 
-        private void HandlePassItem(ItemData item)
+        private void HandlePassItem(InventoryItem inventoryItem)
         {
+            ItemData item = inventoryItem.Item;
+
             EnterResolvingAction();
 
-            item.Count--;
+            inventoryItem.Count--;
 
             if (commandPanel != null)
             {
@@ -1193,13 +1195,15 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             ClearPendingActionFlashTargets();
             ClearPendingActionValuePopups();
 
-            Debug.Log($"[Action] Item used: {item.ItemName}. No MP spent and no extra MP recovered. Remaining: {item.Count}");
+            Debug.Log($"[Action] Item used: {item.ItemName}. No MP spent and no extra MP recovered. Remaining: {inventoryItem.Count}");
 
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
 
-        private void HandleHealItem(ItemData item)
+        private void HandleHealItem(InventoryItem inventoryItem)
         {
+            ItemData item = inventoryItem.Item;
+
             BattleUnit target = TryGetForwardAlly(_active);
             if (target == null)
             {
@@ -1213,7 +1217,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             target.CurrentHP = Mathf.Min(target.CurrentHP + item.HealAmount, target.Data.MaxHP);
             int healed = target.CurrentHP - beforeHp;
 
-            item.Count--;
+            inventoryItem.Count--;
 
             if (commandPanel != null)
             {
@@ -1224,7 +1228,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             SetPendingActionFlashTargets(true, new List<GridPos> { target.GridPos });
             SetPendingActionSourceFlashTargets(true, new List<GridPos> { _active.GridPos });
             AddPendingActionValuePopup(true, target.GridPos, $"+{healed}");
-            Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {item.Count}");
+            Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {inventoryItem.Count}");
 
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
@@ -3219,6 +3223,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 

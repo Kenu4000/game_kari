@@ -4,22 +4,26 @@ namespace GameKari.Battle
 {
     public static class DummyItemCatalog
     {
-        public static List<ItemData> CreateDefaultItems()
+        public static List<InventoryItem> CreateDefaultItems()
         {
-            return new List<ItemData>
+            return new List<InventoryItem>
             {
-                CreateHealItem(
-                    "potion",
-                    "Potion",
-                    "Heal the ally in front of the active unit.",
-                    20,
+                new InventoryItem(
+                    CreateHealItem(
+                        "potion",
+                        "Potion",
+                        "Heal the ally in front of the active unit.",
+                        20
+                    ),
                     3
                 ),
 
-                CreatePassItem(
-                    "pass",
-                    "Pass",
-                    "End the current action. No MP is spent and no extra MP is recovered.",
+                new InventoryItem(
+                    CreatePassItem(
+                        "pass",
+                        "Pass",
+                        "End the current action. No MP is spent and no extra MP is recovered."
+                    ),
                     99
                 )
             };
@@ -29,8 +33,7 @@ namespace GameKari.Battle
             string itemId,
             string itemName,
             string description,
-            int healAmount,
-            int count)
+            int healAmount)
         {
             return new ItemData
             {
@@ -38,16 +41,14 @@ namespace GameKari.Battle
                 ItemName = itemName,
                 Description = description,
                 Kind = ItemKind.Heal,
-                HealAmount = healAmount,
-                Count = count
+                HealAmount = healAmount
             };
         }
 
         private static ItemData CreatePassItem(
             string itemId,
             string itemName,
-            string description,
-            int count)
+            string description)
         {
             return new ItemData
             {
@@ -55,8 +56,7 @@ namespace GameKari.Battle
                 ItemName = itemName,
                 Description = description,
                 Kind = ItemKind.Pass,
-                HealAmount = 0,
-                Count = count
+                HealAmount = 0
             };
         }
     }
