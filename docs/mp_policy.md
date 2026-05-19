@@ -16,6 +16,7 @@ Current implementation status:
 - Temporary dummy skills are assigned per character through `DummySkillCatalog.CreateSkillsForUnit(...)`.
 - `DummyBattleFactory.CreateAllyUnit(...)` creates ally units and assigns player skills.
 - `DummyBattleFactory.CreateEnemyUnit(...)` creates enemy units without assigning player skills.
+- Legacy `DummyBattleFactory.CreateUnit(...)` has been removed to avoid ambiguous ally/enemy unit creation.
 - Knight currently owns the dummy Link skill `TwinHit`.
 - Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
