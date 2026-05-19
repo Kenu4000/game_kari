@@ -36,7 +36,7 @@ Current implementation status:
 - Knight currently owns the Link skill `TwinHit`.
 - Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
 - Enemy actions use `EnemyActionData` as a runtime wrapper around `SkillData`.
-- `DefaultEnemyActionProvider` now reads the enemy unit's primary skill from `BattleUnit.Skills[0]` and uses `enemy_strike` only as fallback.
+- `EnemyActionSelector` reads the enemy unit's primary skill from `BattleUnit.Skills[0]` and uses `enemy_strike` only as fallback.
 - Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution read `action.Skill.TargetPattern`.
 - Current default enemy skills are `enemy_claw`, `enemy_arrow`, `enemy_bite`, `enemy_hex`, and `enemy_strike`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
@@ -181,7 +181,7 @@ Temporary default enemy skills:
 
 - `EnemyActionData` currently remains code-defined runtime data.
 - `EnemyActionData` wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
-- `DefaultEnemyActionProvider` reads the enemy unit's first runtime skill as its default action.
+- `EnemyActionSelector` reads the enemy unit's first runtime skill as its default action.
 - Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
 - Enemy-specific skills are now represented by normal `SkillData` assets and assigned through `CharacterData.DefaultSkills`.
 
