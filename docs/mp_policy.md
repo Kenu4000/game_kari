@@ -16,6 +16,7 @@ Current implementation status:
 - `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
 - `DummyBattleFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
 - `DummyBattleSetupFactory` now creates dummy ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
+- `DummyBattleSetupFactory` now creates runtime inventory items from `DummyItemCatalog` and stores them on `DummyBattleSetupData.InventoryItems`.
 - Enemy `CharacterData` assets currently have empty `DefaultSkills` lists.
 - Legacy `DummyBattleFactory.CreateAllyUnit(...)`, `CreateEnemyUnit(...)`, and `CreateBaseUnit(...)` have been removed.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
@@ -41,7 +42,8 @@ Current implementation status:
 - `default_inventory.asset` currently contains Potion x3 and Pass x99.
 - `ItemData` represents item definition only and does not store runtime count.
 - `InventoryItem` stores an `ItemData` reference and runtime item count.
-- `CommandPanelController` obtains temporary inventory items through `DummyItemCatalog.CreateDefaultItems()` during `Awake()`.
+- `BattleUIManager` stores runtime inventory items and passes them to `CommandPanelController.Setup(...)`.
+- `CommandPanelController` no longer creates inventory items directly; it only displays and updates the inventory list it receives.
 - `Pass` is implemented as an item with count 99 through the default inventory loadout.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
 - Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
@@ -166,6 +168,8 @@ Temporary dummy skill costs:
 - `DummyItemCatalog` currently acts as the required inventory loadout asset lookup.
 - `InventoryItem` is runtime inventory state.
 - Runtime count is stored in `InventoryItem.Count`, not `ItemData` or `InventoryLoadoutData`.
+- Runtime inventory is created during dummy battle setup and passed into the command UI.
+- `CommandPanelController` is now a display/controller consumer of inventory state rather than the inventory creation owner.
 - This separation is intended to make future ScriptableObject-based item definitions and inventories safer.
 
 ## Cooldown and LinkCooldown policy
