@@ -27,13 +27,17 @@ Current implementation status:
 - `DefaultSkillAssetProvider` does not create runtime fallback `SkillData` instances.
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
+- `SkillData.TargetPattern` now uses opponent-relative names such as `FrontTopOpponent`, `BothFrontOpponents`, and `SameGridPosOpponent` so player and enemy actions can share the same targeting model.
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
-- Dummy skill MP costs are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
-- Temporary dummy skills are assigned per character through `CharacterData.DefaultSkills`.
+- Default skill MP costs and target patterns are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
+- Temporary skills are assigned per character through `CharacterData.DefaultSkills`.
 - `UnitSkillInitializer` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
-- Knight currently owns the dummy Link skill `TwinHit`.
-- Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
+- Knight currently owns the Link skill `TwinHit`.
+- Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
+- Enemy actions now use `EnemyActionData` as a runtime wrapper around `SkillData`.
+- `DefaultEnemyActionProvider` currently assigns default enemy actions by referencing existing `SkillData` assets.
+- Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution now read `action.Skill.TargetPattern`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
 - `ItemData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Item Data`.
 - Default `ItemData` assets exist under `Assets/Resources/Battle/Items`.
@@ -83,7 +87,7 @@ Wave means one battle segment inside the future quest loop:
 - Result
 - Base
 
-The current dummy battle may continue to behave as a single battle while the broader quest/Wave loop is not implemented.
+The current battle may continue to behave as a single battle while the broader quest/Wave loop is not implemented.
 
 ## Turn recovery
 
@@ -107,14 +111,14 @@ The current dummy battle may continue to behave as a single battle while the bro
 
 ## Skill costs
 
-Temporary dummy skill costs:
+Temporary default skill costs:
 
 - Slash: MP 0
 - Pierce: MP 1
 - TwinHit: MP 2
 - Focus: MP 0
 
-## Temporary dummy skill ownership
+## Temporary default skill ownership
 
 - Knight: Slash, Pierce, TwinHit, Focus
 - Mage: Slash, Pierce, Focus
@@ -153,6 +157,7 @@ Temporary dummy skill costs:
 - Default skills currently exist as assets in `Assets/Resources/Battle/Skills`.
 - `CharacterData.DefaultSkills` currently controls temporary character skill ownership.
 - `DefaultSkillAssetProvider` currently acts as the required skill asset lookup.
+- `SkillTargetPattern` is opponent-relative, so the same skill target pattern can be interpreted against the enemy board when used by an ally and against the ally board when used by an enemy.
 - Runtime cooldown state is not part of the current design.
 - Runtime link participation state is not part of the current design.
 - The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
@@ -161,8 +166,11 @@ Temporary dummy skill costs:
 ## Enemy action model
 
 - `EnemyActionData` currently remains code-defined runtime data.
-- `DefaultEnemyActionProvider` currently provides default enemy actions and fallback enemy action behavior.
-- Enemy action definitions have not yet been moved to ScriptableObject assets.
+- `EnemyActionData` now wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
+- `DefaultEnemyActionProvider` currently assigns existing default `SkillData` assets to enemies.
+- Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
+- Enemy-specific action assets have not been introduced yet.
+- Enemy-specific skill assets such as enemy-only Claw / Arrow / Bite / Hex / Strike can be added later using the same `SkillData` model.
 
 ## Item model
 
@@ -189,7 +197,7 @@ Temporary dummy skill costs:
 
 - Automatic link partner selection is not part of the target design.
 - Link skills specify their partner per skill through `SkillData.LinkPartnerCharacterId`.
-- Current dummy TwinHit specifies `rogue` as its link partner id.
+- Current TwinHit specifies `rogue` as its link partner id.
 - TwinHit currently requires user MP 2 + specified partner MP 2.
 - If either the user or the specified partner lacks MP, the Link skill is blocked.
 - Current implementation consumes the same `MpCost` from both the user and the specified partner.
@@ -201,5 +209,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
-- Move enemy action definitions from `DefaultEnemyActionProvider` to asset-backed data later if enemy behavior grows.
+- Add enemy-specific `SkillData` assets later if enemy behavior grows beyond reusing the current default skills.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
