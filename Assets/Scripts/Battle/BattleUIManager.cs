@@ -520,31 +520,23 @@ namespace GameKari.Battle
             }
         }
 
-        private bool CanUseSkillWithCooldowns(BattleUnit user, SkillData skill)
+        private bool CanUseSkill(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null)
             {
                 return false;
             }
 
-            int skillCooldown = GetSkillCooldownRemaining(user, skill);
-            if (skillCooldown > 0)
+            int mpCost = Mathf.Max(0, skill.MpCost);
+            if (user.CurrentMP < mpCost)
             {
-                Debug.Log($"[CT] Skill blocked: {user.Name} cannot use {skill.SkillName}. CT {skillCooldown} remaining.");
+                Debug.Log($"[MP] Skill blocked: {user.Name} cannot use {skill.SkillName}. MP {user.CurrentMP}/{user.Data.MaxMP}, Cost {mpCost}.");
                 return false;
             }
 
-            if (IsLinkSkillBlocked(user, skill))
+            if (skill.SkillKind == SkillKind.Link && GetLinkPartnerForSkill(user, skill) == null)
             {
-                Debug.Log($"[CT] Link skill blocked: {user.Name} cannot use {skill.SkillName}. LinkCooldown {GetLinkCooldownRemaining(user)} remaining.");
-                return false;
-            }
-
-            if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner(user))
-            {
-                string reason = LinkPartnerPolicy.BuildUnavailableReason(user, _allies);
-
-                Debug.Log($"[Link] Link skill blocked: {user.Name} cannot use {skill.SkillName}. {reason}");
+                Debug.Log($"[Link] Skill blocked: {user.Name} cannot use {skill.SkillName}. Specified partner is unavailable.");
                 return false;
             }
 
@@ -566,12 +558,53 @@ namespace GameKari.Battle
 
         private BattleUnit GetLinkPartnerForSkill(BattleUnit user, SkillData skill)
         {
-            if (skill == null || skill.SkillKind != SkillKind.Link)
+            if (user == null || skill == null || skill.SkillKind != SkillKind.Link)
             {
                 return null;
             }
 
-            return FindAvailableLinkPartner(user);
+            if (string.IsNullOrEmpty(skill.LinkPartnerCharacterId))
+            {
+                return null;
+            }
+
+            BattleUnit partner = FindUnitByCharacterId(_allies, skill.LinkPartnerCharacterId);
+            if (partner != null && partner != user)
+            {
+                return partner;
+            }
+
+            partner = FindUnitByCharacterId(_reserves, skill.LinkPartnerCharacterId);
+            if (partner != null && partner != user)
+            {
+                return partner;
+            }
+
+            return null;
+        }
+
+        private static BattleUnit FindUnitByCharacterId(List<BattleUnit> units, string characterId)
+        {
+            if (units == null || string.IsNullOrEmpty(characterId))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnit unit = units[i];
+                if (unit == null || unit.IsDead || unit.Data == null)
+                {
+                    continue;
+                }
+
+                if (unit.Data.Id == characterId)
+                {
+                    return unit;
+                }
+            }
+
+            return null;
         }
 
         private static string BuildSkillUserDisplayName(BattleUnit user, BattleUnit linkPartner)
@@ -608,32 +641,20 @@ namespace GameKari.Battle
 
         private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
         {
+            // Target design uses MP instead of Skill CT / LinkCooldown.
+            // Method kept temporarily to minimize migration blast radius.
+        }
+
+        private void ConsumeSkillMP(BattleUnit user, SkillData skill)
+        {
             if (user == null || skill == null)
             {
                 return;
             }
 
-            if (skill.CooldownTurns > 0)
-            {
-                SetSkillCooldownRemaining(user, skill, skill.CooldownTurns);
-                Debug.Log($"[CT] {user.Name}: {skill.SkillName} CT set to {skill.CooldownTurns}.");
-            }
-            else
-            {
-                SetSkillCooldownRemaining(user, skill, 0);
-            }
-
-            if (skill.SkillKind == SkillKind.Link && skill.LinkCooldownTurns > 0)
-            {
-                SetLinkCooldownRemaining(user, skill.LinkCooldownTurns);
-                Debug.Log($"[Link] {user.Name}: LinkCooldown set to {skill.LinkCooldownTurns}.");
-
-                if (linkPartner != null)
-                {
-                    SetLinkCooldownRemaining(linkPartner, skill.LinkCooldownTurns);
-                    Debug.Log($"[Link] {linkPartner.Name}: LinkCooldown set to {skill.LinkCooldownTurns} as link partner.");
-                }
-            }
+            int mpCost = Mathf.Max(0, skill.MpCost);
+            user.CurrentMP = Mathf.Max(0, user.CurrentMP - mpCost);
+            Debug.Log($"[MP] {user.Name} used {skill.SkillName}. MP {user.CurrentMP}/{user.Data.MaxMP}, Cost {mpCost}.");
         }
 
         private bool CanAcceptPlayerCommand()
@@ -684,7 +705,6 @@ namespace GameKari.Battle
 
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
-            TickSkillCooldownsAtTurnStart(activeUnit);
             EnsureSelectedEnemyActionsForPreview();
             UpdateEnemyActionPreview();
             RedrawEnemyActionPreviewHighlights();
@@ -712,7 +732,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            if (!CanUseSkillWithCooldowns(_active, skill))
+            if (!CanUseSkill(_active, skill))
             {
                 return;
             }
@@ -720,6 +740,7 @@ namespace GameKari.Battle
             BattleUnit linkPartner = GetLinkPartnerForSkill(_active, skill);
 
             EnterResolvingAction();
+            ConsumeSkillMP(_active, skill);
 
             ShowActionOverlay(skill.SkillName, BuildSkillUserDisplayName(_active, linkPartner));
             PrepareSkillActionFlashTargets(skill);
@@ -2187,7 +2208,7 @@ namespace GameKari.Battle
 
             _selectedEnemyActions.Clear();
 
-            ClearAllLinkCooldowns();
+            RecoverAllAllyMP();
             TickBuffsAtTurnStart();
 
             RebuildTurnOrder();
@@ -3201,6 +3222,11 @@ namespace GameKari.Battle
 
             var lines = new List<string>();
 
+            if (unit.IsAlly && unit.Data != null)
+            {
+                lines.Add($"MP {unit.CurrentMP}/{unit.Data.MaxMP}");
+            }
+
             if (unit.Buffs != null)
             {
                 for (int i = 0; i < unit.Buffs.Count; i++)
@@ -3215,12 +3241,38 @@ namespace GameKari.Battle
                 }
             }
 
-            if (unit.LinkCooldownRemaining > 0)
+            return string.Join("\n", lines);
+        }
+
+        private void RecoverAllAllyMP()
+        {
+            RecoverMPInUnits(_allies);
+            RecoverMPInUnits(_reserves);
+            RedrawStatusPanels();
+        }
+
+        private static void RecoverMPInUnits(IEnumerable<BattleUnit> units)
+        {
+            if (units == null)
             {
-                lines.Add($"LinkCooldown {unit.LinkCooldownRemaining}");
+                return;
             }
 
-            return string.Join("\n", lines);
+            foreach (BattleUnit unit in units)
+            {
+                if (unit == null || unit.IsDead || unit.Data == null)
+                {
+                    continue;
+                }
+
+                int before = unit.CurrentMP;
+                unit.CurrentMP = Mathf.Min(unit.Data.MaxMP, unit.CurrentMP + 1);
+
+                if (unit.CurrentMP != before)
+                {
+                    Debug.Log($"[MP] {unit.Name} recovered MP {before}->{unit.CurrentMP}/{unit.Data.MaxMP}.");
+                }
+            }
         }
 
         // Utility
@@ -3313,6 +3365,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

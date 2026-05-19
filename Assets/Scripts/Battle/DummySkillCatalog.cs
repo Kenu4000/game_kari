@@ -13,7 +13,8 @@ namespace GameKari.Battle
                     "Slash",
                     "Attack enemy front top.",
                     SkillTargetPattern.FrontTopEnemy,
-                    20
+                    20,
+                    0
                 ),
 
                 CreatePersonalDamageSkill(
@@ -21,7 +22,8 @@ namespace GameKari.Battle
                     "Pierce",
                     "Attack enemy front bottom.",
                     SkillTargetPattern.FrontBottomEnemy,
-                    20
+                    20,
+                    1
                 ),
 
                 CreateLinkDamageSkill(
@@ -31,18 +33,16 @@ namespace GameKari.Battle
                     SkillTargetPattern.BothFrontEnemies,
                     15,
                     2,
-                    1
+                    "rogue"
                 ),
 
-                // Temporary buff test skill.
-                // Wave is intentionally parked until skill slot/UI handling is expanded.
                 CreateSelfBuffSkill(
                     "s4",
                     "Focus",
                     "Apply AttackUp to self.",
                     BuffType.AttackUp,
                     2,
-                    2
+                    0
                 )
             };
         }
@@ -53,7 +53,7 @@ namespace GameKari.Battle
             string description,
             SkillTargetPattern targetPattern,
             int damage,
-            int cooldownTurns = 0)
+            int mpCost)
         {
             return CreateSkill(
                 skillId,
@@ -61,10 +61,9 @@ namespace GameKari.Battle
                 description,
                 targetPattern,
                 damage,
+                mpCost,
                 SkillEffectType.None,
                 BuffType.AttackUp,
-                0,
-                cooldownTurns,
                 0,
                 SkillKind.Personal
             );
@@ -76,8 +75,8 @@ namespace GameKari.Battle
             string description,
             SkillTargetPattern targetPattern,
             int damage,
-            int cooldownTurns,
-            int linkCooldownTurns)
+            int mpCost,
+            string linkPartnerCharacterId)
         {
             return CreateSkill(
                 skillId,
@@ -85,12 +84,13 @@ namespace GameKari.Battle
                 description,
                 targetPattern,
                 damage,
+                mpCost,
                 SkillEffectType.None,
                 BuffType.AttackUp,
                 0,
-                cooldownTurns,
-                linkCooldownTurns,
-                SkillKind.Link
+                SkillKind.Link,
+                SkillEffectTargetType.Self,
+                linkPartnerCharacterId
             );
         }
 
@@ -100,7 +100,7 @@ namespace GameKari.Battle
             string description,
             BuffType buffType,
             int buffTurns,
-            int cooldownTurns)
+            int mpCost)
         {
             return CreateSkill(
                 skillId,
@@ -108,11 +108,10 @@ namespace GameKari.Battle
                 description,
                 SkillTargetPattern.Self,
                 0,
+                mpCost,
                 SkillEffectType.ApplyBuff,
                 buffType,
                 buffTurns,
-                cooldownTurns,
-                0,
                 SkillKind.Personal,
                 SkillEffectTargetType.Self
             );
@@ -124,13 +123,13 @@ namespace GameKari.Battle
             string description,
             SkillTargetPattern targetPattern,
             int damage,
+            int mpCost,
             SkillEffectType effectType = SkillEffectType.None,
             BuffType buffType = BuffType.AttackUp,
             int buffTurns = 0,
-            int cooldownTurns = 0,
-            int linkCooldownTurns = 0,
             SkillKind skillKind = SkillKind.Personal,
-            SkillEffectTargetType effectTarget = SkillEffectTargetType.Self)
+            SkillEffectTargetType effectTarget = SkillEffectTargetType.Self,
+            string linkPartnerCharacterId = "")
         {
             return new SkillData
             {
@@ -139,8 +138,10 @@ namespace GameKari.Battle
                 Description = description,
                 TargetPattern = targetPattern,
                 SkillKind = skillKind,
-                CooldownTurns = cooldownTurns,
-                LinkCooldownTurns = linkCooldownTurns,
+                MpCost = mpCost,
+                LinkPartnerCharacterId = linkPartnerCharacterId,
+                CooldownTurns = 0,
+                LinkCooldownTurns = 0,
 
                 Damage = damage,
                 EffectType = effectType,

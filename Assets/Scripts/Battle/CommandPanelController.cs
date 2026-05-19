@@ -217,7 +217,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            bool unavailable = GetSkillCooldownRemaining(skill) > 0 || IsLinkSkillBlocked(skill) || (skill != null && skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner());
+            bool unavailable = !HasEnoughMP(skill) || (skill != null && skill.SkillKind == SkillKind.Link && !HasRequiredLinkPartner(skill));
             float alpha = unavailable ? 0.45f : 1f;
 
             SetButtonAlpha(button, alpha);
@@ -265,9 +265,10 @@ namespace GameKari.Battle
 
             string skillKindText = BuildSkillKindDescription(skill);
             string damageText = $"Damage: {skill.Damage}";
+            string mpText = BuildSkillMpDescription(skill);
             string effectText = BuildSkillEffectDescription(skill);
             string linkPartnerText = BuildSkillLinkPartnerDescription(skill);
-            string cooldownText = BuildSkillCooldownDescription(skill);
+            string unavailableText = BuildSkillUnavailableDescription(skill);
 
             var lines = new List<string>
             {
@@ -280,6 +281,7 @@ namespace GameKari.Battle
             }
 
             lines.Add(damageText);
+            lines.Add(mpText);
 
             if (!string.IsNullOrEmpty(effectText))
             {
@@ -291,9 +293,9 @@ namespace GameKari.Battle
                 lines.Add(linkPartnerText);
             }
 
-            if (!string.IsNullOrEmpty(cooldownText))
+            if (!string.IsNullOrEmpty(unavailableText))
             {
-                lines.Add(cooldownText);
+                lines.Add(unavailableText);
             }
 
             return string.Join(System.Environment.NewLine, lines);
@@ -336,12 +338,7 @@ namespace GameKari.Battle
                 return string.Empty;
             }
 
-            if (GetSkillCooldownRemaining(skill) > 0 || IsLinkSkillBlocked(skill))
-            {
-                return string.Empty;
-            }
-
-            BattleUnit partner = GetTemporaryLinkPartner();
+            BattleUnit partner = GetRequiredLinkPartner(skill);
             if (partner == null)
             {
                 return string.Empty;
@@ -350,27 +347,31 @@ namespace GameKari.Battle
             return $"Partner: {partner.Name}";
         }
 
-        private string BuildSkillCooldownDescription(SkillData skill)
+        private string BuildSkillMpDescription(SkillData skill)
         {
             if (skill == null)
             {
                 return string.Empty;
             }
 
-            int skillCooldown = GetSkillCooldownRemaining(skill);
-            if (skillCooldown > 0)
+            return $"MP Cost: {Mathf.Max(0, skill.MpCost)}";
+        }
+
+        private string BuildSkillUnavailableDescription(SkillData skill)
+        {
+            if (skill == null)
             {
-                return $"Cooldown: WAIT {skillCooldown}";
+                return string.Empty;
             }
 
-            if (IsLinkSkillBlocked(skill))
+            if (!HasEnoughMP(skill))
             {
-                return $"LinkCooldown: {GetLinkCooldownRemaining()}";
+                return $"Not enough MP. Current: {GetCurrentMP(_activeUnit)}, Cost: {Mathf.Max(0, skill.MpCost)}";
             }
 
-            if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner())
+            if (skill.SkillKind == SkillKind.Link && !HasRequiredLinkPartner(skill))
             {
-                return BuildLinkPartnerUnavailableText();
+                return "No specified link partner.";
             }
 
             return string.Empty;
@@ -383,22 +384,15 @@ namespace GameKari.Battle
                 return string.Empty;
             }
 
-            string label = skill.SkillName;
+            string label = $"{skill.SkillName} MP:{Mathf.Max(0, skill.MpCost)}";
 
-            int skillCooldown = GetSkillCooldownRemaining(skill);
-            if (skillCooldown > 0)
+            if (!HasEnoughMP(skill))
             {
-                label += $" WAIT:{skillCooldown}";
+                label += " NO MP";
             }
-            else if (IsLinkSkillBlocked(skill))
+            else if (skill.SkillKind == SkillKind.Link && !HasRequiredLinkPartner(skill))
             {
-                label += $" LINK:{GetLinkCooldownRemaining()}";
-            }
-            else if (skill.SkillKind == SkillKind.Link && !HasAvailableLinkPartner())
-            {
-                label += HasLivingLinkPartnerCandidate()
-                    ? " NO READY PARTNER"
-                    : " NO PARTNER";
+                label += " NO PARTNER";
             }
 
             return label;
@@ -478,6 +472,76 @@ namespace GameKari.Battle
             return GetTemporaryLinkPartner() != null;
         }
         
+        private bool HasEnoughMP(SkillData skill)
+        {
+            if (_activeUnit == null || skill == null)
+            {
+                return false;
+            }
+
+            return GetCurrentMP(_activeUnit) >= Mathf.Max(0, skill.MpCost);
+        }
+
+        private static int GetCurrentMP(BattleUnit unit)
+        {
+            return unit == null ? 0 : Mathf.Max(0, unit.CurrentMP);
+        }
+
+        private bool HasRequiredLinkPartner(SkillData skill)
+        {
+            if (skill == null || skill.SkillKind != SkillKind.Link)
+            {
+                return true;
+            }
+
+            return GetRequiredLinkPartner(skill) != null;
+        }
+
+        private BattleUnit GetRequiredLinkPartner(SkillData skill)
+        {
+            if (skill == null || skill.SkillKind != SkillKind.Link)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(skill.LinkPartnerCharacterId))
+            {
+                return null;
+            }
+
+            BattleUnit partner = FindUnitByCharacterId(_allies, skill.LinkPartnerCharacterId);
+            if (partner != null)
+            {
+                return partner;
+            }
+
+            return FindUnitByCharacterId(_reserves, skill.LinkPartnerCharacterId);
+        }
+
+        private static BattleUnit FindUnitByCharacterId(List<BattleUnit> units, string characterId)
+        {
+            if (units == null || string.IsNullOrEmpty(characterId))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnit unit = units[i];
+                if (unit == null || unit.IsDead || unit.Data == null)
+                {
+                    continue;
+                }
+
+                if (unit.Data.Id == characterId)
+                {
+                    return unit;
+                }
+            }
+
+            return null;
+        }
+
         private string BuildItemDescription(ItemData item)
         {
             if (item == null)
@@ -761,6 +825,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

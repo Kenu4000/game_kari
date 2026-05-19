@@ -29,12 +29,16 @@ namespace GameKari.Battle
     {
         public CharacterData Data;
         public int CurrentHP;
+        public int CurrentMP;
 
         public bool IsDead;
         public bool IsAlly;
         public GridPos GridPos;
         public readonly List<SkillData> Skills = new();
         public readonly List<BuffState> Buffs = new();
+
+        // Legacy fields kept temporarily during MP migration.
+        // Target design does not use Skill CT or LinkCooldown.
         public readonly List<SkillCooldownState> SkillCooldowns = new();
         public int LinkCooldownRemaining;
 
@@ -42,12 +46,9 @@ namespace GameKari.Battle
         {
             Data = data;
             CurrentHP = data.MaxHP;
-
+            CurrentMP = data.MaxMP;
         }
 
         public string Name => Data.DisplayName;
     }
 }
-
-
-

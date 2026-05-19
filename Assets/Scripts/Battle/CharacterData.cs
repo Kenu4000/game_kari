@@ -10,6 +10,7 @@ namespace GameKari.Battle
         public string Id;
         public string DisplayName;
         public int MaxHP = 100;
+        public int MaxMP = 4;
 
         public int Speed = 10;
         public Sprite FaceIcon;

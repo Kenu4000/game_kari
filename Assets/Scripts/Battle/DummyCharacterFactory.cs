@@ -4,6 +4,8 @@ namespace GameKari.Battle
 {
     public static class DummyCharacterFactory
     {
+        private const int DefaultMaxMP = 4;
+
         public static CharacterData CreateCharacterData(string name, int hp, int speed)
         {
             CharacterData data = ScriptableObject.CreateInstance<CharacterData>();
@@ -11,6 +13,7 @@ namespace GameKari.Battle
             data.Id = BuildCharacterId(name);
             data.DisplayName = name;
             data.MaxHP = hp;
+            data.MaxMP = DefaultMaxMP;
             data.Speed = speed;
 
             return data;

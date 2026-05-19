@@ -39,6 +39,11 @@ namespace GameKari.Battle
         [TextArea] public string Description;
         public SkillTargetPattern TargetPattern;
         public SkillKind SkillKind;
+        public int MpCost;
+        public string LinkPartnerCharacterId;
+
+        // Legacy fields kept temporarily during MP migration.
+        // Target design does not use Skill CT or LinkCooldown.
         public int CooldownTurns;
         public int LinkCooldownTurns;
 
@@ -49,9 +54,3 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
-
-
-
-
-
-
