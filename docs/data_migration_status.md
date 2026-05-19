@@ -10,11 +10,32 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 
 - Battle MVP v0.1 is complete.
 - `DummyBattleFactory` owns temporary unit creation and default skill creation.
-- `BattleUIManager` calls `DummyBattleFactory.CreateUnit(...)` when preparing the current dummy ally and enemy units.
 - `DummyEnemyActionFactory` owns temporary enemy action data.
 - `EnemyTargetPattern` and `EnemyActionData` have been moved out of `BattleUIManager`.
-- `BattleUIManager` now calls `DummyEnemyActionFactory.SetDefaultEnemyActions(...)` during dummy enemy setup.
-- `BattleUIManager` now calls `DummyEnemyActionFactory.SelectEnemyAction(...)` when selecting or previewing enemy actions.
+- `DummyBattleSetupFactory` owns the current temporary battle setup data.
+- `DummyBattleSetupFactory.CreateDefaultSetup()` creates the default ally units, enemy units, ally reserve, enemy reserve, and initial grid placements.
+- `BattleUIManager` now calls `DummyBattleSetupFactory.CreateDefaultSetup()` during dummy battle bootstrap.
+- `BattleUIManager` now applies setup data through `ApplyDummyBattleSetup(...)` and `ApplyDummyUnitPlacements(...)`.
+- `BattleUIManager` still owns runtime grid/list application, UI updates, turn flow, and action resolution.
+- `BattleUIManager` still calls `DummyEnemyActionFactory.SetDefaultEnemyActions(...)` after applying dummy enemy setup.
+- `BattleUIManager` still calls `DummyEnemyActionFactory.SelectEnemyAction(...)` when selecting or previewing enemy actions.
+
+## Current dummy ally setup
+
+- Knight: HP 130, speed 12, position `FrontTop`
+- Mage: HP 80, speed 15, position `BackTop`
+- Cleric: HP 90, speed 9, position `FrontBottom`
+- Rogue: HP 95, speed 18, position `BackBottom`
+- Reserve: HP 100, speed 11, ally reserve
+- Fallback active unit: Knight
+
+## Current dummy enemy setup
+
+- Goblin A: HP 70, speed 10, position `FrontTop`
+- Archer: HP 30, speed 13, position `BackTop`
+- Goblin B: HP 50, speed 8, position `FrontBottom`
+- Shaman: HP 25, speed 7, position `BackBottom`
+- Enemy Reserve: HP 65, speed 11, enemy reserve
 
 ## Current dummy enemy actions
 
@@ -27,12 +48,11 @@ The current policy is to reduce hardcoded dummy-data responsibility from `Battle
 
 ## Not yet migrated
 
-- Dummy ally formation setup remains in `BattleUIManager.SetupDummyAllies()`.
-- Dummy enemy formation setup remains in `BattleUIManager.SetupDummyEnemies()`.
 - CharacterData is still constructed in code through dummy factories.
 - SkillData is still constructed in code through dummy factories.
+- Dummy battle setup is still hardcoded in `DummyBattleSetupFactory`.
 - No ScriptableObject asset migration has started yet.
 
 ## Next suggested step
 
-Create a small battle setup factory that returns the initial dummy ally units, enemy units, reserve units, and grid placement data, while keeping battle behavior unchanged.
+Keep the current factory-based dummy setup stable, then consider moving from code-built `CharacterData` / `SkillData` toward Inspector or ScriptableObject-backed data in a separate, small step.
