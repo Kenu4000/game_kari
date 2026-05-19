@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -11,163 +12,38 @@ namespace GameKari.Battle
 
         public static SkillData GetSlash()
         {
-            return LoadSkillAsset(SlashAssetPath) ?? CreatePersonalDamageSkill(
-                "s1",
-                "Slash",
-                "Attack enemy front top.",
-                SkillTargetPattern.FrontTopEnemy,
-                20,
-                0
-            );
+            return LoadRequiredSkillAsset(SlashAssetPath);
         }
 
         public static SkillData GetPierce()
         {
-            return LoadSkillAsset(PierceAssetPath) ?? CreatePersonalDamageSkill(
-                "s2",
-                "Pierce",
-                "Attack enemy front bottom.",
-                SkillTargetPattern.FrontBottomEnemy,
-                20,
-                1
-            );
+            return LoadRequiredSkillAsset(PierceAssetPath);
         }
 
         public static SkillData GetTwinHit()
         {
-            return LoadSkillAsset(TwinHitAssetPath) ?? CreateLinkDamageSkill(
-                "s3",
-                "TwinHit",
-                "Temporary Knight link skill. Attack both front enemies with Rogue.",
-                SkillTargetPattern.BothFrontEnemies,
-                15,
-                2,
-                "rogue"
-            );
+            return LoadRequiredSkillAsset(TwinHitAssetPath);
         }
 
         public static SkillData GetFocus()
         {
-            return LoadSkillAsset(FocusAssetPath) ?? CreateSelfBuffSkill(
-                "s4",
-                "Focus",
-                "Apply AttackUp to self.",
-                BuffType.AttackUp,
-                2,
-                0
-            );
+            return LoadRequiredSkillAsset(FocusAssetPath);
         }
 
-        private static SkillData LoadSkillAsset(string resourcesPath)
+        private static SkillData LoadRequiredSkillAsset(string resourcesPath)
         {
             if (string.IsNullOrEmpty(resourcesPath))
             {
-                return null;
+                throw new InvalidOperationException("Skill asset path is empty.");
             }
 
-            return Resources.Load<SkillData>(resourcesPath);
-        }
+            SkillData skill = Resources.Load<SkillData>(resourcesPath);
+            if (skill != null)
+            {
+                return skill;
+            }
 
-        private static SkillData CreatePersonalDamageSkill(
-            string skillId,
-            string skillName,
-            string description,
-            SkillTargetPattern targetPattern,
-            int damage,
-            int mpCost)
-        {
-            return CreateSkill(
-                skillId,
-                skillName,
-                description,
-                targetPattern,
-                damage,
-                mpCost,
-                SkillEffectType.None,
-                BuffType.AttackUp,
-                0,
-                SkillKind.Personal
-            );
-        }
-
-        private static SkillData CreateLinkDamageSkill(
-            string skillId,
-            string skillName,
-            string description,
-            SkillTargetPattern targetPattern,
-            int damage,
-            int mpCost,
-            string linkPartnerCharacterId)
-        {
-            return CreateSkill(
-                skillId,
-                skillName,
-                description,
-                targetPattern,
-                damage,
-                mpCost,
-                SkillEffectType.None,
-                BuffType.AttackUp,
-                0,
-                SkillKind.Link,
-                SkillEffectTargetType.Self,
-                linkPartnerCharacterId
-            );
-        }
-
-        private static SkillData CreateSelfBuffSkill(
-            string skillId,
-            string skillName,
-            string description,
-            BuffType buffType,
-            int buffTurns,
-            int mpCost)
-        {
-            return CreateSkill(
-                skillId,
-                skillName,
-                description,
-                SkillTargetPattern.Self,
-                0,
-                mpCost,
-                SkillEffectType.ApplyBuff,
-                buffType,
-                buffTurns,
-                SkillKind.Personal,
-                SkillEffectTargetType.Self
-            );
-        }
-
-        private static SkillData CreateSkill(
-            string skillId,
-            string skillName,
-            string description,
-            SkillTargetPattern targetPattern,
-            int damage,
-            int mpCost,
-            SkillEffectType effectType = SkillEffectType.None,
-            BuffType buffType = BuffType.AttackUp,
-            int buffTurns = 0,
-            SkillKind skillKind = SkillKind.Personal,
-            SkillEffectTargetType effectTarget = SkillEffectTargetType.Self,
-            string linkPartnerCharacterId = "")
-        {
-            SkillData skill = ScriptableObject.CreateInstance<SkillData>();
-
-            skill.SkillId = skillId;
-            skill.SkillName = skillName;
-            skill.Description = description;
-            skill.TargetPattern = targetPattern;
-            skill.SkillKind = skillKind;
-            skill.MpCost = mpCost;
-            skill.LinkPartnerCharacterId = linkPartnerCharacterId;
-            skill.Damage = damage;
-            skill.EffectType = effectType;
-            skill.EffectTarget = effectTarget;
-            skill.BuffType = buffType;
-            skill.BuffTurns = buffTurns;
-
-            return skill;
+            throw new InvalidOperationException($"SkillData asset not found at Resources path: {resourcesPath}");
         }
     }
 }
