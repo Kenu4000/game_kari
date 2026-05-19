@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameKari.Battle
@@ -26,64 +27,28 @@ namespace GameKari.Battle
 
         private static ItemData GetPotion()
         {
-            return LoadItemAsset(PotionAssetPath) ?? CreateHealItem(
-                "potion",
-                "Potion",
-                "Heal the ally in front of the active unit.",
-                20
-            );
+            return LoadRequiredItemAsset(PotionAssetPath);
         }
 
         private static ItemData GetPass()
         {
-            return LoadItemAsset(PassAssetPath) ?? CreatePassItem(
-                "pass",
-                "Pass",
-                "End the current action. No MP is spent and no extra MP is recovered."
-            );
+            return LoadRequiredItemAsset(PassAssetPath);
         }
 
-        private static ItemData LoadItemAsset(string resourcesPath)
+        private static ItemData LoadRequiredItemAsset(string resourcesPath)
         {
             if (string.IsNullOrEmpty(resourcesPath))
             {
-                return null;
+                throw new InvalidOperationException("Item asset path is empty.");
             }
 
-            return Resources.Load<ItemData>(resourcesPath);
-        }
+            ItemData item = Resources.Load<ItemData>(resourcesPath);
+            if (item != null)
+            {
+                return item;
+            }
 
-        private static ItemData CreateHealItem(
-            string itemId,
-            string itemName,
-            string description,
-            int healAmount)
-        {
-            ItemData item = ScriptableObject.CreateInstance<ItemData>();
-
-            item.ItemId = itemId;
-            item.ItemName = itemName;
-            item.Description = description;
-            item.Kind = ItemKind.Heal;
-            item.HealAmount = healAmount;
-
-            return item;
-        }
-
-        private static ItemData CreatePassItem(
-            string itemId,
-            string itemName,
-            string description)
-        {
-            ItemData item = ScriptableObject.CreateInstance<ItemData>();
-
-            item.ItemId = itemId;
-            item.ItemName = itemName;
-            item.Description = description;
-            item.Kind = ItemKind.Pass;
-            item.HealAmount = 0;
-
-            return item;
+            throw new InvalidOperationException($"ItemData asset not found at Resources path: {resourcesPath}");
         }
     }
 }
