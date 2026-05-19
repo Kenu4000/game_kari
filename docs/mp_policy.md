@@ -22,22 +22,23 @@ Current implementation status:
 - Legacy dummy battle factory/setup/helper names have been removed from the battle scripts.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
-- Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
-- `DefaultSkillAssetProvider` loads required default skill assets through `Resources.Load<SkillData>(...)` and throws if a required asset is missing.
+- Default player `SkillData` assets and default enemy `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
+- `DefaultSkillAssetProvider` loads required default player/enemy skill assets through `Resources.Load<SkillData>(...)` and throws if a required asset is missing.
 - `DefaultSkillAssetProvider` does not create runtime fallback `SkillData` instances.
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
-- `SkillData.TargetPattern` now uses opponent-relative names such as `FrontTopOpponent`, `BothFrontOpponents`, and `SameGridPosOpponent` so player and enemy actions can share the same targeting model.
+- `SkillData.TargetPattern` uses opponent-relative names such as `FrontTopOpponent`, `BothFrontOpponents`, and `SameGridPosOpponent` so player and enemy actions can share the same targeting model.
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
-- Default skill MP costs and target patterns are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
+- Default player skill MP costs and enemy skill target patterns are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
 - Temporary skills are assigned per character through `CharacterData.DefaultSkills`.
 - `UnitSkillInitializer` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
 - Knight currently owns the Link skill `TwinHit`.
 - Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
-- Enemy actions now use `EnemyActionData` as a runtime wrapper around `SkillData`.
-- `DefaultEnemyActionProvider` currently assigns default enemy actions by referencing existing `SkillData` assets.
-- Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution now read `action.Skill.TargetPattern`.
+- Enemy actions use `EnemyActionData` as a runtime wrapper around `SkillData`.
+- `DefaultEnemyActionProvider` assigns enemy-specific `SkillData` assets to enemies.
+- Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution read `action.Skill.TargetPattern`.
+- Current default enemy skills are `enemy_claw`, `enemy_arrow`, `enemy_bite`, `enemy_hex`, and `enemy_strike`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
 - `ItemData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Item Data`.
 - Default `ItemData` assets exist under `Assets/Resources/Battle/Items`.
@@ -111,12 +112,20 @@ The current battle may continue to behave as a single battle while the broader q
 
 ## Skill costs
 
-Temporary default skill costs:
+Temporary default player skill costs:
 
 - Slash: MP 0
 - Pierce: MP 1
 - TwinHit: MP 2
 - Focus: MP 0
+
+Temporary default enemy skills:
+
+- Claw: Damage 60, same-grid opponent target
+- Arrow: Damage 45, front-top opponent target
+- Bite: Damage 60, front-bottom opponent target
+- Hex: Damage 25, all opponents target
+- Strike: Damage 60, same-grid opponent target
 
 ## Temporary default skill ownership
 
@@ -154,8 +163,8 @@ Temporary default skill costs:
 
 - `SkillData` is skill definition data.
 - `SkillData` is a `ScriptableObject` type.
-- Default skills currently exist as assets in `Assets/Resources/Battle/Skills`.
-- `CharacterData.DefaultSkills` currently controls temporary character skill ownership.
+- Default player and enemy skills currently exist as assets in `Assets/Resources/Battle/Skills`.
+- `CharacterData.DefaultSkills` currently controls temporary player character skill ownership.
 - `DefaultSkillAssetProvider` currently acts as the required skill asset lookup.
 - `SkillTargetPattern` is opponent-relative, so the same skill target pattern can be interpreted against the enemy board when used by an ally and against the ally board when used by an enemy.
 - Runtime cooldown state is not part of the current design.
@@ -166,11 +175,10 @@ Temporary default skill costs:
 ## Enemy action model
 
 - `EnemyActionData` currently remains code-defined runtime data.
-- `EnemyActionData` now wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
-- `DefaultEnemyActionProvider` currently assigns existing default `SkillData` assets to enemies.
+- `EnemyActionData` wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
+- `DefaultEnemyActionProvider` assigns enemy-specific default `SkillData` assets to enemies.
 - Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
-- Enemy-specific action assets have not been introduced yet.
-- Enemy-specific skill assets such as enemy-only Claw / Arrow / Bite / Hex / Strike can be added later using the same `SkillData` model.
+- Enemy-specific skills are now represented by normal `SkillData` assets rather than a separate enemy action asset type.
 
 ## Item model
 
@@ -209,5 +217,5 @@ Temporary default skill costs:
 ## Remaining cleanup
 
 - Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
-- Add enemy-specific `SkillData` assets later if enemy behavior grows beyond reusing the current default skills.
+- Decide whether enemy `CharacterData.DefaultSkills` should eventually own enemy skills instead of `DefaultEnemyActionProvider` assigning them directly.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
