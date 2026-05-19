@@ -117,7 +117,8 @@ namespace GameKari.Battle.Editor
                 },
                 new[]
                 {
-                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyArrow(), 100)
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyArrow(), 80),
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyStrike(), 20)
                 }
             );
 
@@ -134,7 +135,8 @@ namespace GameKari.Battle.Editor
                 },
                 new[]
                 {
-                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyBite(), 100)
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyBite(), 70),
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyClaw(), 30)
                 }
             );
 
@@ -151,7 +153,8 @@ namespace GameKari.Battle.Editor
                 },
                 new[]
                 {
-                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyHex(), 100)
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyHex(), 40),
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyStrike(), 60)
                 }
             );
 
@@ -261,6 +264,7 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 
 
 

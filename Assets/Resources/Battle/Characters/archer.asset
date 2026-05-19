@@ -23,4 +23,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5e2c1959c3d4c5a4aa42841dac7520e4, type: 2}
   EnemyActionSlots:
   - Skill: {fileID: 11400000, guid: 5e2c1959c3d4c5a4aa42841dac7520e4, type: 2}
-    Weight: 100
+    Weight: 80
+  - Skill: {fileID: 11400000, guid: 3e05c2a7e16864c4e9a8556b0f4d8969, type: 2}
+    Weight: 20
