@@ -222,8 +222,8 @@ namespace GameKari.Battle
                 return;
             }
 
-            ApplyDummyUnitPlacements(true, setup.AllyPlacements, _allies);
-            ApplyDummyUnitPlacements(false, setup.EnemyPlacements, _enemies);
+            ApplyBattleUnitPlacements(true, setup.AllyPlacements, _allies);
+            ApplyBattleUnitPlacements(false, setup.EnemyPlacements, _enemies);
 
             _reserves.AddRange(setup.AllyReserves);
             _enemyReserves.AddRange(setup.EnemyReserves);
@@ -238,7 +238,7 @@ namespace GameKari.Battle
                 setup.EnemyReserve);
         }
 
-        private void ApplyDummyUnitPlacements(
+        private void ApplyBattleUnitPlacements(
             bool isAlly,
             List<BattleUnitPlacement> placements,
             List<BattleUnit> units)
@@ -3226,6 +3226,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 
