@@ -2872,11 +2872,11 @@ namespace GameKari.Battle
             if (hasSprite)
             {
                 labelRect.anchorMin = new Vector2(0f, 0f);
-                labelRect.anchorMax = new Vector2(1f, 0.22f);
+                labelRect.anchorMax = new Vector2(1f, BoardSpriteLabelHeight);
                 labelRect.offsetMin = new Vector2(4f, 2f);
                 labelRect.offsetMax = new Vector2(-4f, -2f);
                 cellLabel.alignment = TextAlignmentOptions.Center;
-                cellLabel.fontSize = 16f;
+                cellLabel.fontSize = BoardSpriteLabelFontSize;
                 return;
             }
 
@@ -2885,7 +2885,7 @@ namespace GameKari.Battle
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
             cellLabel.alignment = TextAlignmentOptions.Center;
-            cellLabel.fontSize = 24f;
+            cellLabel.fontSize = BoardTextOnlyFontSize;
         }
 
         private static void SetBoardCellSprite(TMP_Text cellLabel, Sprite sprite)
@@ -2905,8 +2905,8 @@ namespace GameKari.Battle
                 spriteObject.transform.SetParent(cellTransform, false);
 
                 RectTransform rect = spriteObject.AddComponent<RectTransform>();
-                rect.anchorMin = new Vector2(-0.10f, -0.10f);
-                rect.anchorMax = new Vector2(1.10f, 1.10f);
+                rect.anchorMin = new Vector2(BoardSpriteMinAnchor, BoardSpriteMinAnchor);
+                rect.anchorMax = new Vector2(BoardSpriteMaxAnchor, BoardSpriteMaxAnchor);
                 rect.offsetMin = Vector2.zero;
                 rect.offsetMax = Vector2.zero;
 
@@ -2931,8 +2931,8 @@ namespace GameKari.Battle
             RectTransform imageRect = spriteImage.GetComponent<RectTransform>();
             if (imageRect != null)
             {
-                imageRect.anchorMin = new Vector2(-0.10f, -0.10f);
-                imageRect.anchorMax = new Vector2(1.10f, 1.10f);
+                imageRect.anchorMin = new Vector2(BoardSpriteMinAnchor, BoardSpriteMinAnchor);
+                imageRect.anchorMax = new Vector2(BoardSpriteMaxAnchor, BoardSpriteMaxAnchor);
                 imageRect.offsetMin = Vector2.zero;
                 imageRect.offsetMax = Vector2.zero;
             }
@@ -3317,6 +3317,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
