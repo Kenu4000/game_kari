@@ -11,7 +11,8 @@ Current implementation status:
 - `CharacterData.MaxMP` exists and currently defaults to 4.
 - `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
 - Default `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
-- `DummyCharacterFactory` loads default character assets through `Resources.Load<CharacterData>(...)` and falls back to runtime `ScriptableObject.CreateInstance<CharacterData>()` when assets are missing.
+- `DummyCharacterFactory.CreateCharacterDataById(...)` loads ally character assets through `Resources.Load<CharacterData>(...)` and throws if the requested ally asset is missing.
+- `DummyCharacterFactory.CreateCharacterData(...)` remains as the enemy/runtime character creation path and still falls back to runtime `ScriptableObject.CreateInstance<CharacterData>()` when no asset exists.
 - `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id.
 - `DummyBattleSetupFactory` now creates dummy ally units by character id instead of duplicating ally HP/Speed values in setup code.
 - Legacy `DummyBattleFactory.CreateAllyUnit(...)` has been removed; ally dummy setup now uses `CreateAllyUnitById(...)`.
@@ -133,9 +134,9 @@ Temporary dummy skill costs:
 - `CharacterData` is character definition data.
 - `CharacterData` is a `ScriptableObject` type.
 - Default dummy ally characters currently exist as assets in `Assets/Resources/Battle/Characters`.
-- `DummyCharacterFactory` first tries to load character assets by character id.
-- Runtime-generated `CharacterData` remains only as fallback when an asset is missing.
-- Dummy ally setup now uses character ids for ally creation, so ally HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets when available.
+- `DummyCharacterFactory.CreateCharacterDataById(...)` first tries to load character assets by character id and fails loudly when missing.
+- `DummyCharacterFactory.CreateCharacterData(...)` is still used for enemy/runtime dummy characters.
+- Dummy ally setup now uses character ids for ally creation, so ally HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
 
 ## Skill model
 
@@ -179,5 +180,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
-- Remove runtime `CharacterData` fallback after asset-backed setup is stable.
+- Consider asset-backed enemy definitions later if enemy data starts growing.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
