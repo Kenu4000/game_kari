@@ -45,10 +45,12 @@ namespace GameKari.Battle
 
         private int _hoveredSkillIndex = -1;
 
-        private readonly List<InventoryItem> _dummyItems = DummyItemCatalog.CreateDefaultItems();
+        private List<InventoryItem> _dummyItems;
 
         private void Awake()
         {
+            _dummyItems = DummyItemCatalog.CreateDefaultItems();
+
             HookRootButtons();
             BindFixedItemButtons();
         }
@@ -968,6 +970,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

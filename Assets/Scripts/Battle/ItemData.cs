@@ -1,4 +1,6 @@
-﻿namespace GameKari.Battle
+﻿using UnityEngine;
+
+namespace GameKari.Battle
 {
     public enum ItemKind
     {
@@ -6,12 +8,14 @@
         Pass
     }
 
-    [System.Serializable]
-    public class ItemData
+    [CreateAssetMenu(
+        fileName = "ItemData",
+        menuName = "GameKari/Battle/Item Data")]
+    public class ItemData : ScriptableObject
     {
         public string ItemId;
         public string ItemName;
-        public string Description;
+        [TextArea] public string Description;
         public ItemKind Kind;
         public int HealAmount;
     }

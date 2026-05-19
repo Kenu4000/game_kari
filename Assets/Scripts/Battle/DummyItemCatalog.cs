@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -35,14 +36,15 @@ namespace GameKari.Battle
             string description,
             int healAmount)
         {
-            return new ItemData
-            {
-                ItemId = itemId,
-                ItemName = itemName,
-                Description = description,
-                Kind = ItemKind.Heal,
-                HealAmount = healAmount
-            };
+            ItemData item = ScriptableObject.CreateInstance<ItemData>();
+
+            item.ItemId = itemId;
+            item.ItemName = itemName;
+            item.Description = description;
+            item.Kind = ItemKind.Heal;
+            item.HealAmount = healAmount;
+
+            return item;
         }
 
         private static ItemData CreatePassItem(
@@ -50,14 +52,15 @@ namespace GameKari.Battle
             string itemName,
             string description)
         {
-            return new ItemData
-            {
-                ItemId = itemId,
-                ItemName = itemName,
-                Description = description,
-                Kind = ItemKind.Pass,
-                HealAmount = 0
-            };
+            ItemData item = ScriptableObject.CreateInstance<ItemData>();
+
+            item.ItemId = itemId;
+            item.ItemName = itemName;
+            item.Description = description;
+            item.Kind = ItemKind.Pass;
+            item.HealAmount = 0;
+
+            return item;
         }
     }
 }
