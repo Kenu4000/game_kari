@@ -35,10 +35,11 @@ Current implementation status:
 - Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
 - `ItemData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Item Data`.
+- Default `ItemData` assets exist under `Assets/Resources/Battle/Items`.
+- `DummyItemCatalog` loads default item assets through `Resources.Load<ItemData>(...)` and falls back to runtime `ScriptableObject.CreateInstance<ItemData>()` when assets are missing.
 - `ItemData` represents item definition only and does not store runtime count.
 - `InventoryItem` stores an `ItemData` reference and runtime item count.
 - Temporary inventory items are implemented in `DummyItemCatalog`.
-- `DummyItemCatalog` currently creates temporary runtime `ItemData` instances through `ScriptableObject.CreateInstance<ItemData>()`.
 - `CommandPanelController` obtains temporary inventory items through `DummyItemCatalog.CreateDefaultItems()` during `Awake()`.
 - `Pass` is implemented as an item with count 99.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
@@ -158,10 +159,12 @@ Temporary dummy skill costs:
 
 - `ItemData` is item definition data.
 - `ItemData` is a `ScriptableObject` type.
+- Default dummy items currently exist as assets in `Assets/Resources/Battle/Items`.
+- `DummyItemCatalog` currently acts as the item asset lookup and fallback factory.
 - `InventoryItem` is runtime inventory state.
 - Runtime count is stored in `InventoryItem.Count`, not `ItemData`.
-- Temporary item definitions are still generated in code until asset-backed item definitions are introduced.
-- `DummyItemCatalog` must be called from Unity lifecycle timing such as `Awake()` or later while it still creates runtime `ScriptableObject` instances.
+- Temporary item ownership/count is still generated in code until asset-backed inventory/loadout definitions are introduced.
+- `DummyItemCatalog` must be called from Unity lifecycle timing such as `Awake()` or later while it still creates runtime `ScriptableObject` fallback instances.
 - This separation is intended to make future ScriptableObject-based item definitions safer.
 
 ## Cooldown and LinkCooldown policy
@@ -186,5 +189,5 @@ Temporary dummy skill costs:
 
 ## Remaining cleanup
 
-- Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
+- Remove item runtime fallback after asset-backed item definitions are stable.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
