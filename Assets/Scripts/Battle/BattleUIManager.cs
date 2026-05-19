@@ -106,22 +106,6 @@ namespace GameKari.Battle
             BattleEnded
         }
 
-        private enum EnemyTargetPattern
-        {
-            SameGridPosAlly,
-            AllyFrontTop,
-            AllyFrontBottom,
-            BothFrontAllies,
-            AllAllies
-        }
-
-        private class EnemyActionData
-        {
-            public string ActionName;
-            public int Damage;
-            public EnemyTargetPattern TargetPattern;
-        }
-
         private class DefeatedEnemyInfo
         {
             public BattleUnit Unit;
@@ -272,47 +256,18 @@ namespace GameKari.Battle
             _grid.SetUnit(false, GridPos.FrontBottom, enemyC);
             _grid.SetUnit(false, GridPos.BackBottom, enemyD);
 
-            SetEnemyAction(enemyA, "Claw", 60, EnemyTargetPattern.SameGridPosAlly);
-            SetEnemyAction(enemyB, "Arrow", 45, EnemyTargetPattern.AllyFrontTop);
-            SetEnemyAction(enemyC, "Bite", 60, EnemyTargetPattern.AllyFrontBottom);
-            SetEnemyAction(enemyD, "Hex", 25, EnemyTargetPattern.AllAllies);
-            SetEnemyAction(enemyReserve, "Strike", 60, EnemyTargetPattern.SameGridPosAlly);
+            DummyEnemyActionFactory.SetDefaultEnemyActions(
+                _enemyActions,
+                enemyA,
+                enemyB,
+                enemyC,
+                enemyD,
+                enemyReserve);
         }
-
         // Enemy action selection
-        private void SetEnemyAction(BattleUnit enemy, string actionName, int damage, EnemyTargetPattern targetPattern)
-        {
-            if (enemy == null)
-            {
-                return;
-            }
-
-            _enemyActions[enemy] = new EnemyActionData
-            {
-                ActionName = actionName,
-                Damage = damage,
-                TargetPattern = targetPattern
-            };
-        }
-
-        private EnemyActionData GetEnemyAction(BattleUnit enemy)
-        {
-            if (enemy != null && _enemyActions.TryGetValue(enemy, out EnemyActionData action))
-            {
-                return action;
-            }
-
-            return new EnemyActionData
-            {
-                ActionName = "Strike",
-                Damage = 60,
-                TargetPattern = EnemyTargetPattern.SameGridPosAlly
-            };
-        }
-
         private EnemyActionData SelectEnemyAction(BattleUnit enemy)
         {
-            return GetEnemyAction(enemy);
+            return DummyEnemyActionFactory.SelectEnemyAction(_enemyActions, enemy);
         }
 
         private void EnsureSelectedEnemyActionsForPreview()
@@ -3364,6 +3319,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
