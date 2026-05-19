@@ -28,7 +28,7 @@ namespace GameKari.Battle
         [SerializeField] private Button[] swapButtons = new Button[4];
 
         [Header("Fixed Item Buttons")]
-        [SerializeField] private Button[] itemButtons = new Button[1];
+        [SerializeField] private Button[] itemButtons = new Button[2];
 
         [Header("Description")]
         [SerializeField] private TMP_Text descriptionText;
@@ -45,7 +45,7 @@ namespace GameKari.Battle
 
         private int _hoveredSkillIndex = -1;
 
-        private readonly ItemData _dummyPotion = CreateDummyPotion();
+        private readonly List<ItemData> _dummyItems = CreateDummyItems();
 
         private void Awake()
         {
@@ -518,27 +518,47 @@ namespace GameKari.Battle
 
             string countText = $"Count: {item.Count}";
 
-            if (item.Count > 0)
+            switch (item.Kind)
             {
-                return $"{description}\nHeal: {item.HealAmount}\n{countText}";
-            }
+                case ItemKind.Pass:
+                    return $"{description}\nEffect: End current action.\n{countText}";
 
-            return $"{description}\nHeal: {item.HealAmount}\n{countText}\nNo items left.";
+                case ItemKind.Heal:
+                default:
+                    if (item.Count > 0)
+                    {
+                        return $"{description}\nHeal: {item.HealAmount}\n{countText}";
+                    }
+
+                    return $"{description}\nHeal: {item.HealAmount}\n{countText}\nNo items left.";
+            }
         }
 
-        private static ItemData CreateDummyPotion()
+        private static List<ItemData> CreateDummyItems()
         {
-            return new ItemData
+            return new List<ItemData>
             {
-                ItemId = "potion",
-                ItemName = "Potion",
-                Description = "Heal the ally in front of the active unit.",
-                HealAmount = 20,
-                Count = 3
+                new ItemData
+                {
+                    ItemId = "potion",
+                    ItemName = "Potion",
+                    Description = "Heal the ally in front of the active unit.",
+                    Kind = ItemKind.Heal,
+                    HealAmount = 20,
+                    Count = 3
+                },
+                new ItemData
+                {
+                    ItemId = "pass",
+                    ItemName = "Pass",
+                    Description = "End the current action. No MP is spent and no extra MP is recovered.",
+                    Kind = ItemKind.Pass,
+                    HealAmount = 0,
+                    Count = 99
+                }
             };
         }
-
-        private void ClearDescription()
+private void ClearDescription()
         {
             if (descriptionText != null)
             {
@@ -603,6 +623,8 @@ namespace GameKari.Battle
 
         private void BindFixedItemButtons()
         {
+            EnsureItemButtonCapacity();
+
             if (itemButtons == null)
             {
                 return;
@@ -617,50 +639,220 @@ namespace GameKari.Battle
                 }
 
                 button.onClick.RemoveAllListeners();
+                RemoveHoverEvents(button.gameObject);
 
-                if (i == 0)
-                {
-                    button.gameObject.SetActive(true);
-
-                    if (_dummyPotion.Count <= 0)
-                    {
-                        button.interactable = false;
-                        SetButtonLabel(button, "-");
-                        RemoveHoverEvents(button.gameObject);
-                        continue;
-                    }
-
-                    button.interactable = true;
-                    SetButtonLabel(button, $"{_dummyPotion.ItemName} HP:{_dummyPotion.HealAmount} x{_dummyPotion.Count}");
-                    button.onClick.AddListener(() => OnItemClicked?.Invoke(_dummyPotion));
-
-                    RemoveHoverEvents(button.gameObject);
-
-                    EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
-                    if (trigger == null)
-                    {
-                        trigger = button.gameObject.AddComponent<EventTrigger>();
-                    }
-
-                    AddHoverEvent(trigger, EventTriggerType.PointerEnter, () =>
-                    {
-                        if (descriptionText != null)
-                        {
-                            descriptionText.text = BuildItemDescription(_dummyPotion);
-                        }
-                    });
-
-                    AddHoverEvent(trigger, EventTriggerType.PointerExit, () =>
-                    {
-                        ClearDescription();
-                    });
-                }
-                else
+                ItemData item = GetItemAt(i);
+                if (item == null)
                 {
                     button.gameObject.SetActive(true);
                     button.interactable = false;
                     SetButtonLabel(button, "-");
+                    continue;
                 }
+
+                button.gameObject.SetActive(true);
+
+                if (item.Count <= 0)
+                {
+                    button.interactable = false;
+                    SetButtonLabel(button, "-");
+                    continue;
+                }
+
+                button.interactable = true;
+                SetButtonLabel(button, BuildItemButtonLabel(item));
+
+                button.onClick.AddListener(() => OnItemClicked?.Invoke(item));
+
+                EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
+                if (trigger == null)
+                {
+                    trigger = button.gameObject.AddComponent<EventTrigger>();
+                }
+
+                AddHoverEvent(trigger, EventTriggerType.PointerEnter, () =>
+                {
+                    if (descriptionText != null)
+                    {
+                        descriptionText.text = BuildItemDescription(item);
+                    }
+                });
+
+                AddHoverEvent(trigger, EventTriggerType.PointerExit, () =>
+                {
+                    ClearDescription();
+                });
+            }
+        }
+
+        private void EnsureItemButtonCapacity()
+        {
+            if (itemButtons == null)
+            {
+                itemButtons = new Button[0];
+            }
+
+            int requiredCount = _dummyItems == null ? 0 : _dummyItems.Count;
+            if (requiredCount <= 0)
+            {
+                return;
+            }
+
+            Button[] expanded = new Button[requiredCount];
+
+            for (int i = 0; i < itemButtons.Length && i < expanded.Length; i++)
+            {
+                expanded[i] = itemButtons[i];
+            }
+
+            Button template = FindItemButtonTemplate(expanded);
+            Transform parent = itemListPanel != null
+                ? itemListPanel.transform
+                : template == null ? null : template.transform.parent;
+
+            if (parent == null)
+            {
+                itemButtons = expanded;
+                return;
+            }
+
+            for (int i = 0; i < requiredCount; i++)
+            {
+                if (expanded[i] != null)
+                {
+                    expanded[i].transform.SetParent(parent, false);
+                    PositionItemButton(expanded[i], i);
+                    continue;
+                }
+
+                expanded[i] = template != null
+                    ? CreateItemButtonFromTemplate(template, parent, i)
+                    : CreateItemButton(parent, i);
+            }
+
+            itemButtons = expanded;
+        }
+
+        private static Button FindItemButtonTemplate(Button[] buttons)
+        {
+            if (buttons == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] != null)
+                {
+                    return buttons[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static Button CreateItemButtonFromTemplate(Button template, Transform parent, int index)
+        {
+            if (template == null || parent == null)
+            {
+                return null;
+            }
+
+            GameObject clone = Instantiate(template.gameObject, parent);
+            clone.name = $"ItemButton_{index + 1}";
+
+            Button button = clone.GetComponent<Button>();
+            PositionItemButton(button, index);
+
+            return button;
+        }
+
+        private static Button CreateItemButton(Transform parent, int index)
+        {
+            if (parent == null)
+            {
+                return null;
+            }
+
+            GameObject buttonObject = new GameObject($"ItemButton_{index + 1}");
+            buttonObject.transform.SetParent(parent, false);
+
+            RectTransform rect = buttonObject.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(180f, 36f);
+
+            Image image = buttonObject.AddComponent<Image>();
+            image.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+
+            Button button = buttonObject.AddComponent<Button>();
+
+            GameObject textObject = new GameObject("Text");
+            textObject.transform.SetParent(buttonObject.transform, false);
+
+            RectTransform textRect = textObject.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            TMP_Text label = textObject.AddComponent<TextMeshProUGUI>();
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontSize = 20f;
+            label.raycastTarget = false;
+
+            PositionItemButton(button, index);
+
+            return button;
+        }
+
+        private static void PositionItemButton(Button button, int index)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            RectTransform rect = button.transform as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -44f * index);
+        }
+
+        private ItemData GetItemAt(int index)
+        {
+            if (_dummyItems == null)
+            {
+                return null;
+            }
+
+            if (index < 0 || index >= _dummyItems.Count)
+            {
+                return null;
+            }
+
+            return _dummyItems[index];
+        }
+
+        private static string BuildItemButtonLabel(ItemData item)
+        {
+            if (item == null)
+            {
+                return "-";
+            }
+
+            switch (item.Kind)
+            {
+                case ItemKind.Pass:
+                    return $"{item.ItemName} x{item.Count}";
+
+                case ItemKind.Heal:
+                default:
+                    return $"{item.ItemName} HP:{item.HealAmount} x{item.Count}";
             }
         }
 
@@ -788,6 +980,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

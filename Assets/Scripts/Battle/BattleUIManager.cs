@@ -1165,6 +1165,41 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
                 return;
             }
 
+            switch (item.Kind)
+            {
+                case ItemKind.Pass:
+                    HandlePassItem(item);
+                    return;
+
+                case ItemKind.Heal:
+                default:
+                    HandleHealItem(item);
+                    return;
+            }
+        }
+
+        private void HandlePassItem(ItemData item)
+        {
+            EnterResolvingAction();
+
+            item.Count--;
+
+            if (commandPanel != null)
+            {
+                commandPanel.RefreshItems();
+            }
+
+            ShowActionOverlay(item.ItemName, _active == null ? "" : _active.Name);
+            ClearPendingActionFlashTargets();
+            ClearPendingActionValuePopups();
+
+            Debug.Log($"[Action] Item used: {item.ItemName}. No MP spent and no extra MP recovered. Remaining: {item.Count}");
+
+            StartCoroutine(FinishPlayerActionAfterDelay());
+        }
+
+        private void HandleHealItem(ItemData item)
+        {
             BattleUnit target = TryGetForwardAlly(_active);
             if (target == null)
             {
@@ -3184,6 +3219,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 
