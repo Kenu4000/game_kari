@@ -12,6 +12,8 @@ Current implementation status:
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
+- `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
+- Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
 - Dummy skill MP costs are implemented in `DummySkillCatalog`.
 - Temporary dummy skills are assigned per character through `DummySkillCatalog.CreateSkillsForUnit(...)`.
 - `DummyBattleFactory.CreateAllyUnit(...)` creates ally units and assigns player skills.
@@ -20,10 +22,13 @@ Current implementation status:
 - Knight currently owns the dummy Link skill `TwinHit`.
 - Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
-- Temporary item definitions are implemented in `DummyItemCatalog`.
-- `CommandPanelController` obtains temporary items through `DummyItemCatalog.CreateDefaultItems()`.
+- `ItemData` now represents item definition only and does not store runtime count.
+- `InventoryItem` stores an `ItemData` reference and runtime item count.
+- Temporary inventory items are implemented in `DummyItemCatalog`.
+- `CommandPanelController` obtains temporary inventory items through `DummyItemCatalog.CreateDefaultItems()`.
 - `Pass` is implemented as an item with count 99.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
+- Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
 - Ally status UI shows MP in the existing status text area.
 - Insufficient-MP skills are visually dimmed but remain interactable.
 - `BattleUIManager` blocks insufficient-MP skill execution.
@@ -114,6 +119,14 @@ Temporary dummy skill costs:
 - `BattleUIManager` is responsible for blocking insufficient-MP skill execution.
 - This follows the previous CT-style defensive blocking pattern rather than disabling the button entirely.
 
+## Skill model
+
+- `SkillData` is skill definition data.
+- Runtime cooldown state is not part of the current design.
+- Runtime link participation state is not part of the current design.
+- The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
+- This separation is intended to make future ScriptableObject-based skill definitions safer.
+
 ## Cooldown and LinkCooldown policy
 
 - Skill CT is not part of the target design.
@@ -133,6 +146,13 @@ Temporary dummy skill costs:
 - A reserve character may be a Link partner and pay MP.
 - Reserve Link partners are not shown as source flash cells because they are not placed on the active grid.
 - Future Link skill cost values may be split into separate user/partner costs if needed.
+
+## Item model
+
+- `ItemData` is item definition data.
+- `InventoryItem` is runtime inventory state.
+- Runtime count is stored in `InventoryItem.Count`, not `ItemData`.
+- This separation is intended to make future ScriptableObject-based item definitions safer.
 
 ## Remaining cleanup
 
