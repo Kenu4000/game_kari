@@ -6,49 +6,46 @@ namespace GameKari.Battle
 {
     public static class DummyItemCatalog
     {
-        private const string PotionAssetPath = "Battle/Items/potion";
-        private const string PassAssetPath = "Battle/Items/pass";
+        private const string DefaultInventoryLoadoutPath = "Battle/Inventory/default_inventory";
 
         public static List<InventoryItem> CreateDefaultItems()
         {
-            return new List<InventoryItem>
+            InventoryLoadoutData loadout = LoadRequiredInventoryLoadout(DefaultInventoryLoadoutPath);
+            List<InventoryItem> items = new List<InventoryItem>();
+
+            for (int i = 0; i < loadout.Items.Count; i++)
             {
-                new InventoryItem(
-                    GetPotion(),
-                    3
-                ),
+                InventoryLoadoutEntry entry = loadout.Items[i];
+                if (entry == null || entry.Item == null)
+                {
+                    throw new InvalidOperationException($"Inventory loadout entry is invalid at index: {i}");
+                }
 
-                new InventoryItem(
-                    GetPass(),
-                    99
-                )
-            };
+                if (entry.Count < 0)
+                {
+                    throw new InvalidOperationException($"Inventory loadout count is negative at index: {i}");
+                }
+
+                items.Add(new InventoryItem(entry.Item, entry.Count));
+            }
+
+            return items;
         }
 
-        private static ItemData GetPotion()
-        {
-            return LoadRequiredItemAsset(PotionAssetPath);
-        }
-
-        private static ItemData GetPass()
-        {
-            return LoadRequiredItemAsset(PassAssetPath);
-        }
-
-        private static ItemData LoadRequiredItemAsset(string resourcesPath)
+        private static InventoryLoadoutData LoadRequiredInventoryLoadout(string resourcesPath)
         {
             if (string.IsNullOrEmpty(resourcesPath))
             {
-                throw new InvalidOperationException("Item asset path is empty.");
+                throw new InvalidOperationException("Inventory loadout path is empty.");
             }
 
-            ItemData item = Resources.Load<ItemData>(resourcesPath);
-            if (item != null)
+            InventoryLoadoutData loadout = Resources.Load<InventoryLoadoutData>(resourcesPath);
+            if (loadout != null)
             {
-                return item;
+                return loadout;
             }
 
-            throw new InvalidOperationException($"ItemData asset not found at Resources path: {resourcesPath}");
+            throw new InvalidOperationException($"InventoryLoadoutData asset not found at Resources path: {resourcesPath}");
         }
     }
 }
