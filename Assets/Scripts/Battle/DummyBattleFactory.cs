@@ -2,14 +2,6 @@
 {
     public static class DummyBattleFactory
     {
-        public static BattleUnit CreateAllyUnit(string name, int hp, int speed)
-        {
-            // Legacy compatibility for temporary callers.
-            BattleUnit unit = CreateBaseUnit(name, hp, speed);
-            DummySkillFactory.AddDefaultSkills(unit);
-            return unit;
-        }
-
         public static BattleUnit CreateAllyUnitById(string characterId)
         {
             CharacterData data = DummyCharacterFactory.CreateCharacterDataById(characterId);
