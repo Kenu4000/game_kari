@@ -1,6 +1,6 @@
 ﻿namespace GameKari.Battle
 {
-    public static class DummySkillFactory
+    public static class UnitSkillInitializer
     {
         public static void AddDefaultSkills(BattleUnit unit)
         {
@@ -23,6 +23,7 @@
         }
     }
 }
+
 
 
 

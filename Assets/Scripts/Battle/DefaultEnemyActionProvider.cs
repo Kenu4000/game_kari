@@ -18,7 +18,7 @@ namespace GameKari.Battle
         public EnemyTargetPattern TargetPattern;
     }
 
-    public static class DummyEnemyActionFactory
+    public static class DefaultEnemyActionProvider
     {
         public static void SetDefaultEnemyActions(
             Dictionary<BattleUnit, EnemyActionData> enemyActions,
@@ -92,6 +92,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

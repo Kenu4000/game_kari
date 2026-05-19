@@ -4,19 +4,20 @@
     {
         public static BattleUnit CreateAllyUnitById(string characterId)
         {
-            CharacterData data = DummyCharacterFactory.CreateCharacterDataById(characterId);
+            CharacterData data = CharacterAssetProvider.CreateCharacterDataById(characterId);
             BattleUnit unit = new BattleUnit(data);
-            DummySkillFactory.AddDefaultSkills(unit);
+            UnitSkillInitializer.AddDefaultSkills(unit);
             return unit;
         }
 
         public static BattleUnit CreateEnemyUnitById(string characterId)
         {
-            CharacterData data = DummyCharacterFactory.CreateCharacterDataById(characterId);
+            CharacterData data = CharacterAssetProvider.CreateCharacterDataById(characterId);
             return new BattleUnit(data);
         }
     }
 }
+
 
 
 

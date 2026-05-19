@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GameKari.Battle
 {
-    public static class DummyCharacterFactory
+    public static class CharacterAssetProvider
     {
         private const string CharacterAssetBasePath = "Battle/Characters/";
 
@@ -29,6 +29,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
