@@ -20,8 +20,10 @@ Current implementation status:
 - Knight currently owns the dummy Link skill `TwinHit`.
 - Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
-- Temporary item definitions are implemented in `DummyItemCatalog`.
-- `CommandPanelController` obtains temporary items through `DummyItemCatalog.CreateDefaultItems()`.
+- `ItemData` now represents item definition only and does not store runtime count.
+- `InventoryItem` stores an `ItemData` reference and runtime item count.
+- Temporary inventory items are implemented in `DummyItemCatalog`.
+- `CommandPanelController` obtains temporary inventory items through `DummyItemCatalog.CreateDefaultItems()`.
 - `Pass` is implemented as an item with count 99.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
 - Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
@@ -134,6 +136,13 @@ Temporary dummy skill costs:
 - A reserve character may be a Link partner and pay MP.
 - Reserve Link partners are not shown as source flash cells because they are not placed on the active grid.
 - Future Link skill cost values may be split into separate user/partner costs if needed.
+
+## Item model
+
+- `ItemData` is item definition data.
+- `InventoryItem` is runtime inventory state.
+- Runtime count is stored in `InventoryItem.Count`, not `ItemData`.
+- This separation is intended to make future ScriptableObject-based item definitions safer.
 
 ## Remaining cleanup
 
