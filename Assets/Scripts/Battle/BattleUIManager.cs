@@ -47,8 +47,8 @@ namespace GameKari.Battle
 
         private readonly List<BattleUnit> _enemyReserves = new();
         private readonly List<InventoryItem> _inventoryItems = new();
-        private readonly Dictionary<BattleUnit, EnemyActionData> _enemyActions = new();
-        private readonly Dictionary<BattleUnit, EnemyActionData> _selectedEnemyActions = new();
+        private readonly Dictionary<BattleUnit, EnemyActionState> _enemyActionStates = new();
+        private readonly Dictionary<BattleUnit, EnemyActionState> _previewEnemyActionStates = new();
 
         private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
         private readonly HashSet<BattleUnit> _actedUnits = new();
@@ -209,8 +209,8 @@ namespace GameKari.Battle
             _reserves.Clear();
             _enemyReserves.Clear();
             _inventoryItems.Clear();
-            _enemyActions.Clear();
-            _selectedEnemyActions.Clear();
+            _enemyActionStates.Clear();
+            _previewEnemyActionStates.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
         }
@@ -229,8 +229,8 @@ namespace GameKari.Battle
             _enemyReserves.AddRange(setup.EnemyReserves);
             _inventoryItems.AddRange(setup.InventoryItems);
 
-            EnemyActionSelector.SetDefaultEnemyActions(
-                _enemyActions,
+            EnemyActionSelector.InitializeEnemyActionStates(
+                _enemyActionStates,
                 setup.EnemyA,
                 setup.EnemyB,
                 setup.EnemyC,
@@ -262,12 +262,12 @@ namespace GameKari.Battle
             }
         }
         // Enemy action selection
-        private EnemyActionData SelectEnemyAction(BattleUnit enemy)
+        private EnemyActionState ResolveEnemyActionState(BattleUnit enemy)
         {
-            return EnemyActionSelector.SelectEnemyAction(_enemyActions, enemy);
+            return EnemyActionSelector.ResolveEnemyActionState(_enemyActionStates, enemy);
         }
 
-        private void EnsureSelectedEnemyActionsForPreview()
+        private void EnsureEnemyActionStatesForPreview()
         {
             for (int i = 0; i < _enemies.Count; i++)
             {
@@ -278,40 +278,40 @@ namespace GameKari.Battle
                     continue;
                 }
 
-                if (_selectedEnemyActions.ContainsKey(enemy))
+                if (_previewEnemyActionStates.ContainsKey(enemy))
                 {
                     continue;
                 }
 
-                _selectedEnemyActions[enemy] = SelectEnemyAction(enemy);
+                _previewEnemyActionStates[enemy] = ResolveEnemyActionState(enemy);
             }
         }
 
-        private EnemyActionData GetSelectedEnemyAction(BattleUnit enemy)
+        private EnemyActionState GetPreviewEnemyActionState(BattleUnit enemy)
         {
             if (enemy == null)
             {
                 return null;
             }
 
-            if (_selectedEnemyActions.TryGetValue(enemy, out EnemyActionData selectedAction))
+            if (_previewEnemyActionStates.TryGetValue(enemy, out EnemyActionState selectedAction))
             {
                 return selectedAction;
             }
 
-            EnemyActionData action = SelectEnemyAction(enemy);
-            _selectedEnemyActions[enemy] = action;
+            EnemyActionState action = ResolveEnemyActionState(enemy);
+            _previewEnemyActionStates[enemy] = action;
             return action;
         }
 
-        private void ClearSelectedEnemyAction(BattleUnit enemy)
+        private void ClearPreviewEnemyActionState(BattleUnit enemy)
         {
             if (enemy == null)
             {
                 return;
             }
 
-            _selectedEnemyActions.Remove(enemy);
+            _previewEnemyActionStates.Remove(enemy);
         }
 
         private void SetupInitialTurnState(BattleUnit fallbackActive)
@@ -527,7 +527,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
-            EnsureSelectedEnemyActionsForPreview();
+            EnsureEnemyActionStatesForPreview();
             UpdateEnemyActionPreview();
             RedrawEnemyActionPreviewHighlights();
             SetEnemyActionPreviewVisible(true);
@@ -951,7 +951,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
                 return;
             }
 
-            EnemyActionData action = GetSelectedEnemyAction(nextEnemy);
+            EnemyActionState action = GetPreviewEnemyActionState(nextEnemy);
             if (action == null || action.Skill == null)
             {
                 return;
@@ -992,7 +992,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             RedrawActiveHighlights();
         }
 
-        private void HighlightEnemyActionTargets(BattleUnit enemy, EnemyActionData action)
+        private void HighlightEnemyActionTargets(BattleUnit enemy, EnemyActionState action)
         {
             if (enemy == null || action == null || action.Skill == null)
             {
@@ -1343,7 +1343,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             return targets;
         }
 
-        private List<GridPos> GetEnemyActionTargetPositions(BattleUnit enemy, EnemyActionData action)
+        private List<GridPos> GetEnemyActionTargetPositions(BattleUnit enemy, EnemyActionState action)
         {
             var targets = new List<GridPos>();
 
@@ -1412,7 +1412,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             SetPendingActionFlashTargets(isAllyBoard, targets);
         }
 
-        private void PrepareEnemyActionFlashTargets(BattleUnit enemy, EnemyActionData action)
+        private void PrepareEnemyActionFlashTargets(BattleUnit enemy, EnemyActionState action)
         {
             if (enemy == null || action == null || action.Skill == null)
             {
@@ -1746,11 +1746,11 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             EnterResolvingAction();
 
-            EnemyActionData action = GetSelectedEnemyAction(enemy);
+            EnemyActionState action = GetPreviewEnemyActionState(enemy);
 
             _actedUnits.Add(enemy);
             ExecuteEnemyAction(enemy, action);
-            ClearSelectedEnemyAction(enemy);
+            ClearPreviewEnemyActionState(enemy);
             RedrawBoard();
 
             yield return PlayPendingActionFlashOrDelay();
@@ -1847,7 +1847,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             return null;
         }
 
-        private void ExecuteEnemyAction(BattleUnit enemy, EnemyActionData action)
+        private void ExecuteEnemyAction(BattleUnit enemy, EnemyActionState action)
         {
             if (enemy == null || enemy.IsDead || action == null || action.Skill == null || _battleEnded)
             {
@@ -2067,7 +2067,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             CompactFrontlineIfEmpty(true);
 
-            _selectedEnemyActions.Clear();
+            _previewEnemyActionStates.Clear();
 
             RecoverAllAllyMP();
             TickBuffsAtTurnStart();
@@ -2377,7 +2377,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             _enemyActionPreviewText.raycastTarget = false;
         }
 
-        private string BuildEnemyActionPreviewLine(BattleUnit enemy, EnemyActionData action, bool isNext)
+        private string BuildEnemyActionPreviewLine(BattleUnit enemy, EnemyActionState action, bool isNext)
         {
             if (enemy == null || action == null || action.Skill == null)
             {
@@ -2388,7 +2388,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             return $"{prefix}{enemy.Name}: {action.Skill.SkillName} -> {BuildEnemyActionTargetText(enemy, action)}";
         }
 
-        private string BuildEnemyActionTargetText(BattleUnit enemy, EnemyActionData action)
+        private string BuildEnemyActionTargetText(BattleUnit enemy, EnemyActionState action)
         {
             if (action == null || action.Skill == null)
             {
@@ -2465,7 +2465,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
                     continue;
                 }
 
-                EnemyActionData action = GetSelectedEnemyAction(enemy);
+                EnemyActionState action = GetPreviewEnemyActionState(enemy);
                 if (action == null || action.Skill == null)
                 {
                     continue;
@@ -3226,6 +3226,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 

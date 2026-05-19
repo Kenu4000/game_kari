@@ -2,69 +2,69 @@
 
 namespace GameKari.Battle
 {
-    public class EnemyActionData
+    public class EnemyActionState
     {
         public SkillData Skill;
     }
 
     public static class EnemyActionSelector
     {
-        public static void SetDefaultEnemyActions(
-            Dictionary<BattleUnit, EnemyActionData> enemyActions,
+        public static void InitializeEnemyActionStates(
+            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
             BattleUnit enemyA,
             BattleUnit enemyB,
             BattleUnit enemyC,
             BattleUnit enemyD,
             BattleUnit enemyReserve)
         {
-            if (enemyActions == null)
+            if (enemyActionStates == null)
             {
                 return;
             }
 
-            SetEnemyAction(enemyActions, enemyA);
-            SetEnemyAction(enemyActions, enemyB);
-            SetEnemyAction(enemyActions, enemyC);
-            SetEnemyAction(enemyActions, enemyD);
-            SetEnemyAction(enemyActions, enemyReserve);
+            SetEnemyActionState(enemyActionStates, enemyA);
+            SetEnemyActionState(enemyActionStates, enemyB);
+            SetEnemyActionState(enemyActionStates, enemyC);
+            SetEnemyActionState(enemyActionStates, enemyD);
+            SetEnemyActionState(enemyActionStates, enemyReserve);
         }
 
-        public static EnemyActionData SelectEnemyAction(
-            Dictionary<BattleUnit, EnemyActionData> enemyActions,
+        public static EnemyActionState ResolveEnemyActionState(
+            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
             BattleUnit enemy)
         {
-            return GetEnemyAction(enemyActions, enemy);
+            return GetEnemyActionState(enemyActionStates, enemy);
         }
 
-        private static void SetEnemyAction(
-            Dictionary<BattleUnit, EnemyActionData> enemyActions,
+        private static void SetEnemyActionState(
+            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
             BattleUnit enemy)
         {
-            if (enemyActions == null || enemy == null)
+            if (enemyActionStates == null || enemy == null)
             {
                 return;
             }
 
-            enemyActions[enemy] = new EnemyActionData
+            enemyActionStates[enemy] = new EnemyActionState
             {
                 Skill = GetPrimaryEnemySkill(enemy)
             };
         }
 
-        private static EnemyActionData GetEnemyAction(
-            Dictionary<BattleUnit, EnemyActionData> enemyActions,
+        private static EnemyActionState GetEnemyActionState(
+            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
             BattleUnit enemy)
         {
-            if (enemyActions != null &&
+            if (enemyActionStates != null &&
                 enemy != null &&
-                enemyActions.TryGetValue(enemy, out EnemyActionData action) &&
-                action != null &&
-                action.Skill != null)
+                enemyActionStates.TryGetValue(enemy, out EnemyActionState actionState) &&
+                actionState != null &&
+                actionState.Skill != null)
             {
-                return action;
+                return actionState;
             }
 
-            return new EnemyActionData
+            return new EnemyActionState
             {
                 Skill = GetPrimaryEnemySkill(enemy)
             };
@@ -81,4 +81,3 @@ namespace GameKari.Battle
         }
     }
 }
-
