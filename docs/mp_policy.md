@@ -11,11 +11,12 @@ Current implementation status:
 - `CharacterData.MaxMP` exists and currently defaults to 4.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
+- Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
+- `DummySkillCatalog` loads default skill assets through `Resources.Load<SkillData>(...)` and falls back to runtime `ScriptableObject.CreateInstance<SkillData>()` when assets are missing.
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
-- `DummySkillCatalog` still creates temporary runtime `SkillData` instances through `ScriptableObject.CreateInstance<SkillData>()`.
 - Dummy skill MP costs are implemented in `DummySkillCatalog`.
 - Temporary dummy skills are assigned per character through `DummySkillCatalog.CreateSkillsForUnit(...)`.
 - `DummyBattleFactory.CreateAllyUnit(...)` creates ally units and assigns player skills.
@@ -125,10 +126,11 @@ Temporary dummy skill costs:
 
 - `SkillData` is skill definition data.
 - `SkillData` is a `ScriptableObject` type.
+- Default dummy skills currently exist as assets in `Assets/Resources/Battle/Skills`.
+- `DummySkillCatalog` still controls temporary character skill ownership.
 - Runtime cooldown state is not part of the current design.
 - Runtime link participation state is not part of the current design.
 - The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
-- Temporary dummy skills are still generated in code until asset-backed skill definitions are introduced.
 - This separation is intended to make future ScriptableObject-based skill definitions safer.
 
 ## Cooldown and LinkCooldown policy
@@ -161,5 +163,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
-- Move skill definitions from `DummySkillCatalog` to ScriptableObject or another asset-backed data source when skill count or character-specific skill ownership increases.
+- Move skill ownership from `DummySkillCatalog` to CharacterData or another asset-backed loadout data source.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
