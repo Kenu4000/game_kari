@@ -343,15 +343,25 @@ namespace GameKari.Battle
                 return false;
             }
 
-            if (skill.SkillKind == SkillKind.Link && GetLinkPartnerForSkill(user, skill) == null)
+            if (skill.SkillKind == SkillKind.Link)
             {
-                Debug.Log($"[Link] Skill blocked: {user.Name} cannot use {skill.SkillName}. Specified partner is unavailable.");
-                return false;
+                BattleUnit linkPartner = GetLinkPartnerForSkill(user, skill);
+                if (linkPartner == null)
+                {
+                    Debug.Log($"[Link] Skill blocked: {user.Name} cannot use {skill.SkillName}. Specified partner is unavailable.");
+                    return false;
+                }
+
+                if (linkPartner.CurrentMP < mpCost)
+                {
+                    Debug.Log($"[MP] Link skill blocked: {linkPartner.Name} cannot support {skill.SkillName}. MP {linkPartner.CurrentMP}/{linkPartner.Data.MaxMP}, Cost {mpCost}.");
+                    return false;
+                }
             }
 
             return true;
         }
-        
+
         private BattleUnit GetLinkPartnerForSkill(BattleUnit user, SkillData skill)
         {
             if (user == null || skill == null || skill.SkillKind != SkillKind.Link)
@@ -441,7 +451,7 @@ namespace GameKari.Battle
             // Method kept temporarily to minimize migration blast radius.
         }
 
-        private void ConsumeSkillMP(BattleUnit user, SkillData skill)
+        private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
         {
             if (user == null || skill == null)
             {
@@ -449,8 +459,23 @@ namespace GameKari.Battle
             }
 
             int mpCost = Mathf.Max(0, skill.MpCost);
-            user.CurrentMP = Mathf.Max(0, user.CurrentMP - mpCost);
-            Debug.Log($"[MP] {user.Name} used {skill.SkillName}. MP {user.CurrentMP}/{user.Data.MaxMP}, Cost {mpCost}.");
+            ConsumeMP(user, mpCost, skill.SkillName, "user");
+
+            if (skill.SkillKind == SkillKind.Link && linkPartner != null)
+            {
+                ConsumeMP(linkPartner, mpCost, skill.SkillName, "link partner");
+            }
+        }
+
+        private static void ConsumeMP(BattleUnit unit, int mpCost, string skillName, string role)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            unit.CurrentMP = Mathf.Max(0, unit.CurrentMP - mpCost);
+            Debug.Log($"[MP] {unit.Name} paid {mpCost} MP as {role} for {skillName}. MP {unit.CurrentMP}/{unit.Data.MaxMP}.");
         }
 
         private bool CanAcceptPlayerCommand()
@@ -536,7 +561,7 @@ namespace GameKari.Battle
             BattleUnit linkPartner = GetLinkPartnerForSkill(_active, skill);
 
             EnterResolvingAction();
-            ConsumeSkillMP(_active, skill);
+            ConsumeSkillMP(_active, skill, linkPartner);
 
             ShowActionOverlay(skill.SkillName, BuildSkillUserDisplayName(_active, linkPartner));
             PrepareSkillActionFlashTargets(skill);
@@ -3161,6 +3186,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

@@ -217,7 +217,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            bool unavailable = !HasEnoughMP(skill) || (skill != null && skill.SkillKind == SkillKind.Link && !HasRequiredLinkPartner(skill));
+            bool unavailable = !HasEnoughMP(skill) || !HasEnoughPartnerMP(skill) || (skill != null && skill.SkillKind == SkillKind.Link && !HasRequiredLinkPartner(skill));
             float alpha = unavailable ? 0.45f : 1f;
 
             SetButtonAlpha(button, alpha);
@@ -369,6 +369,14 @@ namespace GameKari.Battle
                 return "No specified link partner.";
             }
 
+            if (!HasEnoughPartnerMP(skill))
+            {
+                BattleUnit partner = GetRequiredLinkPartner(skill);
+                string partnerName = partner == null ? "Partner" : partner.Name;
+                int partnerMp = partner == null ? 0 : GetCurrentMP(partner);
+                return $"Not enough partner MP. {partnerName}: {partnerMp}, Cost: {Mathf.Max(0, skill.MpCost)}";
+            }
+
             return string.Empty;
         }
 
@@ -389,6 +397,10 @@ namespace GameKari.Battle
             {
                 label += " NO PARTNER";
             }
+            else if (!HasEnoughPartnerMP(skill))
+            {
+                label += " PARTNER NO MP";
+            }
 
             return label;
         }
@@ -406,6 +418,22 @@ namespace GameKari.Battle
         private static int GetCurrentMP(BattleUnit unit)
         {
             return unit == null ? 0 : Mathf.Max(0, unit.CurrentMP);
+        }
+
+        private bool HasEnoughPartnerMP(SkillData skill)
+        {
+            if (skill == null || skill.SkillKind != SkillKind.Link)
+            {
+                return true;
+            }
+
+            BattleUnit partner = GetRequiredLinkPartner(skill);
+            if (partner == null)
+            {
+                return false;
+            }
+
+            return GetCurrentMP(partner) >= Mathf.Max(0, skill.MpCost);
         }
 
         private bool HasRequiredLinkPartner(SkillData skill)
@@ -746,6 +774,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
