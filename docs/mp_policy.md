@@ -24,6 +24,7 @@ Current implementation status:
 - `CommandPanelController` obtains temporary items through `DummyItemCatalog.CreateDefaultItems()`.
 - `Pass` is implemented as an item with count 99.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
+- Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
 - Ally status UI shows MP in the existing status text area.
 - Insufficient-MP skills are visually dimmed but remain interactable.
 - `BattleUIManager` blocks insufficient-MP skill execution.
