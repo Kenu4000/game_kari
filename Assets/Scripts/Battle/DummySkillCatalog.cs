@@ -1,9 +1,15 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace GameKari.Battle
 {
     public static class DummySkillCatalog
     {
+        private const string SlashAssetPath = "Battle/Skills/s1_slash";
+        private const string PierceAssetPath = "Battle/Skills/s2_pierce";
+        private const string TwinHitAssetPath = "Battle/Skills/s3_twin_hit";
+        private const string FocusAssetPath = "Battle/Skills/s4_focus";
+
         public static List<SkillData> CreateSkillsForUnit(BattleUnit unit)
         {
             string characterId = unit == null || unit.Data == null ? string.Empty : unit.Data.Id;
@@ -56,7 +62,7 @@ namespace GameKari.Battle
 
         private static SkillData CreateSlash()
         {
-            return CreatePersonalDamageSkill(
+            return LoadSkillAsset(SlashAssetPath) ?? CreatePersonalDamageSkill(
                 "s1",
                 "Slash",
                 "Attack enemy front top.",
@@ -68,7 +74,7 @@ namespace GameKari.Battle
 
         private static SkillData CreatePierce()
         {
-            return CreatePersonalDamageSkill(
+            return LoadSkillAsset(PierceAssetPath) ?? CreatePersonalDamageSkill(
                 "s2",
                 "Pierce",
                 "Attack enemy front bottom.",
@@ -80,7 +86,7 @@ namespace GameKari.Battle
 
         private static SkillData CreateTwinHit()
         {
-            return CreateLinkDamageSkill(
+            return LoadSkillAsset(TwinHitAssetPath) ?? CreateLinkDamageSkill(
                 "s3",
                 "TwinHit",
                 "Temporary Knight link skill. Attack both front enemies with Rogue.",
@@ -93,7 +99,7 @@ namespace GameKari.Battle
 
         private static SkillData CreateFocus()
         {
-            return CreateSelfBuffSkill(
+            return LoadSkillAsset(FocusAssetPath) ?? CreateSelfBuffSkill(
                 "s4",
                 "Focus",
                 "Apply AttackUp to self.",
@@ -101,6 +107,16 @@ namespace GameKari.Battle
                 2,
                 0
             );
+        }
+
+        private static SkillData LoadSkillAsset(string resourcesPath)
+        {
+            if (string.IsNullOrEmpty(resourcesPath))
+            {
+                return null;
+            }
+
+            return Resources.Load<SkillData>(resourcesPath);
         }
 
         private static SkillData CreatePersonalDamageSkill(
@@ -187,7 +203,7 @@ namespace GameKari.Battle
             SkillEffectTargetType effectTarget = SkillEffectTargetType.Self,
             string linkPartnerCharacterId = "")
         {
-            SkillData skill = UnityEngine.ScriptableObject.CreateInstance<SkillData>();
+            SkillData skill = ScriptableObject.CreateInstance<SkillData>();
 
             skill.SkillId = skillId;
             skill.SkillName = skillName;
@@ -206,4 +222,3 @@ namespace GameKari.Battle
         }
     }
 }
-

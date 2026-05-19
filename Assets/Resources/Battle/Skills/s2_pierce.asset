@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ad601f289cc22642b7a9fee0cfd6b14, type: 3}
+  m_Name: s2_pierce
+  m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.SkillData
+  SkillId: s2
+  SkillName: Pierce
+  Description: Attack enemy front bottom.
+  TargetPattern: 1
+  SkillKind: 0
+  MpCost: 1
+  LinkPartnerCharacterId: 
+  Damage: 20
+  EffectType: 0
+  EffectTarget: 0
+  BuffType: 0
+  BuffTurns: 0
