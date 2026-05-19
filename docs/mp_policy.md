@@ -21,12 +21,13 @@ Current implementation status:
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
 - Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
-- `DummySkillCatalog` loads default skill assets through `Resources.Load<SkillData>(...)` and falls back to runtime `ScriptableObject.CreateInstance<SkillData>()` when assets are missing.
+- `DummySkillCatalog` loads required default skill assets through `Resources.Load<SkillData>(...)` and throws if a required asset is missing.
+- `DummySkillCatalog` no longer creates runtime fallback `SkillData` instances.
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
-- Dummy skill MP costs are implemented in `DummySkillCatalog`.
+- Dummy skill MP costs are implemented in `SkillData` assets and accessed through `DummySkillCatalog`.
 - Temporary dummy skills are assigned per character through `CharacterData.DefaultSkills`.
 - `DummySkillFactory` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
 - Legacy `DummyBattleFactory.CreateUnit(...)` has been removed to avoid ambiguous ally/enemy unit creation.
@@ -145,7 +146,7 @@ Temporary dummy skill costs:
 - `SkillData` is a `ScriptableObject` type.
 - Default dummy skills currently exist as assets in `Assets/Resources/Battle/Skills`.
 - `CharacterData.DefaultSkills` currently controls temporary character skill ownership.
-- `DummySkillCatalog` currently acts as the skill asset lookup and fallback factory.
+- `DummySkillCatalog` currently acts as the required skill asset lookup.
 - Runtime cooldown state is not part of the current design.
 - Runtime link participation state is not part of the current design.
 - The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
