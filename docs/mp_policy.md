@@ -36,13 +36,13 @@ Current implementation status:
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
 - `ItemData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Item Data`.
 - Default `ItemData` assets exist under `Assets/Resources/Battle/Items`.
-- `DummyItemCatalog` loads required default item assets through `Resources.Load<ItemData>(...)` and throws if a required asset is missing.
-- `DummyItemCatalog` no longer creates runtime fallback `ItemData` instances.
+- `DummyItemCatalog` loads default inventory ownership/count from `InventoryLoadoutData` under `Assets/Resources/Battle/Inventory`.
+- `InventoryLoadoutData` exists as a `ScriptableObject` and stores initial item ownership/count entries.
+- `default_inventory.asset` currently contains Potion x3 and Pass x99.
 - `ItemData` represents item definition only and does not store runtime count.
 - `InventoryItem` stores an `ItemData` reference and runtime item count.
-- Temporary inventory items are implemented in `DummyItemCatalog`.
 - `CommandPanelController` obtains temporary inventory items through `DummyItemCatalog.CreateDefaultItems()` during `Awake()`.
-- `Pass` is implemented as an item with count 99.
+- `Pass` is implemented as an item with count 99 through the default inventory loadout.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
 - Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
 - Ally status UI shows MP in the existing status text area.
@@ -161,11 +161,12 @@ Temporary dummy skill costs:
 - `ItemData` is item definition data.
 - `ItemData` is a `ScriptableObject` type.
 - Default dummy items currently exist as assets in `Assets/Resources/Battle/Items`.
-- `DummyItemCatalog` currently acts as the required item asset lookup.
+- `InventoryLoadoutData` is initial inventory ownership/count data.
+- Default dummy inventory currently exists as `Assets/Resources/Battle/Inventory/default_inventory.asset`.
+- `DummyItemCatalog` currently acts as the required inventory loadout asset lookup.
 - `InventoryItem` is runtime inventory state.
-- Runtime count is stored in `InventoryItem.Count`, not `ItemData`.
-- Temporary item ownership/count is still generated in code until asset-backed inventory/loadout definitions are introduced.
-- This separation is intended to make future ScriptableObject-based item definitions safer.
+- Runtime count is stored in `InventoryItem.Count`, not `ItemData` or `InventoryLoadoutData`.
+- This separation is intended to make future ScriptableObject-based item definitions and inventories safer.
 
 ## Cooldown and LinkCooldown policy
 
@@ -189,5 +190,5 @@ Temporary dummy skill costs:
 
 ## Remaining cleanup
 
-- Move item ownership/count from `DummyItemCatalog` to an asset-backed inventory or battle loadout data source later.
+- Move item ownership/count from `DummyItemCatalog` to a non-dummy battle loadout or quest state source later.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
