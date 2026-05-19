@@ -14,6 +14,8 @@ Current implementation status:
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
 - Dummy skill MP costs are implemented in `DummySkillCatalog`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
+- Temporary item definitions are implemented in `DummyItemCatalog`.
+- `CommandPanelController` obtains temporary items through `DummyItemCatalog.CreateDefaultItems()`.
 - `Pass` is implemented as an item with count 99.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
 - Ally status UI shows MP in the existing status text area.
@@ -120,5 +122,5 @@ Temporary dummy skill costs:
 
 ## Remaining cleanup
 
-- Move item definitions out of `CommandPanelController` when item count or item behavior increases.
+- Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
