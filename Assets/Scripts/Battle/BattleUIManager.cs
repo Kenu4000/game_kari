@@ -46,6 +46,7 @@ namespace GameKari.Battle
         private readonly List<BattleUnit> _reserves = new();
 
         private readonly List<BattleUnit> _enemyReserves = new();
+        private readonly List<InventoryItem> _inventoryItems = new();
         private readonly Dictionary<BattleUnit, EnemyActionData> _enemyActions = new();
         private readonly Dictionary<BattleUnit, EnemyActionData> _selectedEnemyActions = new();
 
@@ -207,6 +208,7 @@ namespace GameKari.Battle
             _enemies.Clear();
             _reserves.Clear();
             _enemyReserves.Clear();
+            _inventoryItems.Clear();
             _enemyActions.Clear();
             _selectedEnemyActions.Clear();
             _turnNumbers.Clear();
@@ -225,6 +227,7 @@ namespace GameKari.Battle
 
             _reserves.AddRange(setup.AllyReserves);
             _enemyReserves.AddRange(setup.EnemyReserves);
+            _inventoryItems.AddRange(setup.InventoryItems);
 
             DummyEnemyActionFactory.SetDefaultEnemyActions(
                 _enemyActions,
@@ -319,7 +322,7 @@ namespace GameKari.Battle
 
         private void BindUI()
         {
-            commandPanel.Setup(_active, _reserves, _allies);
+            commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
             commandPanel.OnSkillClicked += HandleSkillClicked;
             commandPanel.OnSkillHovered += HandleSkillHover;
             commandPanel.OnHoverExit += ClearTargetPreview;
@@ -533,7 +536,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             if (commandPanel != null)
             {
-                commandPanel.Setup(_active, _reserves, _allies);
+                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
                 commandPanel.SetInteractable(true);
             }
 
@@ -1932,7 +1935,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             if (_active == defeatedAlly)
             {
                 _active = replacement;
-                commandPanel.Setup(_active, _reserves, _allies);
+                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
             }
 
             Debug.Log($"[KO] {replacement.Name} replaced {defeatedAlly.Name} at {position}. Replacement cannot act this turn.");
@@ -2674,7 +2677,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             if (commandPanel != null)
             {
-                commandPanel.Setup(_active, _reserves, _allies);
+                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
                 commandPanel.SetInteractable(true);
             }
 
@@ -3223,6 +3226,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 

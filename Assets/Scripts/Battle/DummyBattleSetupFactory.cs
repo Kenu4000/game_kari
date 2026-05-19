@@ -8,6 +8,7 @@ namespace GameKari.Battle
         public readonly List<DummyBattleUnitPlacement> EnemyPlacements = new();
         public readonly List<BattleUnit> AllyReserves = new();
         public readonly List<BattleUnit> EnemyReserves = new();
+        public readonly List<InventoryItem> InventoryItems = new();
 
         public BattleUnit FallbackActive;
 
@@ -38,6 +39,7 @@ namespace GameKari.Battle
 
             CreateAllies(setup);
             CreateEnemies(setup);
+            CreateInventory(setup);
 
             return setup;
         }
@@ -57,6 +59,16 @@ namespace GameKari.Battle
 
             setup.AllyReserves.Add(reserve);
             setup.FallbackActive = heroA;
+        }
+
+        private static void CreateInventory(DummyBattleSetupData setup)
+        {
+            if (setup == null)
+            {
+                return;
+            }
+
+            setup.InventoryItems.AddRange(DummyItemCatalog.CreateDefaultItems());
         }
 
         private static void CreateEnemies(DummyBattleSetupData setup)
@@ -82,6 +94,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

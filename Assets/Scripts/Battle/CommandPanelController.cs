@@ -45,14 +45,11 @@ namespace GameKari.Battle
 
         private int _hoveredSkillIndex = -1;
 
-        private List<InventoryItem> _dummyItems;
+        private List<InventoryItem> _inventoryItems = new();
 
         private void Awake()
         {
-            _dummyItems = DummyItemCatalog.CreateDefaultItems();
-
             HookRootButtons();
-            BindFixedItemButtons();
         }
 
         private void Start()
@@ -61,11 +58,12 @@ namespace GameKari.Battle
             ShowSkills();
         }
 
-        public void Setup(BattleUnit activeUnit, List<BattleUnit> reserves, List<BattleUnit> allies)
+        public void Setup(BattleUnit activeUnit, List<BattleUnit> reserves, List<BattleUnit> allies, List<InventoryItem> inventoryItems)
         {
             _activeUnit = activeUnit;
             _reserves = reserves;
             _allies = allies;
+            _inventoryItems = inventoryItems ?? new List<InventoryItem>();
 
             BindSkillButtons();
             BindSwapButtons();
@@ -667,7 +665,7 @@ namespace GameKari.Battle
 
         private void EnsureItemButtonCapacity()
         {
-            int requiredCount = _dummyItems == null ? 0 : _dummyItems.Count;
+            int requiredCount = _inventoryItems == null ? 0 : _inventoryItems.Count;
             if (requiredCount <= 0)
             {
                 return;
@@ -813,17 +811,17 @@ namespace GameKari.Battle
 
         private InventoryItem GetItemAt(int index)
         {
-            if (_dummyItems == null)
+            if (_inventoryItems == null)
             {
                 return null;
             }
 
-            if (index < 0 || index >= _dummyItems.Count)
+            if (index < 0 || index >= _inventoryItems.Count)
             {
                 return null;
             }
 
-            return _dummyItems[index];
+            return _inventoryItems[index];
         }
 
         private static string BuildItemButtonLabel(InventoryItem inventoryItem)
@@ -970,6 +968,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
