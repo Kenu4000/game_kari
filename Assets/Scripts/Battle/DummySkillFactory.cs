@@ -11,7 +11,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            List<SkillData> defaultSkills = DummySkillCatalog.CreateDefaultSkills();
+            List<SkillData> defaultSkills = DummySkillCatalog.CreateSkillsForUnit(unit);
 
             for (int i = 0; i < defaultSkills.Count; i++)
             {
