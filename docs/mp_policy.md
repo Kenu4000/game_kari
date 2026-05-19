@@ -15,8 +15,9 @@ Current implementation status:
 - `DummyCharacterFactory` no longer has a runtime character fallback path; dummy battle participants are expected to have `CharacterData` assets.
 - `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
 - `DummyBattleFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
-- `DummyBattleSetupFactory` now creates dummy ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
-- `DummyBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `DummyBattleSetupData.InventoryItems`.
+- `DefaultBattleSetupFactory` now creates default ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
+- `DefaultBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
+- `BattleSetupData` stores default battle unit placements, reserves, fallback active unit, enemy references, and runtime inventory.
 - Enemy `CharacterData` assets currently have empty `DefaultSkills` lists.
 - Legacy `DummyBattleFactory.CreateAllyUnit(...)`, `CreateEnemyUnit(...)`, and `CreateBaseUnit(...)` have been removed.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
@@ -143,8 +144,8 @@ Temporary dummy skill costs:
 - `CharacterData` is a `ScriptableObject` type.
 - Default dummy ally and enemy characters currently exist as assets in `Assets/Resources/Battle/Characters`.
 - `DummyCharacterFactory.CreateCharacterDataById(...)` first tries to load character assets by character id and fails loudly when missing.
-- Dummy ally setup now uses character ids for ally creation, so ally HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
-- Dummy enemy setup also uses character ids, but enemies currently keep `DefaultSkills` empty and continue to act through the existing enemy action flow.
+- Default battle setup now uses character ids for ally/enemy creation, so HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
+- Dummy enemies currently keep `DefaultSkills` empty and continue to act through the existing enemy action flow.
 
 ## Skill model
 
@@ -168,7 +169,7 @@ Temporary dummy skill costs:
 - `DefaultInventoryProvider` currently acts as the required inventory loadout asset lookup.
 - `InventoryItem` is runtime inventory state.
 - Runtime count is stored in `InventoryItem.Count`, not `ItemData` or `InventoryLoadoutData`.
-- Runtime inventory is created during dummy battle setup and passed into the command UI.
+- Runtime inventory is created during default battle setup and passed into the command UI.
 - `CommandPanelController` is now a display/controller consumer of inventory state rather than the inventory creation owner.
 - This separation is intended to make future ScriptableObject-based item definitions and inventories safer.
 
