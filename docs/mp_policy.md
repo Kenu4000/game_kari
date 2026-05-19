@@ -9,6 +9,8 @@ MP has been reintroduced as the primary skill resource. The previous cooldown-ba
 Current implementation status:
 
 - `CharacterData.MaxMP` exists and currently defaults to 4.
+- `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
+- Runtime dummy `CharacterData` instances are populated with default skills by `DummyCharacterFactory`.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
 - Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
@@ -18,7 +20,8 @@ Current implementation status:
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
 - Dummy skill MP costs are implemented in `DummySkillCatalog`.
-- Temporary dummy skills are assigned per character through `DummySkillCatalog.CreateSkillsForUnit(...)`.
+- Temporary dummy skills are assigned per character through `CharacterData.DefaultSkills`.
+- `DummySkillFactory` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
 - `DummyBattleFactory.CreateAllyUnit(...)` creates ally units and assigns player skills.
 - `DummyBattleFactory.CreateEnemyUnit(...)` creates enemy units without assigning player skills.
 - Legacy `DummyBattleFactory.CreateUnit(...)` has been removed to avoid ambiguous ally/enemy unit creation.
@@ -127,7 +130,8 @@ Temporary dummy skill costs:
 - `SkillData` is skill definition data.
 - `SkillData` is a `ScriptableObject` type.
 - Default dummy skills currently exist as assets in `Assets/Resources/Battle/Skills`.
-- `DummySkillCatalog` still controls temporary character skill ownership.
+- `CharacterData.DefaultSkills` currently controls temporary character skill ownership.
+- `DummySkillCatalog` currently acts as the skill asset lookup and fallback factory.
 - Runtime cooldown state is not part of the current design.
 - Runtime link participation state is not part of the current design.
 - The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
@@ -163,5 +167,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
-- Move skill ownership from `DummySkillCatalog` to CharacterData or another asset-backed loadout data source.
+- Replace runtime dummy `CharacterData` generation with asset-backed CharacterData when stable.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
