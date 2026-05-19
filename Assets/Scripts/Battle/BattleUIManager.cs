@@ -2653,10 +2653,10 @@ namespace GameKari.Battle
         {
             Debug.Log("[Result] Return clicked.");
 
-            RestartDummyBattle();
+            RestartBattle();
         }
 
-        private void RestartDummyBattle()
+        private void RestartBattle()
         {
             StopAllCoroutines();
 
@@ -2680,7 +2680,7 @@ namespace GameKari.Battle
 
             RedrawBoard();
 
-            Debug.Log("[Battle] Restarted dummy battle.");
+            Debug.Log("[Battle] Restarted battle.");
         }
 
         private void ShowResultPanel(string result)
@@ -3272,6 +3272,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
