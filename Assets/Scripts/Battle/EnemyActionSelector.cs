@@ -47,7 +47,7 @@ namespace GameKari.Battle
 
             enemyActionStates[enemy] = new EnemyActionState
             {
-                Skill = GetPrimaryEnemySkill(enemy)
+                Skill = SelectEnemySkill(enemy)
             };
         }
 
@@ -66,15 +66,22 @@ namespace GameKari.Battle
 
             return new EnemyActionState
             {
-                Skill = GetPrimaryEnemySkill(enemy)
+                Skill = SelectEnemySkill(enemy)
             };
         }
 
-        private static SkillData GetPrimaryEnemySkill(BattleUnit enemy)
+        private static SkillData SelectEnemySkill(BattleUnit enemy)
         {
-            if (enemy != null && enemy.Skills != null && enemy.Skills.Count > 0 && enemy.Skills[0] != null)
+            if (enemy != null && enemy.Skills != null)
             {
-                return enemy.Skills[0];
+                for (int i = 0; i < enemy.Skills.Count; i++)
+                {
+                    SkillData skill = enemy.Skills[i];
+                    if (skill != null)
+                    {
+                        return skill;
+                    }
+                }
             }
 
             return DefaultSkillAssetProvider.GetEnemyStrike();
