@@ -15,7 +15,7 @@ MonoBehaviour:
   SkillId: s4
   SkillName: Focus
   Description: Apply AttackUp to self.
-  TargetPattern: 4
+  TargetPattern: 5
   SkillKind: 0
   MpCost: 0
   LinkPartnerCharacterId: 

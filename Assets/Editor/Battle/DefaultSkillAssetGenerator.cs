@@ -18,7 +18,7 @@ namespace GameKari.Battle.Editor
                 "s1_slash",
                 "s1",
                 "Slash",
-                "Attack enemy front top.",
+                "Attack opponent front top.",
                 SkillTargetPattern.FrontTopOpponent,
                 SkillKind.Personal,
                 0,
@@ -34,7 +34,7 @@ namespace GameKari.Battle.Editor
                 "s2_pierce",
                 "s2",
                 "Pierce",
-                "Attack enemy front bottom.",
+                "Attack opponent front bottom.",
                 SkillTargetPattern.FrontBottomOpponent,
                 SkillKind.Personal,
                 1,
@@ -50,7 +50,7 @@ namespace GameKari.Battle.Editor
                 "s3_twin_hit",
                 "s3",
                 "TwinHit",
-                "Temporary Knight link skill. Attack both front enemies with Rogue.",
+                "Temporary Knight link skill. Attack both front opponents with Rogue.",
                 SkillTargetPattern.BothFrontOpponents,
                 SkillKind.Link,
                 2,
@@ -76,6 +76,86 @@ namespace GameKari.Battle.Editor
                 SkillEffectTargetType.Self,
                 BuffType.AttackUp,
                 2
+            );
+
+            CreateOrUpdateSkill(
+                "enemy_claw",
+                "enemy_claw",
+                "Claw",
+                "Attack the ally at the same grid position.",
+                SkillTargetPattern.SameGridPosOpponent,
+                SkillKind.Personal,
+                0,
+                string.Empty,
+                60,
+                SkillEffectType.None,
+                SkillEffectTargetType.Self,
+                BuffType.AttackUp,
+                0
+            );
+
+            CreateOrUpdateSkill(
+                "enemy_arrow",
+                "enemy_arrow",
+                "Arrow",
+                "Attack opponent front top.",
+                SkillTargetPattern.FrontTopOpponent,
+                SkillKind.Personal,
+                0,
+                string.Empty,
+                45,
+                SkillEffectType.None,
+                SkillEffectTargetType.Self,
+                BuffType.AttackUp,
+                0
+            );
+
+            CreateOrUpdateSkill(
+                "enemy_bite",
+                "enemy_bite",
+                "Bite",
+                "Attack opponent front bottom.",
+                SkillTargetPattern.FrontBottomOpponent,
+                SkillKind.Personal,
+                0,
+                string.Empty,
+                60,
+                SkillEffectType.None,
+                SkillEffectTargetType.Self,
+                BuffType.AttackUp,
+                0
+            );
+
+            CreateOrUpdateSkill(
+                "enemy_hex",
+                "enemy_hex",
+                "Hex",
+                "Attack all opponents.",
+                SkillTargetPattern.AllOpponents,
+                SkillKind.Personal,
+                0,
+                string.Empty,
+                25,
+                SkillEffectType.None,
+                SkillEffectTargetType.Self,
+                BuffType.AttackUp,
+                0
+            );
+
+            CreateOrUpdateSkill(
+                "enemy_strike",
+                "enemy_strike",
+                "Strike",
+                "Attack the ally at the same grid position.",
+                SkillTargetPattern.SameGridPosOpponent,
+                SkillKind.Personal,
+                0,
+                string.Empty,
+                60,
+                SkillEffectType.None,
+                SkillEffectTargetType.Self,
+                BuffType.AttackUp,
+                0
             );
 
             AssetDatabase.SaveAssets();
@@ -146,5 +226,3 @@ namespace GameKari.Battle.Editor
         }
     }
 }
-
-

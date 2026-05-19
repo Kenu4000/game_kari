@@ -22,11 +22,11 @@ namespace GameKari.Battle
                 return;
             }
 
-            SetEnemyAction(enemyActions, enemyA, DefaultSkillAssetProvider.GetSlash());
-            SetEnemyAction(enemyActions, enemyB, DefaultSkillAssetProvider.GetPierce());
-            SetEnemyAction(enemyActions, enemyC, DefaultSkillAssetProvider.GetSlash());
-            SetEnemyAction(enemyActions, enemyD, DefaultSkillAssetProvider.GetTwinHit());
-            SetEnemyAction(enemyActions, enemyReserve, DefaultSkillAssetProvider.GetSlash());
+            SetEnemyAction(enemyActions, enemyA, DefaultSkillAssetProvider.GetEnemyClaw());
+            SetEnemyAction(enemyActions, enemyB, DefaultSkillAssetProvider.GetEnemyArrow());
+            SetEnemyAction(enemyActions, enemyC, DefaultSkillAssetProvider.GetEnemyBite());
+            SetEnemyAction(enemyActions, enemyD, DefaultSkillAssetProvider.GetEnemyHex());
+            SetEnemyAction(enemyActions, enemyReserve, DefaultSkillAssetProvider.GetEnemyStrike());
         }
 
         public static EnemyActionData SelectEnemyAction(
@@ -67,7 +67,7 @@ namespace GameKari.Battle
 
             return new EnemyActionData
             {
-                Skill = DefaultSkillAssetProvider.GetSlash()
+                Skill = DefaultSkillAssetProvider.GetEnemyStrike()
             };
         }
     }

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.SkillData
   SkillId: s1
   SkillName: Slash
-  Description: Attack enemy front top.
-  TargetPattern: 0
+  Description: Attack opponent front top.
+  TargetPattern: 1
   SkillKind: 0
   MpCost: 0
   LinkPartnerCharacterId: 

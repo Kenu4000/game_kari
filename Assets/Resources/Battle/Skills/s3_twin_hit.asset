@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.SkillData
   SkillId: s3
   SkillName: TwinHit
-  Description: Temporary Knight link skill. Attack both front enemies with Rogue.
-  TargetPattern: 2
+  Description: Temporary Knight link skill. Attack both front opponents with Rogue.
+  TargetPattern: 3
   SkillKind: 1
   MpCost: 2
   LinkPartnerCharacterId: rogue

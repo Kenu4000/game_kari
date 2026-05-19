@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ad601f289cc22642b7a9fee0cfd6b14, type: 3}
-  m_Name: s2_pierce
+  m_Name: enemy_claw
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.SkillData
-  SkillId: s2
-  SkillName: Pierce
-  Description: Attack opponent front bottom.
-  TargetPattern: 2
+  SkillId: enemy_claw
+  SkillName: Claw
+  Description: Attack the ally at the same grid position.
+  TargetPattern: 0
   SkillKind: 0
-  MpCost: 1
+  MpCost: 0
   LinkPartnerCharacterId: 
-  Damage: 20
+  Damage: 60
   EffectType: 0
   EffectTarget: 0
   BuffType: 0
