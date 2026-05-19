@@ -19,8 +19,7 @@ MonoBehaviour:
   Speed: 8
   FaceIcon: {fileID: 0}
   StandingSprite: {fileID: 0}
-  DefaultSkills:
-  - {fileID: 11400000, guid: 1dd089e6c6b1037469dd472d41aea2c6, type: 2}
+  DefaultSkills: []
   EnemyActionSlots:
   - Skill: {fileID: 11400000, guid: 1dd089e6c6b1037469dd472d41aea2c6, type: 2}
     Weight: 70

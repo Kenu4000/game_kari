@@ -93,10 +93,7 @@ namespace GameKari.Battle.Editor
                 70,
                 4,
                 10,
-                new[]
-                {
-                    DefaultSkillAssetProvider.GetEnemyClaw()
-                },
+                null,
                 new[]
                 {
                     CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyClaw(), 70),
@@ -111,10 +108,7 @@ namespace GameKari.Battle.Editor
                 30,
                 4,
                 13,
-                new[]
-                {
-                    DefaultSkillAssetProvider.GetEnemyArrow()
-                },
+                null,
                 new[]
                 {
                     CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyArrow(), 80),
@@ -129,10 +123,7 @@ namespace GameKari.Battle.Editor
                 50,
                 4,
                 8,
-                new[]
-                {
-                    DefaultSkillAssetProvider.GetEnemyBite()
-                },
+                null,
                 new[]
                 {
                     CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyBite(), 70),
@@ -147,10 +138,7 @@ namespace GameKari.Battle.Editor
                 25,
                 4,
                 7,
-                new[]
-                {
-                    DefaultSkillAssetProvider.GetEnemyHex()
-                },
+                null,
                 new[]
                 {
                     CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyHex(), 40),
@@ -165,10 +153,7 @@ namespace GameKari.Battle.Editor
                 65,
                 4,
                 11,
-                new[]
-                {
-                    DefaultSkillAssetProvider.GetEnemyStrike()
-                },
+                null,
                 new[]
                 {
                     CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyStrike(), 100)
@@ -264,6 +249,7 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 
 
 
