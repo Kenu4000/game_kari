@@ -4,7 +4,21 @@
 
 This document supersedes the previous Battle MVP v0.1 policy that removed MP from the active battle prototype.
 
-MP is being reintroduced as the primary skill resource. The previous cooldown-based skill restriction model is no longer the target design.
+MP has been reintroduced as the primary skill resource. The previous cooldown-based skill restriction model is no longer the target design.
+
+Current implementation status:
+
+- `CharacterData.MaxMP` exists and currently defaults to 4.
+- `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
+- `SkillData.MpCost` exists.
+- `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
+- Dummy skill MP costs are implemented in `DummySkillCatalog`.
+- Ally status UI shows MP in the existing status text area.
+- Insufficient-MP skills are visually dimmed but remain interactable.
+- `BattleUIManager` blocks insufficient-MP skill execution.
+- Accepted skill use consumes user MP when the skill action begins.
+- `StartNextTurn()` recovers MP +1 for ally front-line and reserve characters.
+- Skill CT and LinkCooldown behavior are currently disabled at the active flow level, but legacy fields and helper methods may still exist temporarily.
 
 ## Core MP rules
 
@@ -77,26 +91,20 @@ Temporary dummy skill costs:
 - Skill CT is not part of the target design.
 - LinkCooldown is not part of the target design.
 - `WAIT:N` and `LINK:N` are not target UI states.
-- Existing CT / LinkCooldown implementation may be removed or disabled in small steps during the MP migration.
+- Existing CT / LinkCooldown legacy fields and helper methods may remain temporarily during migration, but the active target flow should not rely on them.
 
 ## Link skill policy
 
 - Automatic link partner selection is not part of the target design.
-- Link skills should specify their partner per skill.
-- Initial implementation may keep TwinHit as a Link skill that consumes only the user's MP 2.
+- Link skills specify their partner per skill through `SkillData.LinkPartnerCharacterId`.
+- Current dummy TwinHit specifies `rogue` as its link partner id.
+- Current implementation keeps TwinHit as a Link skill that consumes only the user's MP 2.
 - Future link skill cost policy is user MP 2 + partner MP 2.
 - Future link skill availability should check both the user and the specified partner.
 
-## Implementation notes
+## Remaining cleanup
 
-Recommended migration order:
-
-1. Restore MP-related data fields: `CharacterData.MaxMP`, `BattleUnit.CurrentMP`, and `SkillData.MpCost`.
-2. Assign dummy skill MP costs in `DummySkillCatalog`.
-3. Show ally MP in status UI.
-4. Dim insufficient-MP skill buttons while keeping them interactable.
-5. Block insufficient-MP skills in `BattleUIManager`.
-6. Consume MP on accepted skill use.
-7. Recover ally front-line and reserve MP at `StartNextTurn()`.
-8. Disable or remove CT and LinkCooldown behavior in small steps.
-9. Replace automatic link partner selection with per-skill specified partner logic.
+- Remove or simplify legacy CT helper methods once the MP flow is stable.
+- Remove or simplify legacy LinkCooldown helper methods once the specified-partner link flow is stable.
+- Replace any remaining automatic partner-selection references with specified-partner logic.
+- Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
