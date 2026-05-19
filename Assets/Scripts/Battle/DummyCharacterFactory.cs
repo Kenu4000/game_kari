@@ -5,12 +5,20 @@ namespace GameKari.Battle
     public static class DummyCharacterFactory
     {
         private const int DefaultMaxMP = 4;
+        private const string CharacterAssetBasePath = "Battle/Characters/";
 
         public static CharacterData CreateCharacterData(string name, int hp, int speed)
         {
+            string characterId = BuildCharacterId(name);
+            CharacterData asset = LoadCharacterAsset(characterId);
+            if (asset != null)
+            {
+                return asset;
+            }
+
             CharacterData data = ScriptableObject.CreateInstance<CharacterData>();
 
-            data.Id = BuildCharacterId(name);
+            data.Id = characterId;
             data.DisplayName = name;
             data.MaxHP = hp;
             data.MaxMP = DefaultMaxMP;
@@ -19,6 +27,16 @@ namespace GameKari.Battle
             AssignDefaultSkills(data);
 
             return data;
+        }
+
+        private static CharacterData LoadCharacterAsset(string characterId)
+        {
+            if (string.IsNullOrEmpty(characterId))
+            {
+                return null;
+            }
+
+            return Resources.Load<CharacterData>(CharacterAssetBasePath + characterId);
         }
 
         private static void AssignDefaultSkills(CharacterData data)
