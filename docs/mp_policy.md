@@ -34,10 +34,12 @@ Current implementation status:
 - Knight currently owns the dummy Link skill `TwinHit`.
 - Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
-- `ItemData` now represents item definition only and does not store runtime count.
+- `ItemData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Item Data`.
+- `ItemData` represents item definition only and does not store runtime count.
 - `InventoryItem` stores an `ItemData` reference and runtime item count.
 - Temporary inventory items are implemented in `DummyItemCatalog`.
-- `CommandPanelController` obtains temporary inventory items through `DummyItemCatalog.CreateDefaultItems()`.
+- `DummyItemCatalog` currently creates temporary runtime `ItemData` instances through `ScriptableObject.CreateInstance<ItemData>()`.
+- `CommandPanelController` obtains temporary inventory items through `DummyItemCatalog.CreateDefaultItems()` during `Awake()`.
 - `Pass` is implemented as an item with count 99.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
 - Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
@@ -152,6 +154,16 @@ Temporary dummy skill costs:
 - The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
 - This separation is intended to make future ScriptableObject-based skill definitions safer.
 
+## Item model
+
+- `ItemData` is item definition data.
+- `ItemData` is a `ScriptableObject` type.
+- `InventoryItem` is runtime inventory state.
+- Runtime count is stored in `InventoryItem.Count`, not `ItemData`.
+- Temporary item definitions are still generated in code until asset-backed item definitions are introduced.
+- `DummyItemCatalog` must be called from Unity lifecycle timing such as `Awake()` or later while it still creates runtime `ScriptableObject` instances.
+- This separation is intended to make future ScriptableObject-based item definitions safer.
+
 ## Cooldown and LinkCooldown policy
 
 - Skill CT is not part of the target design.
@@ -171,13 +183,6 @@ Temporary dummy skill costs:
 - A reserve character may be a Link partner and pay MP.
 - Reserve Link partners are not shown as source flash cells because they are not placed on the active grid.
 - Future Link skill cost values may be split into separate user/partner costs if needed.
-
-## Item model
-
-- `ItemData` is item definition data.
-- `InventoryItem` is runtime inventory state.
-- Runtime count is stored in `InventoryItem.Count`, not `ItemData`.
-- This separation is intended to make future ScriptableObject-based item definitions safer.
 
 ## Remaining cleanup
 
