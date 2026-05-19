@@ -86,6 +86,56 @@ namespace GameKari.Battle.Editor
                 }
             );
 
+            CreateOrUpdateCharacter(
+                "goblin_a",
+                "goblin_a",
+                "Goblin A",
+                70,
+                4,
+                10,
+                null
+            );
+
+            CreateOrUpdateCharacter(
+                "archer",
+                "archer",
+                "Archer",
+                30,
+                4,
+                13,
+                null
+            );
+
+            CreateOrUpdateCharacter(
+                "goblin_b",
+                "goblin_b",
+                "Goblin B",
+                50,
+                4,
+                8,
+                null
+            );
+
+            CreateOrUpdateCharacter(
+                "shaman",
+                "shaman",
+                "Shaman",
+                25,
+                4,
+                7,
+                null
+            );
+
+            CreateOrUpdateCharacter(
+                "enemy_reserve",
+                "enemy_reserve",
+                "Enemy Reserve",
+                65,
+                4,
+                11,
+                null
+            );
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[GameKari] Default CharacterData assets generated.");

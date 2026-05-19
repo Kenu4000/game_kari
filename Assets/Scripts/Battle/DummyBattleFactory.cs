@@ -10,6 +10,12 @@
             return unit;
         }
 
+        public static BattleUnit CreateEnemyUnitById(string characterId)
+        {
+            CharacterData data = DummyCharacterFactory.CreateCharacterDataById(characterId);
+            return new BattleUnit(data);
+        }
+
         public static BattleUnit CreateEnemyUnit(string name, int hp, int speed)
         {
             return CreateBaseUnit(name, hp, speed);

@@ -61,11 +61,11 @@ namespace GameKari.Battle
 
         private static void CreateEnemies(DummyBattleSetupData setup)
         {
-            BattleUnit enemyA = DummyBattleFactory.CreateEnemyUnit("Goblin A", 70, 10);
-            BattleUnit enemyB = DummyBattleFactory.CreateEnemyUnit("Archer", 30, 13);
-            BattleUnit enemyC = DummyBattleFactory.CreateEnemyUnit("Goblin B", 50, 8);
-            BattleUnit enemyD = DummyBattleFactory.CreateEnemyUnit("Shaman", 25, 7);
-            BattleUnit enemyReserve = DummyBattleFactory.CreateEnemyUnit("Enemy Reserve", 65, 11);
+            BattleUnit enemyA = DummyBattleFactory.CreateEnemyUnitById("goblin_a");
+            BattleUnit enemyB = DummyBattleFactory.CreateEnemyUnitById("archer");
+            BattleUnit enemyC = DummyBattleFactory.CreateEnemyUnitById("goblin_b");
+            BattleUnit enemyD = DummyBattleFactory.CreateEnemyUnitById("shaman");
+            BattleUnit enemyReserve = DummyBattleFactory.CreateEnemyUnitById("enemy_reserve");
 
             setup.EnemyPlacements.Add(new DummyBattleUnitPlacement(GridPos.FrontTop, enemyA));
             setup.EnemyPlacements.Add(new DummyBattleUnitPlacement(GridPos.BackTop, enemyB));
@@ -82,5 +82,6 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
