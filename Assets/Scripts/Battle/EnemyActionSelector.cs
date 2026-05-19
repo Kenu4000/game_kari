@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -33,7 +34,17 @@ namespace GameKari.Battle
             Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
             BattleUnit enemy)
         {
-            return GetEnemyActionState(enemyActionStates, enemy);
+            EnemyActionState actionState = new EnemyActionState
+            {
+                Skill = SelectEnemySkill(enemy)
+            };
+
+            if (enemyActionStates != null && enemy != null)
+            {
+                enemyActionStates[enemy] = actionState;
+            }
+
+            return actionState;
         }
 
         private static void SetEnemyActionState(
@@ -51,40 +62,87 @@ namespace GameKari.Battle
             };
         }
 
-        private static EnemyActionState GetEnemyActionState(
-            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
-            BattleUnit enemy)
-        {
-            if (enemyActionStates != null &&
-                enemy != null &&
-                enemyActionStates.TryGetValue(enemy, out EnemyActionState actionState) &&
-                actionState != null &&
-                actionState.Skill != null)
-            {
-                return actionState;
-            }
-
-            return new EnemyActionState
-            {
-                Skill = SelectEnemySkill(enemy)
-            };
-        }
-
         private static SkillData SelectEnemySkill(BattleUnit enemy)
         {
-            if (enemy != null && enemy.Skills != null)
+            SkillData weightedSkill = SelectWeightedEnemyActionSlotSkill(enemy);
+            if (weightedSkill != null)
             {
-                for (int i = 0; i < enemy.Skills.Count; i++)
-                {
-                    SkillData skill = enemy.Skills[i];
-                    if (skill != null)
-                    {
-                        return skill;
-                    }
-                }
+                return weightedSkill;
+            }
+
+            SkillData firstRuntimeSkill = SelectFirstRuntimeSkill(enemy);
+            if (firstRuntimeSkill != null)
+            {
+                return firstRuntimeSkill;
             }
 
             return DefaultSkillAssetProvider.GetEnemyStrike();
+        }
+
+        private static SkillData SelectWeightedEnemyActionSlotSkill(BattleUnit enemy)
+        {
+            if (enemy == null || enemy.Data == null || enemy.Data.EnemyActionSlots == null)
+            {
+                return null;
+            }
+
+            List<EnemyActionSlot> slots = enemy.Data.EnemyActionSlots;
+            int totalWeight = 0;
+
+            for (int i = 0; i < slots.Count; i++)
+            {
+                EnemyActionSlot slot = slots[i];
+                if (slot == null || slot.Skill == null || slot.Weight <= 0)
+                {
+                    continue;
+                }
+
+                totalWeight += slot.Weight;
+            }
+
+            if (totalWeight <= 0)
+            {
+                return null;
+            }
+
+            int roll = Random.Range(0, totalWeight);
+            int cumulativeWeight = 0;
+
+            for (int i = 0; i < slots.Count; i++)
+            {
+                EnemyActionSlot slot = slots[i];
+                if (slot == null || slot.Skill == null || slot.Weight <= 0)
+                {
+                    continue;
+                }
+
+                cumulativeWeight += slot.Weight;
+                if (roll < cumulativeWeight)
+                {
+                    return slot.Skill;
+                }
+            }
+
+            return null;
+        }
+
+        private static SkillData SelectFirstRuntimeSkill(BattleUnit enemy)
+        {
+            if (enemy == null || enemy.Skills == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < enemy.Skills.Count; i++)
+            {
+                SkillData skill = enemy.Skills[i];
+                if (skill != null)
+                {
+                    return skill;
+                }
+            }
+
+            return null;
         }
     }
 }
