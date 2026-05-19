@@ -19,7 +19,7 @@ namespace GameKari.Battle.Editor
                 "s1",
                 "Slash",
                 "Attack enemy front top.",
-                SkillTargetPattern.FrontTopEnemy,
+                SkillTargetPattern.FrontTopOpponent,
                 SkillKind.Personal,
                 0,
                 string.Empty,
@@ -35,7 +35,7 @@ namespace GameKari.Battle.Editor
                 "s2",
                 "Pierce",
                 "Attack enemy front bottom.",
-                SkillTargetPattern.FrontBottomEnemy,
+                SkillTargetPattern.FrontBottomOpponent,
                 SkillKind.Personal,
                 1,
                 string.Empty,
@@ -51,7 +51,7 @@ namespace GameKari.Battle.Editor
                 "s3",
                 "TwinHit",
                 "Temporary Knight link skill. Attack both front enemies with Rogue.",
-                SkillTargetPattern.BothFrontEnemies,
+                SkillTargetPattern.BothFrontOpponents,
                 SkillKind.Link,
                 2,
                 "rogue",
@@ -146,4 +146,5 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 

@@ -2,20 +2,9 @@
 
 namespace GameKari.Battle
 {
-    public enum EnemyTargetPattern
-    {
-        SameGridPosAlly,
-        AllyFrontTop,
-        AllyFrontBottom,
-        BothFrontAllies,
-        AllAllies
-    }
-
     public class EnemyActionData
     {
-        public string ActionName;
-        public int Damage;
-        public EnemyTargetPattern TargetPattern;
+        public SkillData Skill;
     }
 
     public static class DefaultEnemyActionProvider
@@ -33,11 +22,11 @@ namespace GameKari.Battle
                 return;
             }
 
-            SetEnemyAction(enemyActions, enemyA, "Claw", 60, EnemyTargetPattern.SameGridPosAlly);
-            SetEnemyAction(enemyActions, enemyB, "Arrow", 45, EnemyTargetPattern.AllyFrontTop);
-            SetEnemyAction(enemyActions, enemyC, "Bite", 60, EnemyTargetPattern.AllyFrontBottom);
-            SetEnemyAction(enemyActions, enemyD, "Hex", 25, EnemyTargetPattern.AllAllies);
-            SetEnemyAction(enemyActions, enemyReserve, "Strike", 60, EnemyTargetPattern.SameGridPosAlly);
+            SetEnemyAction(enemyActions, enemyA, DefaultSkillAssetProvider.GetSlash());
+            SetEnemyAction(enemyActions, enemyB, DefaultSkillAssetProvider.GetPierce());
+            SetEnemyAction(enemyActions, enemyC, DefaultSkillAssetProvider.GetSlash());
+            SetEnemyAction(enemyActions, enemyD, DefaultSkillAssetProvider.GetTwinHit());
+            SetEnemyAction(enemyActions, enemyReserve, DefaultSkillAssetProvider.GetSlash());
         }
 
         public static EnemyActionData SelectEnemyAction(
@@ -50,20 +39,16 @@ namespace GameKari.Battle
         private static void SetEnemyAction(
             Dictionary<BattleUnit, EnemyActionData> enemyActions,
             BattleUnit enemy,
-            string actionName,
-            int damage,
-            EnemyTargetPattern targetPattern)
+            SkillData skill)
         {
-            if (enemyActions == null || enemy == null)
+            if (enemyActions == null || enemy == null || skill == null)
             {
                 return;
             }
 
             enemyActions[enemy] = new EnemyActionData
             {
-                ActionName = actionName,
-                Damage = damage,
-                TargetPattern = targetPattern
+                Skill = skill
             };
         }
 
@@ -73,26 +58,17 @@ namespace GameKari.Battle
         {
             if (enemyActions != null &&
                 enemy != null &&
-                enemyActions.TryGetValue(enemy, out EnemyActionData action))
+                enemyActions.TryGetValue(enemy, out EnemyActionData action) &&
+                action != null &&
+                action.Skill != null)
             {
                 return action;
             }
 
-            return CreateFallbackAction();
-        }
-
-        private static EnemyActionData CreateFallbackAction()
-        {
             return new EnemyActionData
             {
-                ActionName = "Strike",
-                Damage = 60,
-                TargetPattern = EnemyTargetPattern.SameGridPosAlly
+                Skill = DefaultSkillAssetProvider.GetSlash()
             };
         }
     }
 }
-
-
-
-

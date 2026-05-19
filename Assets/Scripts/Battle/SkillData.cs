@@ -4,10 +4,11 @@ namespace GameKari.Battle
 {
     public enum SkillTargetPattern
     {
-        FrontTopEnemy,
-        FrontBottomEnemy,
-        BothFrontEnemies,
-        AllEnemies,
+        SameGridPosOpponent,
+        FrontTopOpponent,
+        FrontBottomOpponent,
+        BothFrontOpponents,
+        AllOpponents,
         Self
     }
 
@@ -51,7 +52,3 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
-
-
-
-

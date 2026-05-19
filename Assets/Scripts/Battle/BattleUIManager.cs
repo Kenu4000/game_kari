@@ -952,7 +952,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             }
 
             EnemyActionData action = GetSelectedEnemyAction(nextEnemy);
-            if (action == null)
+            if (action == null || action.Skill == null)
             {
                 return;
             }
@@ -994,31 +994,31 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
         private void HighlightEnemyActionTargets(BattleUnit enemy, EnemyActionData action)
         {
-            if (enemy == null || action == null)
+            if (enemy == null || action == null || action.Skill == null)
             {
                 return;
             }
 
-            switch (action.TargetPattern)
+            switch (action.Skill.TargetPattern)
             {
-                case EnemyTargetPattern.SameGridPosAlly:
+                case SkillTargetPattern.SameGridPosOpponent:
                     SetAllyBoardCellColor(enemy.GridPos, EnemyActionPreviewCellColor);
                     break;
 
-                case EnemyTargetPattern.AllyFrontTop:
+                case SkillTargetPattern.FrontTopOpponent:
                     SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
                     break;
 
-                case EnemyTargetPattern.AllyFrontBottom:
+                case SkillTargetPattern.FrontBottomOpponent:
                     SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
                     break;
 
-                case EnemyTargetPattern.BothFrontAllies:
+                case SkillTargetPattern.BothFrontOpponents:
                     SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
                     SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
                     break;
 
-                case EnemyTargetPattern.AllAllies:
+                case SkillTargetPattern.AllOpponents:
                     SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
                     SetAllyBoardCellColor(GridPos.BackTop, EnemyActionPreviewCellColor);
                     SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
@@ -1055,20 +1055,20 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             switch (_hoveredSkill.TargetPattern)
             {
-                case SkillTargetPattern.FrontTopEnemy:
+                case SkillTargetPattern.FrontTopOpponent:
                     SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
                     break;
 
-                case SkillTargetPattern.FrontBottomEnemy:
+                case SkillTargetPattern.FrontBottomOpponent:
                     SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
                     break;
 
-                case SkillTargetPattern.BothFrontEnemies:
+                case SkillTargetPattern.BothFrontOpponents:
                     SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
                     SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
                     break;
 
-                case SkillTargetPattern.AllEnemies:
+                case SkillTargetPattern.AllOpponents:
                     SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
                     SetEnemyBoardCellColor(GridPos.BackTop, TargetPreviewCellColor);
                     SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
@@ -1248,20 +1248,20 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             switch (skill.TargetPattern)
             {
-                case SkillTargetPattern.FrontTopEnemy:
+                case SkillTargetPattern.FrontTopOpponent:
                     targets.Add(GridPos.FrontTop);
                     break;
 
-                case SkillTargetPattern.FrontBottomEnemy:
+                case SkillTargetPattern.FrontBottomOpponent:
                     targets.Add(GridPos.FrontBottom);
                     break;
 
-                case SkillTargetPattern.BothFrontEnemies:
+                case SkillTargetPattern.BothFrontOpponents:
                     targets.Add(GridPos.FrontTop);
                     targets.Add(GridPos.FrontBottom);
                     break;
 
-                case SkillTargetPattern.AllEnemies:
+                case SkillTargetPattern.AllOpponents:
                     AddAllGridPositions(targets);
                     break;
 
@@ -1315,20 +1315,20 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             switch (skill.TargetPattern)
             {
-                case SkillTargetPattern.FrontTopEnemy:
+                case SkillTargetPattern.FrontTopOpponent:
                     targets.Add(GridPos.FrontTop);
                     break;
 
-                case SkillTargetPattern.FrontBottomEnemy:
+                case SkillTargetPattern.FrontBottomOpponent:
                     targets.Add(GridPos.FrontBottom);
                     break;
 
-                case SkillTargetPattern.BothFrontEnemies:
+                case SkillTargetPattern.BothFrontOpponents:
                     targets.Add(GridPos.FrontTop);
                     targets.Add(GridPos.FrontBottom);
                     break;
 
-                case SkillTargetPattern.AllEnemies:
+                case SkillTargetPattern.AllOpponents:
                     AddAllGridPositions(targets);
                     break;
 
@@ -1347,31 +1347,31 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
         {
             var targets = new List<GridPos>();
 
-            if (enemy == null || action == null)
+            if (enemy == null || action == null || action.Skill == null)
             {
                 return targets;
             }
 
-            switch (action.TargetPattern)
+            switch (action.Skill.TargetPattern)
             {
-                case EnemyTargetPattern.SameGridPosAlly:
+                case SkillTargetPattern.SameGridPosOpponent:
                     targets.Add(enemy.GridPos);
                     break;
 
-                case EnemyTargetPattern.AllyFrontTop:
+                case SkillTargetPattern.FrontTopOpponent:
                     targets.Add(GridPos.FrontTop);
                     break;
 
-                case EnemyTargetPattern.AllyFrontBottom:
+                case SkillTargetPattern.FrontBottomOpponent:
                     targets.Add(GridPos.FrontBottom);
                     break;
 
-                case EnemyTargetPattern.BothFrontAllies:
+                case SkillTargetPattern.BothFrontOpponents:
                     targets.Add(GridPos.FrontTop);
                     targets.Add(GridPos.FrontBottom);
                     break;
 
-                case EnemyTargetPattern.AllAllies:
+                case SkillTargetPattern.AllOpponents:
                     AddAllGridPositions(targets);
                     break;
             }
@@ -1414,7 +1414,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
         private void PrepareEnemyActionFlashTargets(BattleUnit enemy, EnemyActionData action)
         {
-            if (enemy == null || action == null)
+            if (enemy == null || action == null || action.Skill == null)
             {
                 ClearPendingActionFlashTargets();
                 return;
@@ -1849,19 +1849,19 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
         private void ExecuteEnemyAction(BattleUnit enemy, EnemyActionData action)
         {
-            if (enemy == null || enemy.IsDead || action == null || _battleEnded)
+            if (enemy == null || enemy.IsDead || action == null || action.Skill == null || _battleEnded)
             {
                 return;
             }
 
-            ShowActionOverlay(action.ActionName, enemy.Name);
+            ShowActionOverlay(action.Skill.SkillName, enemy.Name);
             PrepareEnemyActionFlashTargets(enemy, action);
             SetPendingActionSourceFlashTargets(false, new List<GridPos> { enemy.GridPos });
 
             List<GridPos> targets = GetEnemyActionTargetPositions(enemy, action);
             for (int i = 0; i < targets.Count; i++)
             {
-                DamageAllyAt(targets[i], action.Damage, enemy, action.ActionName);
+                DamageAllyAt(targets[i], action.Skill.Damage, enemy, action.Skill.SkillName);
             }
         }
 
@@ -2379,39 +2379,39 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
         private string BuildEnemyActionPreviewLine(BattleUnit enemy, EnemyActionData action, bool isNext)
         {
-            if (enemy == null || action == null)
+            if (enemy == null || action == null || action.Skill == null)
             {
                 return "-";
             }
 
             string prefix = isNext ? "NEXT > " : "";
-            return $"{prefix}{enemy.Name}: {action.ActionName} -> {BuildEnemyActionTargetText(enemy, action)}";
+            return $"{prefix}{enemy.Name}: {action.Skill.SkillName} -> {BuildEnemyActionTargetText(enemy, action)}";
         }
 
         private string BuildEnemyActionTargetText(BattleUnit enemy, EnemyActionData action)
         {
-            if (action == null)
+            if (action == null || action.Skill == null)
             {
                 return "Unknown";
             }
 
-            switch (action.TargetPattern)
+            switch (action.Skill.TargetPattern)
             {
-                case EnemyTargetPattern.SameGridPosAlly:
+                case SkillTargetPattern.SameGridPosOpponent:
                     return enemy == null
                         ? "Ally same position"
                         : $"Ally {FormatEnemyPreviewGridPos(enemy.GridPos)}";
 
-                case EnemyTargetPattern.AllyFrontTop:
+                case SkillTargetPattern.FrontTopOpponent:
                     return "Ally FrontTop";
 
-                case EnemyTargetPattern.AllyFrontBottom:
+                case SkillTargetPattern.FrontBottomOpponent:
                     return "Ally FrontBottom";
 
-                case EnemyTargetPattern.BothFrontAllies:
+                case SkillTargetPattern.BothFrontOpponents:
                     return "Ally front row";
 
-                case EnemyTargetPattern.AllAllies:
+                case SkillTargetPattern.AllOpponents:
                     return "All allies";
 
                 default:
@@ -2466,7 +2466,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
                 }
 
                 EnemyActionData action = GetSelectedEnemyAction(enemy);
-                if (action == null)
+                if (action == null || action.Skill == null)
                 {
                     continue;
                 }
@@ -3226,6 +3226,8 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
+
 
 
 
