@@ -4,15 +4,9 @@
     {
         public static BattleUnit CreateUnit(string name, int hp, int speed)
         {
-            var data = new CharacterData
-            {
-                Id = name.ToLower().Replace(" ", "_"),
-                DisplayName = name,
-                MaxHP = hp,
-                Speed = speed
-            };
+            CharacterData data = DummyCharacterFactory.CreateCharacterData(name, hp, speed);
 
-            var unit = new BattleUnit(data);
+            BattleUnit unit = new BattleUnit(data);
             DummySkillFactory.AddDefaultSkills(unit);
 
             return unit;
