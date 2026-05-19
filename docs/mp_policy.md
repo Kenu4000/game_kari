@@ -16,19 +16,19 @@ Current implementation status:
 - `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
 - `DummyBattleFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
 - `DummyBattleSetupFactory` now creates dummy ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
-- `DummyBattleSetupFactory` now creates runtime inventory items from `DummyItemCatalog` and stores them on `DummyBattleSetupData.InventoryItems`.
+- `DummyBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `DummyBattleSetupData.InventoryItems`.
 - Enemy `CharacterData` assets currently have empty `DefaultSkills` lists.
 - Legacy `DummyBattleFactory.CreateAllyUnit(...)`, `CreateEnemyUnit(...)`, and `CreateBaseUnit(...)` have been removed.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
 - Default `SkillData` assets exist under `Assets/Resources/Battle/Skills`.
-- `DummySkillCatalog` loads required default skill assets through `Resources.Load<SkillData>(...)` and throws if a required asset is missing.
-- `DummySkillCatalog` no longer creates runtime fallback `SkillData` instances.
+- `DefaultSkillAssetProvider` loads required default skill assets through `Resources.Load<SkillData>(...)` and throws if a required asset is missing.
+- `DefaultSkillAssetProvider` does not create runtime fallback `SkillData` instances.
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
-- Dummy skill MP costs are implemented in `SkillData` assets and accessed through `DummySkillCatalog`.
+- Dummy skill MP costs are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
 - Temporary dummy skills are assigned per character through `CharacterData.DefaultSkills`.
 - `DummySkillFactory` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
 - Legacy `DummyBattleFactory.CreateUnit(...)` has been removed to avoid ambiguous ally/enemy unit creation.
@@ -37,7 +37,7 @@ Current implementation status:
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
 - `ItemData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Item Data`.
 - Default `ItemData` assets exist under `Assets/Resources/Battle/Items`.
-- `DummyItemCatalog` loads default inventory ownership/count from `InventoryLoadoutData` under `Assets/Resources/Battle/Inventory`.
+- `DefaultInventoryProvider` loads default inventory ownership/count from `InventoryLoadoutData` under `Assets/Resources/Battle/Inventory`.
 - `InventoryLoadoutData` exists as a `ScriptableObject` and stores initial item ownership/count entries.
 - `default_inventory.asset` currently contains Potion x3 and Pass x99.
 - `ItemData` represents item definition only and does not store runtime count.
@@ -152,7 +152,7 @@ Temporary dummy skill costs:
 - `SkillData` is a `ScriptableObject` type.
 - Default dummy skills currently exist as assets in `Assets/Resources/Battle/Skills`.
 - `CharacterData.DefaultSkills` currently controls temporary character skill ownership.
-- `DummySkillCatalog` currently acts as the required skill asset lookup.
+- `DefaultSkillAssetProvider` currently acts as the required skill asset lookup.
 - Runtime cooldown state is not part of the current design.
 - Runtime link participation state is not part of the current design.
 - The current runtime mutable skill-related state is MP on `BattleUnit` and buffs on `BattleUnit.Buffs`.
@@ -165,7 +165,7 @@ Temporary dummy skill costs:
 - Default dummy items currently exist as assets in `Assets/Resources/Battle/Items`.
 - `InventoryLoadoutData` is initial inventory ownership/count data.
 - Default dummy inventory currently exists as `Assets/Resources/Battle/Inventory/default_inventory.asset`.
-- `DummyItemCatalog` currently acts as the required inventory loadout asset lookup.
+- `DefaultInventoryProvider` currently acts as the required inventory loadout asset lookup.
 - `InventoryItem` is runtime inventory state.
 - Runtime count is stored in `InventoryItem.Count`, not `ItemData` or `InventoryLoadoutData`.
 - Runtime inventory is created during dummy battle setup and passed into the command UI.
@@ -194,5 +194,5 @@ Temporary dummy skill costs:
 
 ## Remaining cleanup
 
-- Move item ownership/count from `DummyItemCatalog` to a non-dummy battle loadout or quest state source later.
+- Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
