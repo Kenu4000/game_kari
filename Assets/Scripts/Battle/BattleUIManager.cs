@@ -115,7 +115,7 @@ namespace GameKari.Battle
         // Battle setup
         private void Start()
         {
-            BootstrapDummyBattle();
+            BootstrapBattle();
             BindUI();
             EnsureResultPanel();
             EnsureEnemyActionPreviewPanel();
@@ -183,7 +183,7 @@ namespace GameKari.Battle
 #endif
         }
 
-        private void BootstrapDummyBattle()
+        private void BootstrapBattle()
         {
             _battleEnded = false;
             _phase = BattlePhase.CommandSelect;
@@ -197,7 +197,7 @@ namespace GameKari.Battle
             ClearBattleLists();
 
             BattleSetupData setup = DefaultBattleSetupFactory.CreateDefaultSetup();
-            ApplyDummyBattleSetup(setup);
+            ApplyBattleSetup(setup);
             SetupInitialTurnState(setup.FallbackActive);
         }
 
@@ -213,7 +213,7 @@ namespace GameKari.Battle
             _actedUnits.Clear();
         }
 
-        private void ApplyDummyBattleSetup(BattleSetupData setup)
+        private void ApplyBattleSetup(BattleSetupData setup)
         {
             if (setup == null)
             {
@@ -2664,7 +2664,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             HideActionOverlay();
             SetCommandUiVisible(true);
 
-            BootstrapDummyBattle();
+            BootstrapBattle();
 
             if (commandPanel != null)
             {
@@ -3217,6 +3217,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 
