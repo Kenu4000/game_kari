@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace GameKari.Battle
 {
@@ -48,3 +48,4 @@ namespace GameKari.Battle
         public IReadOnlyDictionary<GridPos, BattleUnit> EnemyGrid => _enemyGrid;
     }
 }
+

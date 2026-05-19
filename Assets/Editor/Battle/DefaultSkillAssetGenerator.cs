@@ -146,3 +146,4 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+

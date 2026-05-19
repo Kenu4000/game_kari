@@ -19,3 +19,4 @@ namespace GameKari.Battle
         public List<InventoryLoadoutEntry> Items = new();
     }
 }
+

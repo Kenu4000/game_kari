@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -33,3 +33,4 @@ namespace GameKari.Battle
         }
     }
 }
+

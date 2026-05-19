@@ -20,3 +20,4 @@ namespace GameKari.Battle
         public int HealAmount;
     }
 }
+

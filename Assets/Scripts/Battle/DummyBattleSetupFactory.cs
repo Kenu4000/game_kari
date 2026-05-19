@@ -68,7 +68,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            setup.InventoryItems.AddRange(DummyItemCatalog.CreateDefaultItems());
+            setup.InventoryItems.AddRange(DefaultInventoryProvider.CreateDefaultItems());
         }
 
         private static void CreateEnemies(DummyBattleSetupData setup)
@@ -94,6 +94,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

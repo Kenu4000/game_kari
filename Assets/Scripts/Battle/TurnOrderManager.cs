@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace GameKari.Battle
@@ -17,3 +17,4 @@ namespace GameKari.Battle
         }
     }
 }
+

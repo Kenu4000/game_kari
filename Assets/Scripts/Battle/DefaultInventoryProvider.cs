@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GameKari.Battle
 {
-    public static class DummyItemCatalog
+    public static class DefaultInventoryProvider
     {
         private const string DefaultInventoryLoadoutPath = "Battle/Inventory/default_inventory";
 
@@ -49,3 +49,4 @@ namespace GameKari.Battle
         }
     }
 }
+

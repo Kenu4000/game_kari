@@ -22,10 +22,10 @@ namespace GameKari.Battle.Editor
                 12,
                 new[]
                 {
-                    DummySkillCatalog.GetSlash(),
-                    DummySkillCatalog.GetPierce(),
-                    DummySkillCatalog.GetTwinHit(),
-                    DummySkillCatalog.GetFocus()
+                    DefaultSkillAssetProvider.GetSlash(),
+                    DefaultSkillAssetProvider.GetPierce(),
+                    DefaultSkillAssetProvider.GetTwinHit(),
+                    DefaultSkillAssetProvider.GetFocus()
                 }
             );
 
@@ -38,9 +38,9 @@ namespace GameKari.Battle.Editor
                 15,
                 new[]
                 {
-                    DummySkillCatalog.GetSlash(),
-                    DummySkillCatalog.GetPierce(),
-                    DummySkillCatalog.GetFocus()
+                    DefaultSkillAssetProvider.GetSlash(),
+                    DefaultSkillAssetProvider.GetPierce(),
+                    DefaultSkillAssetProvider.GetFocus()
                 }
             );
 
@@ -53,8 +53,8 @@ namespace GameKari.Battle.Editor
                 9,
                 new[]
                 {
-                    DummySkillCatalog.GetSlash(),
-                    DummySkillCatalog.GetFocus()
+                    DefaultSkillAssetProvider.GetSlash(),
+                    DefaultSkillAssetProvider.GetFocus()
                 }
             );
 
@@ -67,9 +67,9 @@ namespace GameKari.Battle.Editor
                 18,
                 new[]
                 {
-                    DummySkillCatalog.GetSlash(),
-                    DummySkillCatalog.GetPierce(),
-                    DummySkillCatalog.GetFocus()
+                    DefaultSkillAssetProvider.GetSlash(),
+                    DefaultSkillAssetProvider.GetPierce(),
+                    DefaultSkillAssetProvider.GetFocus()
                 }
             );
 
@@ -82,7 +82,7 @@ namespace GameKari.Battle.Editor
                 11,
                 new[]
                 {
-                    DummySkillCatalog.GetSlash()
+                    DefaultSkillAssetProvider.GetSlash()
                 }
             );
 
@@ -203,3 +203,4 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+

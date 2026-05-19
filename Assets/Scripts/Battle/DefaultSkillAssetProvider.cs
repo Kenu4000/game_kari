@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GameKari.Battle
 {
-    public static class DummySkillCatalog
+    public static class DefaultSkillAssetProvider
     {
         private const string SlashAssetPath = "Battle/Skills/s1_slash";
         private const string PierceAssetPath = "Battle/Skills/s2_pierce";
@@ -47,3 +47,4 @@ namespace GameKari.Battle
         }
     }
 }
+
