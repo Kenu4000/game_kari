@@ -17,6 +17,8 @@ Current implementation status:
 - Insufficient-MP skills are visually dimmed but remain interactable.
 - `BattleUIManager` blocks insufficient-MP skill execution.
 - Accepted skill use consumes user MP when the skill action begins.
+- Link skills also require the specified partner to have enough MP.
+- Accepted Link skill use consumes MP from both the user and the specified partner.
 - `StartNextTurn()` recovers MP +1 for ally front-line and reserve characters.
 - Skill CT and LinkCooldown data fields have been removed from the active data model.
 - `WAIT:N`, `LINK:N`, and LinkCooldown status display are no longer part of the active UI flow.
@@ -100,9 +102,10 @@ Temporary dummy skill costs:
 - Automatic link partner selection is not part of the target design.
 - Link skills specify their partner per skill through `SkillData.LinkPartnerCharacterId`.
 - Current dummy TwinHit specifies `rogue` as its link partner id.
-- Current implementation keeps TwinHit as a Link skill that consumes only the user's MP 2.
-- Future link skill cost policy is user MP 2 + partner MP 2.
-- Future link skill availability should check both the user and the specified partner.
+- TwinHit currently requires user MP 2 + specified partner MP 2.
+- If either the user or the specified partner lacks MP, the Link skill is blocked.
+- Current implementation consumes the same `MpCost` from both the user and the specified partner.
+- Future Link skill cost values may be split into separate user/partner costs if needed.
 
 ## Remaining cleanup
 
