@@ -2,12 +2,6 @@
 {
     public static class DummyBattleFactory
     {
-        public static BattleUnit CreateUnit(string name, int hp, int speed)
-        {
-            // Legacy compatibility: default unit creation is ally-style.
-            return CreateAllyUnit(name, hp, speed);
-        }
-
         public static BattleUnit CreateAllyUnit(string name, int hp, int speed)
         {
             BattleUnit unit = CreateBaseUnit(name, hp, speed);
