@@ -10,6 +10,7 @@ Current implementation status:
 
 - `CharacterData.MaxMP` exists and currently defaults to 4.
 - `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
+- `CharacterData.EnemyActionSlots` exists and stores enemy AI action candidates as `SkillData` + weight.
 - Default ally and enemy `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
 - `CharacterAssetProvider.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
 - `CharacterAssetProvider` does not have a runtime character fallback path; battle participants are expected to have `CharacterData` assets.
@@ -18,7 +19,7 @@ Current implementation status:
 - `DefaultBattleSetupFactory` now creates default ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
 - `DefaultBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
 - `BattleSetupData` stores default battle unit placements, reserves, fallback active unit, enemy references, and runtime inventory.
-- Enemy `CharacterData` assets now have one default enemy skill each.
+- Enemy `CharacterData` assets now have one default enemy skill and one `EnemyActionSlot` each.
 - Legacy dummy battle factory/setup/helper names have been removed from the battle scripts.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
@@ -36,8 +37,10 @@ Current implementation status:
 - Knight currently owns the Link skill `TwinHit`.
 - Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
 - Enemy actions use `EnemyActionState` as a runtime wrapper around `SkillData`.
-- `EnemyActionSelector` selects the first non-null runtime skill from `BattleUnit.Skills` and uses `enemy_strike` only as fallback.
+- `EnemyActionSelector` currently still selects the first non-null runtime skill from `BattleUnit.Skills` and uses `enemy_strike` only as fallback.
+- `EnemyActionSlots` have been added as data, but weighted selection has not been enabled yet.
 - Enemy action selection does not check or consume MP.
+- Enemy action preview remains in its current implementation and should be treated as undecided / low-priority unless explicitly changed later.
 - `BattleUIManager` stores initialized enemy action states in `_enemyActionStates` and preview-fixed enemy action states in `_previewEnemyActionStates`.
 - Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution read `action.Skill.TargetPattern`.
 - Current default enemy skills are `enemy_claw`, `enemy_arrow`, `enemy_bite`, `enemy_hex`, and `enemy_strike`.
@@ -144,6 +147,14 @@ Temporary default enemy skills:
 - Shaman: Hex
 - Enemy Reserve: Strike
 
+## Temporary default enemy action slots
+
+- Goblin A: Claw, Weight 100
+- Archer: Arrow, Weight 100
+- Goblin B: Bite, Weight 100
+- Shaman: Hex, Weight 100
+- Enemy Reserve: Strike, Weight 100
+
 ## MP spending
 
 - Player skills have `MpCost`.
@@ -169,6 +180,7 @@ Temporary default enemy skills:
 - `CharacterAssetProvider.CreateCharacterDataById(...)` first tries to load character assets by character id and fails loudly when missing.
 - Default battle setup now uses character ids for ally/enemy creation, so HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
 - Enemies now store their default enemy skill in `CharacterData.DefaultSkills`.
+- Enemies also store enemy AI action candidates in `CharacterData.EnemyActionSlots`.
 
 ## Skill model
 
@@ -187,8 +199,12 @@ Temporary default enemy skills:
 
 - `EnemyActionState` currently remains code-defined runtime state.
 - `EnemyActionState` wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
-- `EnemyActionSelector` reads the enemy unit's first non-null runtime skill as its default action state.
+- `EnemyActionSelector` currently reads the enemy unit's first non-null runtime skill as its default action state.
 - `EnemyActionSelector` does not check enemy MP when selecting an action.
+- `CharacterData.EnemyActionSlots` is the intended future source for weighted random normal-enemy action selection.
+- Weighted enemy action selection has not been enabled yet.
+- Boss-style conditional action selection is deferred until the battle loop is more stable.
+- Battle action preview remains undecided; current preview implementation should stay unobtrusive and low-priority.
 - `BattleUIManager` keeps preview enemy action states separate from initialized enemy action states so the preview remains stable until that enemy acts.
 - Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
 - Enemy-specific skills are now represented by normal `SkillData` assets and assigned through `CharacterData.DefaultSkills`.
@@ -230,5 +246,7 @@ Temporary default enemy skills:
 ## Remaining cleanup
 
 - Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
-- Decide whether enemies should eventually support random, weighted, or condition-based action selection instead of always using the first non-null skill.
+- Switch normal enemy action selection from first non-null skill to weighted `EnemyActionSlots` later.
+- Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
+- Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
