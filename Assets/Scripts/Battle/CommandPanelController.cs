@@ -45,7 +45,7 @@ namespace GameKari.Battle
 
         private int _hoveredSkillIndex = -1;
 
-        private readonly List<ItemData> _dummyItems = CreateDummyItems();
+        private readonly List<ItemData> _dummyItems = DummyItemCatalog.CreateDefaultItems();
 
         private void Awake()
         {
@@ -533,32 +533,7 @@ namespace GameKari.Battle
                     return $"{description}\nHeal: {item.HealAmount}\n{countText}\nNo items left.";
             }
         }
-
-        private static List<ItemData> CreateDummyItems()
-        {
-            return new List<ItemData>
-            {
-                new ItemData
-                {
-                    ItemId = "potion",
-                    ItemName = "Potion",
-                    Description = "Heal the ally in front of the active unit.",
-                    Kind = ItemKind.Heal,
-                    HealAmount = 20,
-                    Count = 3
-                },
-                new ItemData
-                {
-                    ItemId = "pass",
-                    ItemName = "Pass",
-                    Description = "End the current action. No MP is spent and no extra MP is recovered.",
-                    Kind = ItemKind.Pass,
-                    HealAmount = 0,
-                    Count = 99
-                }
-            };
-        }
-private void ClearDescription()
+        private void ClearDescription()
         {
             if (descriptionText != null)
             {
@@ -980,6 +955,7 @@ private void ClearDescription()
         }
     }
 }
+
 
 
 
