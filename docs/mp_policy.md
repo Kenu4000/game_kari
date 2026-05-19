@@ -10,11 +10,12 @@ Current implementation status:
 
 - `CharacterData.MaxMP` exists and currently defaults to 4.
 - `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
-- Default `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
-- `DummyCharacterFactory.CreateCharacterDataById(...)` loads ally character assets through `Resources.Load<CharacterData>(...)` and throws if the requested ally asset is missing.
-- `DummyCharacterFactory.CreateCharacterData(...)` remains as the enemy/runtime character creation path and still falls back to runtime `ScriptableObject.CreateInstance<CharacterData>()` when no asset exists.
-- `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id.
-- `DummyBattleSetupFactory` now creates dummy ally units by character id instead of duplicating ally HP/Speed values in setup code.
+- Default ally and enemy `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
+- `DummyCharacterFactory.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
+- `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
+- `DummyBattleFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
+- `DummyBattleSetupFactory` now creates dummy ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
+- Enemy `CharacterData` assets currently have empty `DefaultSkills` lists.
 - Legacy `DummyBattleFactory.CreateAllyUnit(...)` has been removed; ally dummy setup now uses `CreateAllyUnitById(...)`.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
@@ -27,7 +28,6 @@ Current implementation status:
 - Dummy skill MP costs are implemented in `DummySkillCatalog`.
 - Temporary dummy skills are assigned per character through `CharacterData.DefaultSkills`.
 - `DummySkillFactory` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
-- `DummyBattleFactory.CreateEnemyUnit(...)` creates enemy units without assigning player skills.
 - Legacy `DummyBattleFactory.CreateUnit(...)` has been removed to avoid ambiguous ally/enemy unit creation.
 - Knight currently owns the dummy Link skill `TwinHit`.
 - Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
@@ -133,10 +133,10 @@ Temporary dummy skill costs:
 
 - `CharacterData` is character definition data.
 - `CharacterData` is a `ScriptableObject` type.
-- Default dummy ally characters currently exist as assets in `Assets/Resources/Battle/Characters`.
+- Default dummy ally and enemy characters currently exist as assets in `Assets/Resources/Battle/Characters`.
 - `DummyCharacterFactory.CreateCharacterDataById(...)` first tries to load character assets by character id and fails loudly when missing.
-- `DummyCharacterFactory.CreateCharacterData(...)` is still used for enemy/runtime dummy characters.
 - Dummy ally setup now uses character ids for ally creation, so ally HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
+- Dummy enemy setup also uses character ids, but enemies currently keep `DefaultSkills` empty and continue to act through the existing enemy action flow.
 
 ## Skill model
 
@@ -180,5 +180,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
-- Consider asset-backed enemy definitions later if enemy data starts growing.
+- Remove remaining enemy/name/HP/speed runtime character creation path if no longer needed.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
