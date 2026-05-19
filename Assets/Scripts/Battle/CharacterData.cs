@@ -2,8 +2,10 @@
 
 namespace GameKari.Battle
 {
-    [System.Serializable]
-    public class CharacterData
+    [CreateAssetMenu(
+        fileName = "CharacterData",
+        menuName = "GameKari/Battle/Character Data")]
+    public class CharacterData : ScriptableObject
     {
         public string Id;
         public string DisplayName;
@@ -14,5 +16,3 @@ namespace GameKari.Battle
         public Sprite StandingSprite;
     }
 }
-
-
