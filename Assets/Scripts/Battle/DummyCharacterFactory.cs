@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -15,7 +16,7 @@ namespace GameKari.Battle
                 return asset;
             }
 
-            return CreateFallbackCharacterData(characterId, characterId, 100, 10);
+            throw new InvalidOperationException($"CharacterData asset not found for id: {characterId}");
         }
 
         public static CharacterData CreateCharacterData(string name, int hp, int speed)
@@ -27,10 +28,10 @@ namespace GameKari.Battle
                 return asset;
             }
 
-            return CreateFallbackCharacterData(characterId, name, hp, speed);
+            return CreateRuntimeCharacterData(characterId, name, hp, speed);
         }
 
-        private static CharacterData CreateFallbackCharacterData(string characterId, string displayName, int hp, int speed)
+        private static CharacterData CreateRuntimeCharacterData(string characterId, string displayName, int hp, int speed)
         {
             CharacterData data = ScriptableObject.CreateInstance<CharacterData>();
 
