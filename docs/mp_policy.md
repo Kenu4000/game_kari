@@ -13,6 +13,9 @@ Current implementation status:
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
 - Dummy skill MP costs are implemented in `DummySkillCatalog`.
+- Temporary dummy skills are assigned per character through `DummySkillCatalog.CreateSkillsForUnit(...)`.
+- Knight currently owns the dummy Link skill `TwinHit`.
+- Rogue is the specified dummy partner for `TwinHit` and does not currently own `TwinHit`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
 - Temporary item definitions are implemented in `DummyItemCatalog`.
 - `CommandPanelController` obtains temporary items through `DummyItemCatalog.CreateDefaultItems()`.
@@ -85,6 +88,14 @@ Temporary dummy skill costs:
 - TwinHit: MP 2
 - Focus: MP 0
 
+## Temporary dummy skill ownership
+
+- Knight: Slash, Pierce, TwinHit, Focus
+- Mage: Slash, Pierce, Focus
+- Cleric: Slash, Focus
+- Rogue: Slash, Pierce, Focus
+- Other characters: Slash
+
 ## MP spending
 
 - Skills have `MpCost`.
@@ -123,4 +134,5 @@ Temporary dummy skill costs:
 ## Remaining cleanup
 
 - Move item definitions from `DummyItemCatalog` to ScriptableObject or another asset-backed data source when item count or item behavior increases.
+- Move skill definitions from `DummySkillCatalog` to ScriptableObject or another asset-backed data source when skill count or character-specific skill ownership increases.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
