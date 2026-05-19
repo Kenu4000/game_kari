@@ -459,12 +459,26 @@ namespace GameKari.Battle
             }
 
             BattleUnit partner = FindUnitByCharacterId(_allies, skill.LinkPartnerCharacterId);
-            if (partner != null)
+            if (IsValidLinkPartner(partner))
             {
                 return partner;
             }
 
-            return FindUnitByCharacterId(_reserves, skill.LinkPartnerCharacterId);
+            partner = FindUnitByCharacterId(_reserves, skill.LinkPartnerCharacterId);
+            if (IsValidLinkPartner(partner))
+            {
+                return partner;
+            }
+
+            return null;
+        }
+
+        private bool IsValidLinkPartner(BattleUnit partner)
+        {
+            return partner != null
+                && partner != _activeUnit
+                && !partner.IsDead
+                && partner.Data != null;
         }
 
         private static BattleUnit FindUnitByCharacterId(List<BattleUnit> units, string characterId)
@@ -774,6 +788,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

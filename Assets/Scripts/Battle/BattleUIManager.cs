@@ -428,6 +428,11 @@ namespace GameKari.Battle
             return $"{user.Name} + {linkPartner.Name}";
         }
 
+        private bool IsActiveAllyUnit(BattleUnit unit)
+        {
+            return unit != null && _allies != null && _allies.Contains(unit);
+        }
+
         private static List<GridPos> BuildSkillSourceFlashTargets(BattleUnit user, BattleUnit linkPartner)
         {
             var targets = new List<GridPos>();
@@ -444,14 +449,7 @@ namespace GameKari.Battle
 
             return targets;
         }
-
-        private void ApplySkillCooldownAfterUse(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
-        {
-            // Target design uses MP instead of Skill CT / LinkCooldown.
-            // Method kept temporarily to minimize migration blast radius.
-        }
-
-        private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
+private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
         {
             if (user == null || skill == null)
             {
@@ -565,12 +563,12 @@ namespace GameKari.Battle
 
             ShowActionOverlay(skill.SkillName, BuildSkillUserDisplayName(_active, linkPartner));
             PrepareSkillActionFlashTargets(skill);
-            SetPendingActionSourceFlashTargets(true, BuildSkillSourceFlashTargets(_active, linkPartner));
+            BattleUnit flashableLinkPartner = IsActiveAllyUnit(linkPartner) ? linkPartner : null;
+            SetPendingActionSourceFlashTargets(true, BuildSkillSourceFlashTargets(_active, flashableLinkPartner));
             Debug.Log($"[Action] Skill used: {skill.SkillName} by {BuildSkillUserDisplayName(_active, linkPartner)}.");
 
             ApplySkillDamage(skill);
             ApplySkillEffect(skill);
-            ApplySkillCooldownAfterUse(_active, skill, linkPartner);
 
             if (_battleEnded)
             {
@@ -3186,6 +3184,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
