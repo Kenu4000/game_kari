@@ -196,9 +196,9 @@ namespace GameKari.Battle
 
             ClearBattleLists();
 
-            BattleUnit fallbackActive = SetupDummyAllies();
-            SetupDummyEnemies();
-            SetupInitialTurnState(fallbackActive);
+            DummyBattleSetupData setup = DummyBattleSetupFactory.CreateDefaultSetup();
+            ApplyDummyBattleSetup(setup);
+            SetupInitialTurnState(setup.FallbackActive);
         }
 
         private void ClearBattleLists()
@@ -213,56 +213,50 @@ namespace GameKari.Battle
             _actedUnits.Clear();
         }
 
-        private BattleUnit SetupDummyAllies()
+        private void ApplyDummyBattleSetup(DummyBattleSetupData setup)
         {
-            BattleUnit heroA = DummyBattleFactory.CreateUnit("Knight", 130, 12);
-            BattleUnit heroB = DummyBattleFactory.CreateUnit("Mage", 80, 15);
-            BattleUnit heroC = DummyBattleFactory.CreateUnit("Cleric", 90, 9);
-            BattleUnit heroD = DummyBattleFactory.CreateUnit("Rogue", 95, 18);
-            BattleUnit reserve = DummyBattleFactory.CreateUnit("Reserve", 100, 11);
+            if (setup == null)
+            {
+                return;
+            }
 
-            _grid.SetUnit(true, GridPos.FrontTop, heroA);
-            _grid.SetUnit(true, GridPos.BackTop, heroB);
-            _grid.SetUnit(true, GridPos.FrontBottom, heroC);
-            _grid.SetUnit(true, GridPos.BackBottom, heroD);
+            ApplyDummyUnitPlacements(true, setup.AllyPlacements, _allies);
+            ApplyDummyUnitPlacements(false, setup.EnemyPlacements, _enemies);
 
-            _allies.Add(heroA);
-            _allies.Add(heroB);
-            _allies.Add(heroC);
-            _allies.Add(heroD);
-
-            _reserves.Add(reserve);
-
-            return heroA;
-        }
-
-        private void SetupDummyEnemies()
-        {
-            BattleUnit enemyA = DummyBattleFactory.CreateUnit("Goblin A", 70, 10);
-            BattleUnit enemyB = DummyBattleFactory.CreateUnit("Archer", 30, 13);
-            BattleUnit enemyC = DummyBattleFactory.CreateUnit("Goblin B", 50, 8);
-            BattleUnit enemyD = DummyBattleFactory.CreateUnit("Shaman", 25, 7);
-            BattleUnit enemyReserve = DummyBattleFactory.CreateUnit("Enemy Reserve", 65, 11);
-
-            _enemies.Add(enemyA);
-            _enemies.Add(enemyB);
-            _enemies.Add(enemyC);
-            _enemies.Add(enemyD);
-
-            _enemyReserves.Add(enemyReserve);
-
-            _grid.SetUnit(false, GridPos.FrontTop, enemyA);
-            _grid.SetUnit(false, GridPos.BackTop, enemyB);
-            _grid.SetUnit(false, GridPos.FrontBottom, enemyC);
-            _grid.SetUnit(false, GridPos.BackBottom, enemyD);
+            _reserves.AddRange(setup.AllyReserves);
+            _enemyReserves.AddRange(setup.EnemyReserves);
 
             DummyEnemyActionFactory.SetDefaultEnemyActions(
                 _enemyActions,
-                enemyA,
-                enemyB,
-                enemyC,
-                enemyD,
-                enemyReserve);
+                setup.EnemyA,
+                setup.EnemyB,
+                setup.EnemyC,
+                setup.EnemyD,
+                setup.EnemyReserve);
+        }
+
+        private void ApplyDummyUnitPlacements(
+            bool isAlly,
+            List<DummyBattleUnitPlacement> placements,
+            List<BattleUnit> units)
+        {
+            if (placements == null || units == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < placements.Count; i++)
+            {
+                DummyBattleUnitPlacement placement = placements[i];
+
+                if (placement == null || placement.Unit == null)
+                {
+                    continue;
+                }
+
+                _grid.SetUnit(isAlly, placement.Position, placement.Unit);
+                units.Add(placement.Unit);
+            }
         }
         // Enemy action selection
         private EnemyActionData SelectEnemyAction(BattleUnit enemy)
@@ -3319,6 +3313,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
