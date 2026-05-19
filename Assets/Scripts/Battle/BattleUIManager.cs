@@ -2850,8 +2850,42 @@ namespace GameKari.Battle
                 return;
             }
 
+            Sprite sprite = unit == null || unit.Data == null ? null : unit.Data.BattleSprite;
             cellLabel.text = SafeName(unit);
-            SetBoardCellSprite(cellLabel, unit == null || unit.Data == null ? null : unit.Data.BattleSprite);
+            ApplyBoardCellLabelLayout(cellLabel, sprite != null);
+            SetBoardCellSprite(cellLabel, sprite);
+        }
+
+        private static void ApplyBoardCellLabelLayout(TMP_Text cellLabel, bool hasSprite)
+        {
+            if (cellLabel == null)
+            {
+                return;
+            }
+
+            RectTransform labelRect = cellLabel.GetComponent<RectTransform>();
+            if (labelRect == null)
+            {
+                return;
+            }
+
+            if (hasSprite)
+            {
+                labelRect.anchorMin = new Vector2(0f, 0f);
+                labelRect.anchorMax = new Vector2(1f, 0.22f);
+                labelRect.offsetMin = new Vector2(4f, 2f);
+                labelRect.offsetMax = new Vector2(-4f, -2f);
+                cellLabel.alignment = TextAlignmentOptions.Center;
+                cellLabel.fontSize = 16f;
+                return;
+            }
+
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            cellLabel.alignment = TextAlignmentOptions.Center;
+            cellLabel.fontSize = 24f;
         }
 
         private static void SetBoardCellSprite(TMP_Text cellLabel, Sprite sprite)
@@ -3283,6 +3317,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
