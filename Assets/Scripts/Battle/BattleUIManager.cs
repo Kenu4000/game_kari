@@ -443,7 +443,7 @@ namespace GameKari.Battle
 
             return targets;
         }
-private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
+        private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
         {
             if (user == null || skill == null)
             {
@@ -591,7 +591,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             ResolveDefeatedEnemies(defeatedEnemies);
         }
-        
+
         private void ApplySkillEffect(SkillData skill)
         {
             if (skill == null)
@@ -1294,7 +1294,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
             return targets;
         }
-        
+
         private List<GridPos> GetSkillAnimationTargetPositions(SkillData skill)
         {
             var targets = new List<GridPos>();
@@ -1382,7 +1382,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             targets.Add(GridPos.FrontBottom);
             targets.Add(GridPos.BackBottom);
         }
-        
+
         private void PrepareSkillActionFlashTargets(SkillData skill)
         {
             if (skill == null)
@@ -1701,8 +1701,8 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
                 }
             }
         }
-        
-        
+
+
         // Turn progression
         private IEnumerator FinishPlayerActionAfterDelay()
         {
@@ -2430,7 +2430,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
                     return pos.ToString();
             }
         }
-        
+
         private void UpdateEnemyActionPreview()
         {
             EnsureEnemyActionPreviewPanel();
@@ -2482,7 +2482,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
                 _enemyActionPreviewPanelObject.SetActive(visible);
             }
         }
-        
+
         // Result UI
         private void EnsureResultPanel()
         {
@@ -2728,15 +2728,15 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
         {
             // Enemy side is displayed mirrored on screen.
             // Visual left cells show enemy backline, visual right cells show enemy frontline.
-            enemyFrontTop.text = SafeName(_grid.GetUnit(false, GridPos.BackTop));
-            enemyBackTop.text = SafeName(_grid.GetUnit(false, GridPos.FrontTop));
-            enemyFrontBottom.text = SafeName(_grid.GetUnit(false, GridPos.BackBottom));
-            enemyBackBottom.text = SafeName(_grid.GetUnit(false, GridPos.FrontBottom));
+            SetBoardCellUnit(enemyFrontTop, _grid.GetUnit(false, GridPos.BackTop));
+            SetBoardCellUnit(enemyBackTop, _grid.GetUnit(false, GridPos.FrontTop));
+            SetBoardCellUnit(enemyFrontBottom, _grid.GetUnit(false, GridPos.BackBottom));
+            SetBoardCellUnit(enemyBackBottom, _grid.GetUnit(false, GridPos.FrontBottom));
 
-            allyFrontTop.text = SafeName(_grid.GetUnit(true, GridPos.FrontTop));
-            allyBackTop.text = SafeName(_grid.GetUnit(true, GridPos.BackTop));
-            allyFrontBottom.text = SafeName(_grid.GetUnit(true, GridPos.FrontBottom));
-            allyBackBottom.text = SafeName(_grid.GetUnit(true, GridPos.BackBottom));
+            SetBoardCellUnit(allyFrontTop, _grid.GetUnit(true, GridPos.FrontTop));
+            SetBoardCellUnit(allyBackTop, _grid.GetUnit(true, GridPos.BackTop));
+            SetBoardCellUnit(allyFrontBottom, _grid.GetUnit(true, GridPos.FrontBottom));
+            SetBoardCellUnit(allyBackBottom, _grid.GetUnit(true, GridPos.BackBottom));
 
             RedrawStatusPanels();
             RedrawActiveHighlights();
@@ -2843,6 +2843,61 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
             }
         }
 
+        private static void SetBoardCellUnit(TMP_Text cellLabel, BattleUnit unit)
+        {
+            if (cellLabel == null)
+            {
+                return;
+            }
+
+            cellLabel.text = SafeName(unit);
+            SetBoardCellSprite(cellLabel, unit == null || unit.Data == null ? null : unit.Data.BattleSprite);
+        }
+
+        private static void SetBoardCellSprite(TMP_Text cellLabel, Sprite sprite)
+        {
+            if (cellLabel == null || cellLabel.transform.parent == null)
+            {
+                return;
+            }
+
+            Transform cellTransform = cellLabel.transform.parent;
+            Transform existing = cellTransform.Find("BattleSpriteImage");
+
+            Image spriteImage;
+            if (existing == null)
+            {
+                GameObject spriteObject = new GameObject("BattleSpriteImage");
+                spriteObject.transform.SetParent(cellTransform, false);
+
+                RectTransform rect = spriteObject.AddComponent<RectTransform>();
+                rect.anchorMin = new Vector2(-0.10f, -0.10f);
+                rect.anchorMax = new Vector2(1.10f, 1.10f);
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+
+                spriteImage = spriteObject.AddComponent<Image>();
+                spriteImage.raycastTarget = false;
+                spriteImage.preserveAspect = true;
+
+                // Keep the sprite behind the cell text.
+                spriteObject.transform.SetSiblingIndex(0);
+            }
+            else
+            {
+                spriteImage = existing.GetComponent<Image>();
+                if (spriteImage == null)
+                {
+                    spriteImage = existing.gameObject.AddComponent<Image>();
+                    spriteImage.raycastTarget = false;
+                    spriteImage.preserveAspect = true;
+                }
+            }
+
+            spriteImage.sprite = sprite;
+            spriteImage.enabled = sprite != null;
+            spriteImage.color = Color.white;
+        }
         private static void SetCellImageColor(TMP_Text cellLabel, Color color)
         {
             if (cellLabel == null || cellLabel.transform.parent == null)
@@ -3217,6 +3272,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 

@@ -23,7 +23,9 @@ namespace GameKari.Battle
         public int Speed = 10;
         public Sprite FaceIcon;
         public Sprite StandingSprite;
+        public Sprite BattleSprite;
         public List<SkillData> DefaultSkills = new();
         public List<EnemyActionSlot> EnemyActionSlots = new();
     }
 }
+
