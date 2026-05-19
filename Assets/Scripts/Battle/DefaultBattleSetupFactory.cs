@@ -46,11 +46,11 @@ namespace GameKari.Battle
 
         private static void CreateAllies(BattleSetupData setup)
         {
-            BattleUnit heroA = DummyBattleFactory.CreateAllyUnitById("knight");
-            BattleUnit heroB = DummyBattleFactory.CreateAllyUnitById("mage");
-            BattleUnit heroC = DummyBattleFactory.CreateAllyUnitById("cleric");
-            BattleUnit heroD = DummyBattleFactory.CreateAllyUnitById("rogue");
-            BattleUnit reserve = DummyBattleFactory.CreateAllyUnitById("reserve");
+            BattleUnit heroA = DefaultBattleUnitFactory.CreateAllyUnitById("knight");
+            BattleUnit heroB = DefaultBattleUnitFactory.CreateAllyUnitById("mage");
+            BattleUnit heroC = DefaultBattleUnitFactory.CreateAllyUnitById("cleric");
+            BattleUnit heroD = DefaultBattleUnitFactory.CreateAllyUnitById("rogue");
+            BattleUnit reserve = DefaultBattleUnitFactory.CreateAllyUnitById("reserve");
 
             setup.AllyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, heroA));
             setup.AllyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, heroB));
@@ -73,11 +73,11 @@ namespace GameKari.Battle
 
         private static void CreateEnemies(BattleSetupData setup)
         {
-            BattleUnit enemyA = DummyBattleFactory.CreateEnemyUnitById("goblin_a");
-            BattleUnit enemyB = DummyBattleFactory.CreateEnemyUnitById("archer");
-            BattleUnit enemyC = DummyBattleFactory.CreateEnemyUnitById("goblin_b");
-            BattleUnit enemyD = DummyBattleFactory.CreateEnemyUnitById("shaman");
-            BattleUnit enemyReserve = DummyBattleFactory.CreateEnemyUnitById("enemy_reserve");
+            BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_a");
+            BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("archer");
+            BattleUnit enemyC = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_b");
+            BattleUnit enemyD = DefaultBattleUnitFactory.CreateEnemyUnitById("shaman");
+            BattleUnit enemyReserve = DefaultBattleUnitFactory.CreateEnemyUnitById("enemy_reserve");
 
             setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, enemyA));
             setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, enemyB));
@@ -94,6 +94,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

@@ -1,6 +1,6 @@
 ﻿namespace GameKari.Battle
 {
-    public static class DummyBattleFactory
+    public static class DefaultBattleUnitFactory
     {
         public static BattleUnit CreateAllyUnitById(string characterId)
         {
@@ -17,5 +17,6 @@
         }
     }
 }
+
 
 
