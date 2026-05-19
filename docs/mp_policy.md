@@ -36,7 +36,8 @@ Current implementation status:
 - Knight currently owns the Link skill `TwinHit`.
 - Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
 - Enemy actions use `EnemyActionState` as a runtime wrapper around `SkillData`.
-- `EnemyActionSelector` reads the enemy unit's primary skill from `BattleUnit.Skills[0]` and uses `enemy_strike` only as fallback.
+- `EnemyActionSelector` selects the first non-null runtime skill from `BattleUnit.Skills` and uses `enemy_strike` only as fallback.
+- Enemy action selection does not check or consume MP.
 - `BattleUIManager` stores initialized enemy action states in `_enemyActionStates` and preview-fixed enemy action states in `_previewEnemyActionStates`.
 - Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution read `action.Skill.TargetPattern`.
 - Current default enemy skills are `enemy_claw`, `enemy_arrow`, `enemy_bite`, `enemy_hex`, and `enemy_strike`.
@@ -75,6 +76,8 @@ Current implementation status:
 - Wave start does not grant additional MP recovery.
 - Returning to base restores all allies to MP 4/4.
 - Initial implementation does not give MP to enemies.
+- Enemy action selection does not check MP.
+- Enemy action execution does not consume MP.
 
 ## Game loop context
 
@@ -143,11 +146,13 @@ Temporary default enemy skills:
 
 ## MP spending
 
-- Skills have `MpCost`.
-- MP is checked before skill execution.
-- If current MP is lower than `MpCost`, the skill is blocked.
-- If the skill is accepted, MP is consumed when the skill action begins.
-- MP is consumed even if the target cell is empty and the skill misses.
+- Player skills have `MpCost`.
+- Player MP is checked before player skill execution.
+- If current MP is lower than `MpCost`, the player skill is blocked.
+- If the player skill is accepted, MP is consumed when the skill action begins.
+- Player MP is consumed even if the target cell is empty and the skill misses.
+- Enemy skills currently ignore `MpCost`.
+- Enemy skills currently do not consume MP.
 
 ## Skill button behavior
 
@@ -182,7 +187,8 @@ Temporary default enemy skills:
 
 - `EnemyActionState` currently remains code-defined runtime state.
 - `EnemyActionState` wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
-- `EnemyActionSelector` reads the enemy unit's first runtime skill as its default action state.
+- `EnemyActionSelector` reads the enemy unit's first non-null runtime skill as its default action state.
+- `EnemyActionSelector` does not check enemy MP when selecting an action.
 - `BattleUIManager` keeps preview enemy action states separate from initialized enemy action states so the preview remains stable until that enemy acts.
 - Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
 - Enemy-specific skills are now represented by normal `SkillData` assets and assigned through `CharacterData.DefaultSkills`.
@@ -224,5 +230,5 @@ Temporary default enemy skills:
 ## Remaining cleanup
 
 - Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
-- Decide whether enemies should eventually support multiple action skills and selection policies instead of always using the first skill.
+- Decide whether enemies should eventually support random, weighted, or condition-based action selection instead of always using the first non-null skill.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
