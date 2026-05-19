@@ -44,11 +44,11 @@ namespace GameKari.Battle
 
         private static void CreateAllies(DummyBattleSetupData setup)
         {
-            BattleUnit heroA = DummyBattleFactory.CreateAllyUnit("Knight", 130, 12);
-            BattleUnit heroB = DummyBattleFactory.CreateAllyUnit("Mage", 80, 15);
-            BattleUnit heroC = DummyBattleFactory.CreateAllyUnit("Cleric", 90, 9);
-            BattleUnit heroD = DummyBattleFactory.CreateAllyUnit("Rogue", 95, 18);
-            BattleUnit reserve = DummyBattleFactory.CreateAllyUnit("Reserve", 100, 11);
+            BattleUnit heroA = DummyBattleFactory.CreateAllyUnitById("knight");
+            BattleUnit heroB = DummyBattleFactory.CreateAllyUnitById("mage");
+            BattleUnit heroC = DummyBattleFactory.CreateAllyUnitById("cleric");
+            BattleUnit heroD = DummyBattleFactory.CreateAllyUnitById("rogue");
+            BattleUnit reserve = DummyBattleFactory.CreateAllyUnitById("reserve");
 
             setup.AllyPlacements.Add(new DummyBattleUnitPlacement(GridPos.FrontTop, heroA));
             setup.AllyPlacements.Add(new DummyBattleUnitPlacement(GridPos.BackTop, heroB));
@@ -82,4 +82,5 @@ namespace GameKari.Battle
         }
     }
 }
+
 

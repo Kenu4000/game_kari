@@ -7,6 +7,17 @@ namespace GameKari.Battle
         private const int DefaultMaxMP = 4;
         private const string CharacterAssetBasePath = "Battle/Characters/";
 
+        public static CharacterData CreateCharacterDataById(string characterId)
+        {
+            CharacterData asset = LoadCharacterAsset(characterId);
+            if (asset != null)
+            {
+                return asset;
+            }
+
+            return CreateFallbackCharacterData(characterId, characterId, 100, 10);
+        }
+
         public static CharacterData CreateCharacterData(string name, int hp, int speed)
         {
             string characterId = BuildCharacterId(name);
@@ -16,10 +27,15 @@ namespace GameKari.Battle
                 return asset;
             }
 
+            return CreateFallbackCharacterData(characterId, name, hp, speed);
+        }
+
+        private static CharacterData CreateFallbackCharacterData(string characterId, string displayName, int hp, int speed)
+        {
             CharacterData data = ScriptableObject.CreateInstance<CharacterData>();
 
             data.Id = characterId;
-            data.DisplayName = name;
+            data.DisplayName = displayName;
             data.MaxHP = hp;
             data.MaxMP = DefaultMaxMP;
             data.Speed = speed;
