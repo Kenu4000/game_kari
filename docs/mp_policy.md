@@ -19,7 +19,7 @@ Current implementation status:
 - `DefaultBattleSetupFactory` now creates default ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
 - `DefaultBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
 - `BattleSetupData` stores default battle unit placements, reserves, fallback active unit, enemy references, and runtime inventory.
-- Enemy `CharacterData` assets now have one default enemy skill and one `EnemyActionSlot` each.
+- Enemy `CharacterData` assets now have weighted `EnemyActionSlot` entries for normal-enemy action selection.
 - Legacy dummy battle factory/setup/helper names have been removed from the battle scripts.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
@@ -148,11 +148,11 @@ Temporary default enemy skills:
 
 ## Temporary default enemy action slots
 
-- Goblin A: Claw, Weight 100
-- Archer: Arrow, Weight 100
-- Goblin B: Bite, Weight 100
-- Shaman: Hex, Weight 100
-- Enemy Reserve: Strike, Weight 100
+- Goblin A: Claw 70, Strike 30
+- Archer: Arrow 80, Strike 20
+- Goblin B: Bite 70, Claw 30
+- Shaman: Hex 40, Strike 60
+- Enemy Reserve: Strike 100
 
 ## MP spending
 
