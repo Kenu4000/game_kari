@@ -20,7 +20,7 @@ Current implementation status:
 - `StartNextTurn()` recovers MP +1 for ally front-line and reserve characters.
 - Skill CT and LinkCooldown data fields have been removed from the active data model.
 - `WAIT:N`, `LINK:N`, and LinkCooldown status display are no longer part of the active UI flow.
-- `LinkPartnerPolicy` remains only as a temporary compatibility shim and no longer checks LinkCooldown.
+- `LinkPartnerPolicy` has been removed after confirming no active code references it.
 
 ## Core MP rules
 
@@ -106,5 +106,4 @@ Temporary dummy skill costs:
 
 ## Remaining cleanup
 
-- Remove `LinkPartnerPolicy` after confirming no active code references it.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
