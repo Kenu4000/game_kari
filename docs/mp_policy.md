@@ -13,8 +13,8 @@ Current implementation status:
 - Default ally and enemy `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
 - `DummyCharacterFactory.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
 - `DummyCharacterFactory` no longer has a runtime character fallback path; dummy battle participants are expected to have `CharacterData` assets.
-- `DummyBattleFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
-- `DummyBattleFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
+- `DefaultBattleUnitFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
+- `DefaultBattleUnitFactory.CreateEnemyUnitById(...)` creates enemy units by character id without assigning player skills.
 - `DefaultBattleSetupFactory` now creates default ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
 - `DefaultBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
 - `BattleSetupData` stores default battle unit placements, reserves, fallback active unit, enemy references, and runtime inventory.
