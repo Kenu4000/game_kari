@@ -41,7 +41,7 @@ Current implementation status:
 - `EnemyActionSelector` currently selects a weighted random `SkillData` from `CharacterData.EnemyActionSlots` and uses the first non-null runtime skill, then `enemy_strike`, only as fallback.
 - Enemy action selection does not check or consume MP.
 - Enemy action preview remains in its current implementation and should be treated as undecided / low-priority unless explicitly changed later.
-- `BattleUIManager` stores initialized enemy action states in `_enemyActionStates` and preview-fixed enemy action states in `_previewEnemyActionStates`.
+- `BattleUIManager` stores only preview-fixed enemy action states in `_previewEnemyActionStates`; the previous initialized enemy action state cache has been removed.
 - Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution read `action.Skill.TargetPattern`.
 - Current default enemy skills are `enemy_claw`, `enemy_arrow`, `enemy_bite`, `enemy_hex`, and `enemy_strike`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
@@ -202,7 +202,7 @@ Temporary default enemy skills:
 - `EnemyActionSelector` does not check enemy MP when selecting an action.
 - Boss-style conditional action selection is deferred until the battle loop is more stable.
 - Battle action preview remains undecided; current preview implementation should stay unobtrusive and low-priority.
-- `BattleUIManager` keeps preview enemy action states separate from initialized enemy action states so the preview remains stable until that enemy acts.
+- `BattleUIManager` keeps only preview-fixed enemy action states so the preview remains stable until that enemy acts.
 - Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
 - Enemy-specific skills are represented by normal `SkillData` assets and assigned through `CharacterData.EnemyActionSlots`.
 
