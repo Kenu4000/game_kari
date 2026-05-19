@@ -99,7 +99,8 @@ namespace GameKari.Battle.Editor
                 },
                 new[]
                 {
-                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyClaw(), 100)
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyClaw(), 70),
+                    CreateEnemyActionSlot(DefaultSkillAssetProvider.GetEnemyStrike(), 30)
                 }
             );
 
@@ -260,6 +261,7 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 
 
 
