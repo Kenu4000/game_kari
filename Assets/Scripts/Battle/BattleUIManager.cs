@@ -2858,7 +2858,7 @@ namespace GameKari.Battle
             Sprite sprite = unit == null || unit.Data == null ? null : unit.Data.BattleSprite;
             cellLabel.text = SafeName(unit);
             ApplyBoardCellLabelLayout(cellLabel, sprite != null);
-            SetBoardCellSprite(cellLabel, sprite);
+            SetBoardCellSprite(cellLabel, unit);
         }
 
         private static void ApplyBoardCellLabelLayout(TMP_Text cellLabel, bool hasSprite)
@@ -2893,12 +2893,16 @@ namespace GameKari.Battle
             cellLabel.fontSize = BoardTextOnlyFontSize;
         }
 
-        private static void SetBoardCellSprite(TMP_Text cellLabel, Sprite sprite)
+        private static void SetBoardCellSprite(TMP_Text cellLabel, BattleUnit unit)
         {
             if (cellLabel == null || cellLabel.transform.parent == null)
             {
                 return;
             }
+
+            Sprite sprite = unit == null || unit.Data == null ? null : unit.Data.BattleSprite;
+            float spriteScale = unit == null || unit.Data == null ? 1f : Mathf.Max(0.01f, unit.Data.BattleSpriteScale);
+            Vector2 spriteOffset = unit == null || unit.Data == null ? Vector2.zero : unit.Data.BattleSpriteOffset;
 
             Transform cellTransform = cellLabel.transform.parent;
             Transform existing = cellTransform.Find("BattleSpriteImage");
@@ -2938,8 +2942,9 @@ namespace GameKari.Battle
             {
                 imageRect.anchorMin = new Vector2(BoardSpriteMinAnchor, BoardSpriteMinAnchor);
                 imageRect.anchorMax = new Vector2(BoardSpriteMaxAnchor, BoardSpriteMaxAnchor);
-                imageRect.offsetMin = Vector2.zero;
-                imageRect.offsetMax = Vector2.zero;
+                imageRect.offsetMin = spriteOffset;
+                imageRect.offsetMax = spriteOffset;
+                imageRect.localScale = new Vector3(spriteScale, spriteScale, 1f);
             }
 
             spriteImage.raycastTarget = false;
@@ -3322,6 +3327,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

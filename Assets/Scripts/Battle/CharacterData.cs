@@ -24,8 +24,11 @@ namespace GameKari.Battle
         public Sprite FaceIcon;
         public Sprite StandingSprite;
         public Sprite BattleSprite;
+        public float BattleSpriteScale = 1f;
+        public Vector2 BattleSpriteOffset;
         public List<SkillData> DefaultSkills = new();
         public List<EnemyActionSlot> EnemyActionSlots = new();
     }
 }
+
 
