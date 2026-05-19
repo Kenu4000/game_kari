@@ -13,6 +13,9 @@ Current implementation status:
 - `SkillData.MpCost` exists.
 - `SkillData.LinkPartnerCharacterId` exists for per-skill specified link partners.
 - Dummy skill MP costs are implemented in `DummySkillCatalog`.
+- `ItemData.ItemKind` exists for Heal / Pass item behavior.
+- `Pass` is implemented as an item with count 99.
+- Item buttons are generated and positioned under `itemListPanel` when needed.
 - Ally status UI shows MP in the existing status text area.
 - Insufficient-MP skills are visually dimmed but remain interactable.
 - `BattleUIManager` blocks insufficient-MP skill execution.
@@ -65,7 +68,10 @@ The current dummy battle may continue to behave as a single battle while the bro
 - Reserve allies keep their current MP.
 - Reserve allies are included in the `StartNextTurn()` MP +1 recovery.
 - Item costs 0 MP.
+- Pass is an item with count 99.
 - Pass costs 0 MP.
+- Pass ends the current action.
+- Pass does not heal HP.
 - Pass does not grant additional MP recovery.
 
 ## Skill costs
@@ -114,4 +120,5 @@ Temporary dummy skill costs:
 
 ## Remaining cleanup
 
+- Move item definitions out of `CommandPanelController` when item count or item behavior increases.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
