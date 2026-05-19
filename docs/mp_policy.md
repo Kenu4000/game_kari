@@ -35,8 +35,9 @@ Current implementation status:
 - `UnitSkillInitializer` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
 - Knight currently owns the Link skill `TwinHit`.
 - Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
-- Enemy actions use `EnemyActionData` as a runtime wrapper around `SkillData`.
+- Enemy actions use `EnemyActionState` as a runtime wrapper around `SkillData`.
 - `EnemyActionSelector` reads the enemy unit's primary skill from `BattleUnit.Skills[0]` and uses `enemy_strike` only as fallback.
+- `BattleUIManager` stores initialized enemy action states in `_enemyActionStates` and preview-fixed enemy action states in `_previewEnemyActionStates`.
 - Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution read `action.Skill.TargetPattern`.
 - Current default enemy skills are `enemy_claw`, `enemy_arrow`, `enemy_bite`, `enemy_hex`, and `enemy_strike`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
@@ -179,9 +180,10 @@ Temporary default enemy skills:
 
 ## Enemy action model
 
-- `EnemyActionData` currently remains code-defined runtime data.
-- `EnemyActionData` wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
-- `EnemyActionSelector` reads the enemy unit's first runtime skill as its default action.
+- `EnemyActionState` currently remains code-defined runtime state.
+- `EnemyActionState` wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
+- `EnemyActionSelector` reads the enemy unit's first runtime skill as its default action state.
+- `BattleUIManager` keeps preview enemy action states separate from initialized enemy action states so the preview remains stable until that enemy acts.
 - Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
 - Enemy-specific skills are now represented by normal `SkillData` assets and assigned through `CharacterData.DefaultSkills`.
 
