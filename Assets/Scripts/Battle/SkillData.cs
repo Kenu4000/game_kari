@@ -52,3 +52,4 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
+

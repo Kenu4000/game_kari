@@ -7,7 +7,7 @@ namespace GameKari.Battle
         public SkillData Skill;
     }
 
-    public static class DefaultEnemyActionProvider
+    public static class EnemyActionSelector
     {
         public static void SetDefaultEnemyActions(
             Dictionary<BattleUnit, EnemyActionData> enemyActions,
@@ -81,3 +81,4 @@ namespace GameKari.Battle
         }
     }
 }
+

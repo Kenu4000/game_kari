@@ -229,7 +229,7 @@ namespace GameKari.Battle
             _enemyReserves.AddRange(setup.EnemyReserves);
             _inventoryItems.AddRange(setup.InventoryItems);
 
-            DefaultEnemyActionProvider.SetDefaultEnemyActions(
+            EnemyActionSelector.SetDefaultEnemyActions(
                 _enemyActions,
                 setup.EnemyA,
                 setup.EnemyB,
@@ -264,7 +264,7 @@ namespace GameKari.Battle
         // Enemy action selection
         private EnemyActionData SelectEnemyAction(BattleUnit enemy)
         {
-            return DefaultEnemyActionProvider.SelectEnemyAction(_enemyActions, enemy);
+            return EnemyActionSelector.SelectEnemyAction(_enemyActions, enemy);
         }
 
         private void EnsureSelectedEnemyActionsForPreview()
@@ -3226,6 +3226,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 

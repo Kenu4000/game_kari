@@ -78,3 +78,4 @@ namespace GameKari.Battle
         }
     }
 }
+
