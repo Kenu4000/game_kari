@@ -190,6 +190,8 @@ namespace GameKari.Battle.Editor
             character.MaxMP = maxMp;
             character.Speed = speed;
 
+            // Visual references such as FaceIcon, StandingSprite, and BattleSprite
+            // are intentionally preserved so manually assigned sprites are not overwritten.
             character.DefaultSkills.Clear();
             if (defaultSkills != null)
             {
@@ -249,6 +251,7 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 
 
 
