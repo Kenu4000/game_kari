@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -10,57 +9,7 @@ namespace GameKari.Battle
         private const string TwinHitAssetPath = "Battle/Skills/s3_twin_hit";
         private const string FocusAssetPath = "Battle/Skills/s4_focus";
 
-        public static List<SkillData> CreateSkillsForUnit(BattleUnit unit)
-        {
-            string characterId = unit == null || unit.Data == null ? string.Empty : unit.Data.Id;
-            return CreateSkillsForCharacter(characterId);
-        }
-
-        public static List<SkillData> CreateSkillsForCharacter(string characterId)
-        {
-            switch (characterId)
-            {
-                case "knight":
-                    return new List<SkillData>
-                    {
-                        CreateSlash(),
-                        CreatePierce(),
-                        CreateTwinHit(),
-                        CreateFocus()
-                    };
-
-                case "mage":
-                    return new List<SkillData>
-                    {
-                        CreateSlash(),
-                        CreatePierce(),
-                        CreateFocus()
-                    };
-
-                case "cleric":
-                    return new List<SkillData>
-                    {
-                        CreateSlash(),
-                        CreateFocus()
-                    };
-
-                case "rogue":
-                    return new List<SkillData>
-                    {
-                        CreateSlash(),
-                        CreatePierce(),
-                        CreateFocus()
-                    };
-
-                default:
-                    return new List<SkillData>
-                    {
-                        CreateSlash()
-                    };
-            }
-        }
-
-        private static SkillData CreateSlash()
+        public static SkillData GetSlash()
         {
             return LoadSkillAsset(SlashAssetPath) ?? CreatePersonalDamageSkill(
                 "s1",
@@ -72,7 +21,7 @@ namespace GameKari.Battle
             );
         }
 
-        private static SkillData CreatePierce()
+        public static SkillData GetPierce()
         {
             return LoadSkillAsset(PierceAssetPath) ?? CreatePersonalDamageSkill(
                 "s2",
@@ -84,7 +33,7 @@ namespace GameKari.Battle
             );
         }
 
-        private static SkillData CreateTwinHit()
+        public static SkillData GetTwinHit()
         {
             return LoadSkillAsset(TwinHitAssetPath) ?? CreateLinkDamageSkill(
                 "s3",
@@ -97,7 +46,7 @@ namespace GameKari.Battle
             );
         }
 
-        private static SkillData CreateFocus()
+        public static SkillData GetFocus()
         {
             return LoadSkillAsset(FocusAssetPath) ?? CreateSelfBuffSkill(
                 "s4",

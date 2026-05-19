@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace GameKari.Battle
 {
@@ -15,5 +16,6 @@ namespace GameKari.Battle
         public int Speed = 10;
         public Sprite FaceIcon;
         public Sprite StandingSprite;
+        public List<SkillData> DefaultSkills = new();
     }
 }

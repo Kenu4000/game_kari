@@ -1,21 +1,17 @@
-﻿using System.Collections.Generic;
-
-namespace GameKari.Battle
+﻿namespace GameKari.Battle
 {
     public static class DummySkillFactory
     {
         public static void AddDefaultSkills(BattleUnit unit)
         {
-            if (unit == null)
+            if (unit == null || unit.Data == null || unit.Data.DefaultSkills == null)
             {
                 return;
             }
 
-            List<SkillData> defaultSkills = DummySkillCatalog.CreateSkillsForUnit(unit);
-
-            for (int i = 0; i < defaultSkills.Count; i++)
+            for (int i = 0; i < unit.Data.DefaultSkills.Count; i++)
             {
-                SkillData skill = defaultSkills[i];
+                SkillData skill = unit.Data.DefaultSkills[i];
 
                 if (skill == null)
                 {
