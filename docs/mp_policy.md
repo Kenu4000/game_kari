@@ -37,8 +37,7 @@ Current implementation status:
 - Knight currently owns the Link skill `TwinHit`.
 - Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
 - Enemy actions use `EnemyActionState` as a runtime wrapper around `SkillData`.
-- `EnemyActionSelector` currently still selects the first non-null runtime skill from `BattleUnit.Skills` and uses `enemy_strike` only as fallback.
-- `EnemyActionSlots` have been added as data, but weighted selection has not been enabled yet.
+- `EnemyActionSelector` currently selects a weighted random `SkillData` from `CharacterData.EnemyActionSlots` and uses the first non-null runtime skill, then `enemy_strike`, only as fallback.
 - Enemy action selection does not check or consume MP.
 - Enemy action preview remains in its current implementation and should be treated as undecided / low-priority unless explicitly changed later.
 - `BattleUIManager` stores initialized enemy action states in `_enemyActionStates` and preview-fixed enemy action states in `_previewEnemyActionStates`.
@@ -199,10 +198,10 @@ Temporary default enemy skills:
 
 - `EnemyActionState` currently remains code-defined runtime state.
 - `EnemyActionState` wraps a `SkillData` reference instead of storing action name, damage, and target pattern directly.
-- `EnemyActionSelector` currently reads the enemy unit's first non-null runtime skill as its default action state.
+- `EnemyActionSelector` selects from `CharacterData.EnemyActionSlots` using weight.
+- If all enemy action slots are invalid, it falls back to the first non-null runtime skill on `BattleUnit.Skills`.
+- If no runtime skill exists, it falls back to `enemy_strike`.
 - `EnemyActionSelector` does not check enemy MP when selecting an action.
-- `CharacterData.EnemyActionSlots` is the intended future source for weighted random normal-enemy action selection.
-- Weighted enemy action selection has not been enabled yet.
 - Boss-style conditional action selection is deferred until the battle loop is more stable.
 - Battle action preview remains undecided; current preview implementation should stay unobtrusive and low-priority.
 - `BattleUIManager` keeps preview enemy action states separate from initialized enemy action states so the preview remains stable until that enemy acts.
@@ -246,7 +245,6 @@ Temporary default enemy skills:
 ## Remaining cleanup
 
 - Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
-- Switch normal enemy action selection from first non-null skill to weighted `EnemyActionSlots` later.
 - Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
 - Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
