@@ -10,53 +10,9 @@ namespace GameKari.Battle
 
     public static class EnemyActionSelector
     {
-        public static void InitializeEnemyActionStates(
-            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
-            BattleUnit enemyA,
-            BattleUnit enemyB,
-            BattleUnit enemyC,
-            BattleUnit enemyD,
-            BattleUnit enemyReserve)
+        public static EnemyActionState ResolveEnemyActionState(BattleUnit enemy)
         {
-            if (enemyActionStates == null)
-            {
-                return;
-            }
-
-            SetEnemyActionState(enemyActionStates, enemyA);
-            SetEnemyActionState(enemyActionStates, enemyB);
-            SetEnemyActionState(enemyActionStates, enemyC);
-            SetEnemyActionState(enemyActionStates, enemyD);
-            SetEnemyActionState(enemyActionStates, enemyReserve);
-        }
-
-        public static EnemyActionState ResolveEnemyActionState(
-            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
-            BattleUnit enemy)
-        {
-            EnemyActionState actionState = new EnemyActionState
-            {
-                Skill = SelectEnemySkill(enemy)
-            };
-
-            if (enemyActionStates != null && enemy != null)
-            {
-                enemyActionStates[enemy] = actionState;
-            }
-
-            return actionState;
-        }
-
-        private static void SetEnemyActionState(
-            Dictionary<BattleUnit, EnemyActionState> enemyActionStates,
-            BattleUnit enemy)
-        {
-            if (enemyActionStates == null || enemy == null)
-            {
-                return;
-            }
-
-            enemyActionStates[enemy] = new EnemyActionState
+            return new EnemyActionState
             {
                 Skill = SelectEnemySkill(enemy)
             };

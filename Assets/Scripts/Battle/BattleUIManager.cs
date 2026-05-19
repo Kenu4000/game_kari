@@ -47,7 +47,6 @@ namespace GameKari.Battle
 
         private readonly List<BattleUnit> _enemyReserves = new();
         private readonly List<InventoryItem> _inventoryItems = new();
-        private readonly Dictionary<BattleUnit, EnemyActionState> _enemyActionStates = new();
         private readonly Dictionary<BattleUnit, EnemyActionState> _previewEnemyActionStates = new();
 
         private readonly Dictionary<BattleUnit, int> _turnNumbers = new();
@@ -209,7 +208,6 @@ namespace GameKari.Battle
             _reserves.Clear();
             _enemyReserves.Clear();
             _inventoryItems.Clear();
-            _enemyActionStates.Clear();
             _previewEnemyActionStates.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
@@ -229,13 +227,6 @@ namespace GameKari.Battle
             _enemyReserves.AddRange(setup.EnemyReserves);
             _inventoryItems.AddRange(setup.InventoryItems);
 
-            EnemyActionSelector.InitializeEnemyActionStates(
-                _enemyActionStates,
-                setup.EnemyA,
-                setup.EnemyB,
-                setup.EnemyC,
-                setup.EnemyD,
-                setup.EnemyReserve);
         }
 
         private void ApplyBattleUnitPlacements(
@@ -264,7 +255,7 @@ namespace GameKari.Battle
         // Enemy action selection
         private EnemyActionState ResolveEnemyActionState(BattleUnit enemy)
         {
-            return EnemyActionSelector.ResolveEnemyActionState(_enemyActionStates, enemy);
+            return EnemyActionSelector.ResolveEnemyActionState(enemy);
         }
 
         private void EnsureEnemyActionStatesForPreview()
@@ -3226,6 +3217,7 @@ private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPar
 
     }
 }
+
 
 
 
