@@ -2856,7 +2856,7 @@ namespace GameKari.Battle
             }
 
             Sprite sprite = unit == null || unit.Data == null ? null : unit.Data.BattleSprite;
-            cellLabel.text = SafeName(unit);
+            cellLabel.text = sprite == null ? SafeName(unit) : "";
             ApplyBoardCellLabelLayout(cellLabel, sprite != null);
             SetBoardCellSprite(cellLabel, unit);
         }
@@ -2937,6 +2937,8 @@ namespace GameKari.Battle
                 }
             }
 
+            spriteImage.transform.SetSiblingIndex(0);
+
             RectTransform imageRect = spriteImage.GetComponent<RectTransform>();
             if (imageRect != null)
             {
@@ -2947,6 +2949,7 @@ namespace GameKari.Battle
                 imageRect.localScale = new Vector3(spriteScale, spriteScale, 1f);
             }
 
+            cellLabel.transform.SetAsLastSibling();
             spriteImage.raycastTarget = false;
             spriteImage.preserveAspect = true;
             spriteImage.sprite = sprite;
@@ -3327,6 +3330,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
