@@ -18,7 +18,9 @@ Current implementation status:
 - `BattleUIManager` blocks insufficient-MP skill execution.
 - Accepted skill use consumes user MP when the skill action begins.
 - `StartNextTurn()` recovers MP +1 for ally front-line and reserve characters.
-- Skill CT and LinkCooldown behavior are currently disabled at the active flow level, but legacy fields and helper methods may still exist temporarily.
+- Skill CT and LinkCooldown data fields have been removed from the active data model.
+- `WAIT:N`, `LINK:N`, and LinkCooldown status display are no longer part of the active UI flow.
+- `LinkPartnerPolicy` remains only as a temporary compatibility shim and no longer checks LinkCooldown.
 
 ## Core MP rules
 
@@ -91,7 +93,7 @@ Temporary dummy skill costs:
 - Skill CT is not part of the target design.
 - LinkCooldown is not part of the target design.
 - `WAIT:N` and `LINK:N` are not target UI states.
-- Existing CT / LinkCooldown legacy fields and helper methods may remain temporarily during migration, but the active target flow should not rely on them.
+- Active data fields and active UI flow for Skill CT / LinkCooldown have been removed.
 
 ## Link skill policy
 
@@ -104,7 +106,5 @@ Temporary dummy skill costs:
 
 ## Remaining cleanup
 
-- Remove or simplify legacy CT helper methods once the MP flow is stable.
-- Remove or simplify legacy LinkCooldown helper methods once the specified-partner link flow is stable.
-- Replace any remaining automatic partner-selection references with specified-partner logic.
+- Remove `LinkPartnerPolicy` after confirming no active code references it.
 - Implement the broader quest/Wave loop later; the current dummy battle still restarts as a single battle.
