@@ -18,13 +18,6 @@ namespace GameKari.Battle
     }
 
     [System.Serializable]
-    public class SkillCooldownState
-    {
-        public string SkillId;
-        public int RemainingTurns;
-    }
-
-    [System.Serializable]
     public class BattleUnit
     {
         public CharacterData Data;
@@ -37,11 +30,6 @@ namespace GameKari.Battle
         public readonly List<SkillData> Skills = new();
         public readonly List<BuffState> Buffs = new();
 
-        // Legacy fields kept temporarily during MP migration.
-        // Target design does not use Skill CT or LinkCooldown.
-        public readonly List<SkillCooldownState> SkillCooldowns = new();
-        public int LinkCooldownRemaining;
-
         public BattleUnit(CharacterData data)
         {
             Data = data;
@@ -52,3 +40,4 @@ namespace GameKari.Battle
         public string Name => Data.DisplayName;
     }
 }
+

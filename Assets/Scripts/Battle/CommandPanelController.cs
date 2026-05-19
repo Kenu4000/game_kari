@@ -326,11 +326,6 @@ namespace GameKari.Battle
                     return string.Empty;
             }
         }
-
-        private string BuildLinkPartnerUnavailableText()
-        {
-            return LinkPartnerPolicy.BuildUnavailableReason(_activeUnit, _allies);
-        }
         private string BuildSkillLinkPartnerDescription(SkillData skill)
         {
             if (skill == null || skill.SkillKind != SkillKind.Link)
@@ -398,80 +393,6 @@ namespace GameKari.Battle
             return label;
         }
 
-        private int GetSkillCooldownRemaining(SkillData skill)
-        {
-            return GetSkillCooldownRemaining(_activeUnit, skill);
-        }
-
-        private int GetSkillCooldownRemaining(BattleUnit unit, SkillData skill)
-        {
-            SkillCooldownState state = FindSkillCooldownState(unit, skill);
-            return state == null ? 0 : Mathf.Max(0, state.RemainingTurns);
-        }
-
-        private SkillCooldownState FindSkillCooldownState(BattleUnit unit, SkillData skill)
-        {
-            if (unit == null || skill == null || unit.SkillCooldowns == null)
-            {
-                return null;
-            }
-
-            string key = GetSkillCooldownKey(skill);
-            if (string.IsNullOrEmpty(key))
-            {
-                return null;
-            }
-
-            for (int i = 0; i < unit.SkillCooldowns.Count; i++)
-            {
-                SkillCooldownState state = unit.SkillCooldowns[i];
-                if (state != null && state.SkillId == key)
-                {
-                    return state;
-                }
-            }
-
-            return null;
-        }
-
-        private static string GetSkillCooldownKey(SkillData skill)
-        {
-            return skill == null ? string.Empty : skill.SkillId ?? string.Empty;
-        }
-
-        private int GetLinkCooldownRemaining()
-        {
-            if (_activeUnit == null)
-            {
-                return 0;
-            }
-
-            return Mathf.Max(0, _activeUnit.LinkCooldownRemaining);
-        }
-
-        private bool IsLinkSkillBlocked(SkillData skill)
-        {
-            if (skill == null || _activeUnit == null)
-            {
-                return false;
-            }
-
-            return skill.SkillKind == SkillKind.Link && GetLinkCooldownRemaining() > 0;
-        }
-
-        private bool HasLivingLinkPartnerCandidate()
-        {
-            return LinkPartnerPolicy.HasLivingPartnerCandidate(_activeUnit, _allies);
-        }
-        private BattleUnit GetTemporaryLinkPartner()
-        {
-            return LinkPartnerPolicy.FindFirstAvailablePartner(_activeUnit, _allies);
-        }
-        private bool HasAvailableLinkPartner()
-        {
-            return GetTemporaryLinkPartner() != null;
-        }
-        
         private bool HasEnoughMP(SkillData skill)
         {
             if (_activeUnit == null || skill == null)
@@ -825,6 +746,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 

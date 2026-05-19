@@ -42,11 +42,6 @@ namespace GameKari.Battle
         public int MpCost;
         public string LinkPartnerCharacterId;
 
-        // Legacy fields kept temporarily during MP migration.
-        // Target design does not use Skill CT or LinkCooldown.
-        public int CooldownTurns;
-        public int LinkCooldownTurns;
-
         public int Damage;
         public SkillEffectType EffectType;
         public SkillEffectTargetType EffectTarget;
@@ -54,3 +49,4 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
+

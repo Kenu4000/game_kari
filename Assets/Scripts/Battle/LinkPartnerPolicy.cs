@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace GameKari.Battle
 {
@@ -27,6 +27,8 @@ namespace GameKari.Battle
 
         public static BattleUnit FindFirstAvailablePartner(BattleUnit user, IReadOnlyList<BattleUnit> allies)
         {
+            // Legacy compatibility only.
+            // Target design uses SkillData.LinkPartnerCharacterId instead of automatic partner selection.
             if (user == null || user.IsDead || allies == null)
             {
                 return null;
@@ -35,7 +37,7 @@ namespace GameKari.Battle
             for (int i = 0; i < allies.Count; i++)
             {
                 BattleUnit ally = allies[i];
-                if (ally == null || ally == user || ally.IsDead || ally.LinkCooldownRemaining > 0)
+                if (ally == null || ally == user || ally.IsDead)
                 {
                     continue;
                 }
@@ -54,7 +56,7 @@ namespace GameKari.Battle
         public static string BuildUnavailableReason(BattleUnit user, IReadOnlyList<BattleUnit> allies)
         {
             return HasLivingPartnerCandidate(user, allies)
-                ? "No ready link partner."
+                ? "No specified link partner."
                 : "No available link partner.";
         }
     }

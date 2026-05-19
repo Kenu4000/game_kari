@@ -140,9 +140,6 @@ namespace GameKari.Battle
                 SkillKind = skillKind,
                 MpCost = mpCost,
                 LinkPartnerCharacterId = linkPartnerCharacterId,
-                CooldownTurns = 0,
-                LinkCooldownTurns = 0,
-
                 Damage = damage,
                 EffectType = effectType,
                 EffectTarget = effectTarget,
@@ -152,3 +149,4 @@ namespace GameKari.Battle
         }
     }
 }
+
