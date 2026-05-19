@@ -94,8 +94,6 @@ namespace GameKari.Battle
         private const float EnemyStatusSlotWidth = 240f;
         private const float BoardSpriteMinAnchor = -0.10f;
         private const float BoardSpriteMaxAnchor = 1.10f;
-        private const float BoardSpriteLabelHeight = 0.22f;
-        private const float BoardSpriteLabelFontSize = 16f;
         private const float BoardTextOnlyFontSize = 24f;
 
         private sealed class ActionValuePopup
@@ -2874,17 +2872,6 @@ namespace GameKari.Battle
                 return;
             }
 
-            if (hasSprite)
-            {
-                labelRect.anchorMin = new Vector2(0f, 0f);
-                labelRect.anchorMax = new Vector2(1f, BoardSpriteLabelHeight);
-                labelRect.offsetMin = new Vector2(4f, 2f);
-                labelRect.offsetMax = new Vector2(-4f, -2f);
-                cellLabel.alignment = TextAlignmentOptions.Center;
-                cellLabel.fontSize = BoardSpriteLabelFontSize;
-                return;
-            }
-
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = Vector2.zero;
@@ -3330,6 +3317,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
