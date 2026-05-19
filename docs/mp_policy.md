@@ -9,17 +9,17 @@ MP has been reintroduced as the primary skill resource. The previous cooldown-ba
 Current implementation status:
 
 - `CharacterData.MaxMP` exists and currently defaults to 4.
-- `CharacterData.DefaultSkills` exists and stores default skill ownership for a character.
+- `CharacterData.DefaultSkills` exists and stores default player skill ownership.
 - `CharacterData.EnemyActionSlots` exists and stores enemy AI action candidates as `SkillData` + weight.
 - Default ally and enemy `CharacterData` assets exist under `Assets/Resources/Battle/Characters`.
 - `CharacterAssetProvider.CreateCharacterDataById(...)` loads character assets through `Resources.Load<CharacterData>(...)` and throws if the requested asset is missing.
 - `CharacterAssetProvider` does not have a runtime character fallback path; battle participants are expected to have `CharacterData` assets.
 - `DefaultBattleUnitFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
-- `DefaultBattleUnitFactory.CreateEnemyUnitById(...)` creates enemy units by character id and assigns enemy skills from `CharacterData.DefaultSkills`.
+- `DefaultBattleUnitFactory.CreateEnemyUnitById(...)` creates enemy units by character id; enemy actions are sourced from `CharacterData.EnemyActionSlots`.
 - `DefaultBattleSetupFactory` now creates default ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
 - `DefaultBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
 - `BattleSetupData` stores default battle unit placements, reserves, fallback active unit, enemy references, and runtime inventory.
-- Enemy `CharacterData` assets now have weighted `EnemyActionSlot` entries for normal-enemy action selection.
+- Enemy `CharacterData` assets have empty `DefaultSkills` and weighted `EnemyActionSlot` entries for normal-enemy action selection.
 - Legacy dummy battle factory/setup/helper names have been removed from the battle scripts.
 - `BattleUnit.CurrentMP` exists and is initialized from `CharacterData.MaxMP`.
 - `SkillData` has been converted to `ScriptableObject` and can be created from `Create > GameKari > Battle > Skill Data`.
@@ -32,7 +32,8 @@ Current implementation status:
 - `SkillData` currently represents skill definition data only and does not store runtime cooldown/state.
 - Runtime unit state is stored on `BattleUnit` through HP, MP, KO state, grid position, and buffs.
 - Default player skill MP costs and enemy skill target patterns are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
-- Skills are assigned per character through `CharacterData.DefaultSkills` for both allies and enemies.
+- Ally skills are assigned through `CharacterData.DefaultSkills`.
+- Enemy action candidates are assigned through `CharacterData.EnemyActionSlots`.
 - `UnitSkillInitializer` copies skills from `unit.Data.DefaultSkills` to `unit.Skills`.
 - Knight currently owns the Link skill `TwinHit`.
 - Rogue is the specified partner for `TwinHit` and does not currently own `TwinHit`.
@@ -140,11 +141,7 @@ Temporary default enemy skills:
 - Cleric: Slash, Focus
 - Rogue: Slash, Pierce, Focus
 - Reserve: Slash
-- Goblin A: Claw
-- Archer: Arrow
-- Goblin B: Bite
-- Shaman: Hex
-- Enemy Reserve: Strike
+- Enemy CharacterData.DefaultSkills: empty
 
 ## Temporary default enemy action slots
 
@@ -178,15 +175,16 @@ Temporary default enemy skills:
 - Default ally and enemy characters currently exist as assets in `Assets/Resources/Battle/Characters`.
 - `CharacterAssetProvider.CreateCharacterDataById(...)` first tries to load character assets by character id and fails loudly when missing.
 - Default battle setup now uses character ids for ally/enemy creation, so HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
-- Enemies now store their default enemy skill in `CharacterData.DefaultSkills`.
-- Enemies also store enemy AI action candidates in `CharacterData.EnemyActionSlots`.
+- Allies store player command skills in `CharacterData.DefaultSkills`.
+- Enemies keep `CharacterData.DefaultSkills` empty and store enemy AI action candidates in `CharacterData.EnemyActionSlots`.
 
 ## Skill model
 
 - `SkillData` is skill definition data.
 - `SkillData` is a `ScriptableObject` type.
 - Default player and enemy skills currently exist as assets in `Assets/Resources/Battle/Skills`.
-- `CharacterData.DefaultSkills` currently controls temporary player and enemy character skill ownership.
+- `CharacterData.DefaultSkills` currently controls temporary player character skill ownership.
+- `CharacterData.EnemyActionSlots` currently controls temporary enemy action candidates.
 - `DefaultSkillAssetProvider` currently acts as the required skill asset lookup.
 - `SkillTargetPattern` is opponent-relative, so the same skill target pattern can be interpreted against the enemy board when used by an ally and against the ally board when used by an enemy.
 - Runtime cooldown state is not part of the current design.
@@ -206,7 +204,7 @@ Temporary default enemy skills:
 - Battle action preview remains undecided; current preview implementation should stay unobtrusive and low-priority.
 - `BattleUIManager` keeps preview enemy action states separate from initialized enemy action states so the preview remains stable until that enemy acts.
 - Enemy action names, damage values, target previews, and damage target positions are read from the referenced `SkillData`.
-- Enemy-specific skills are now represented by normal `SkillData` assets and assigned through `CharacterData.DefaultSkills`.
+- Enemy-specific skills are represented by normal `SkillData` assets and assigned through `CharacterData.EnemyActionSlots`.
 
 ## Item model
 
