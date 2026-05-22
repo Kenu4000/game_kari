@@ -69,8 +69,7 @@ namespace GameKari.Battle
 
         private bool _battleEnded;
         private BattlePhase _phase;
-        private int _waveTurn = 1;
-        private int _currentDistance;
+        private WaveProgressState _waveProgress;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
@@ -221,8 +220,7 @@ namespace GameKari.Battle
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
             _hoveredSkill = null;
-            _waveTurn = 1;
-            _currentDistance = 0;
+            _waveProgress = new WaveProgressState(TargetDistance, BaseWaveDistance);
 
             _grid = new BattleGrid();
             _formation = new FormationController(_grid);
@@ -2034,20 +2032,30 @@ namespace GameKari.Battle
 
         private WaveClearResult CreateWaveClearResult()
         {
+            EnsureWaveProgress();
+
             WaveClearRank rank = EvaluateWaveClearRank();
             int distanceGain = CalculateWaveDistanceGain(rank);
-            _currentDistance = Mathf.Min(TargetDistance, _currentDistance + distanceGain);
+            int currentDistance = _waveProgress.AddDistance(distanceGain);
 
             return new WaveClearResult
             {
                 Rank = rank,
                 DistanceGain = distanceGain,
-                CurrentDistance = _currentDistance,
-                TargetDistance = TargetDistance,
+                CurrentDistance = currentDistance,
+                TargetDistance = _waveProgress.TargetDistance,
                 PartyHealAmount = rank == WaveClearRank.OneTurn
                     ? OneTurnClearPartyHeal
                     : 0
             };
+        }
+
+        private void EnsureWaveProgress()
+        {
+            if (_waveProgress == null)
+            {
+                _waveProgress = new WaveProgressState(TargetDistance, BaseWaveDistance);
+            }
         }
 
         private void ApplyWaveClearRewards(WaveClearResult result)
@@ -2063,17 +2071,21 @@ namespace GameKari.Battle
 
         private WaveClearRank EvaluateWaveClearRank()
         {
-            if (_waveTurn <= 1)
+            EnsureWaveProgress();
+
+            int waveTurn = _waveProgress.WaveTurn;
+
+            if (waveTurn <= 1)
             {
                 return WaveClearRank.OneTurn;
             }
 
-            if (_waveTurn == 2)
+            if (waveTurn == 2)
             {
                 return WaveClearRank.TwoTurn;
             }
 
-            if (_waveTurn == 3)
+            if (waveTurn == 3)
             {
                 return WaveClearRank.ThreeTurn;
             }
@@ -2209,7 +2221,8 @@ namespace GameKari.Battle
 
             _previewEnemyActionStates.Clear();
 
-            _waveTurn++;
+            EnsureWaveProgress();
+            _waveProgress.AdvanceTurn();
             RecoverAllAllyMP();
             TickBuffsAtTurnStart();
 
@@ -2222,7 +2235,7 @@ namespace GameKari.Battle
             }
 
             RedrawBoard();
-            Debug.Log($"[Turn] New turn started. WaveTurn={_waveTurn}.");
+            Debug.Log($"[Turn] New turn started. WaveTurn={_waveProgress.WaveTurn}.");
         }
 
         private BattleUnit TryGetForwardAlly(BattleUnit user)
@@ -3582,6 +3595,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
