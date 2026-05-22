@@ -69,6 +69,8 @@ namespace GameKari.Battle
 
         private bool _battleEnded;
         private BattlePhase _phase;
+        private int _waveTurn = 1;
+        private int _currentDistance;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
@@ -100,6 +102,12 @@ namespace GameKari.Battle
         // BattleSprite未設定キャラの名前だけ表示するときの文字サイズ。
         private const float BoardTextOnlyFontSize = 24f;
 
+        // 現在のBattleを1Waveとして扱うための仮Distance設定。
+        // 将来はQuestData / WaveData側へ移す。
+        private const int TargetDistance = 100;
+        private const int BaseWaveDistance = 20;
+        private const int OneTurnClearPartyHeal = 5;
+
         private sealed class ActionValuePopup
         {
             public bool IsAllyBoard;
@@ -111,6 +119,14 @@ namespace GameKari.Battle
             CommandSelect,
             ResolvingAction,
             BattleEnded
+        }
+
+        private enum WaveClearRank
+        {
+            OneTurn,
+            TwoTurn,
+            ThreeTurn,
+            FourPlusTurn
         }
 
         private class DefeatedEnemyInfo
@@ -196,6 +212,8 @@ namespace GameKari.Battle
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
             _hoveredSkill = null;
+            _waveTurn = 1;
+            _currentDistance = 0;
 
             _grid = new BattleGrid();
             _formation = new FormationController(_grid);
@@ -1977,7 +1995,7 @@ namespace GameKari.Battle
 
             if (!HasAliveActiveEnemies() && !HasAliveEnemyReserves())
             {
-                EndBattle("Victory");
+                EndWaveClear();
                 return;
             }
 
@@ -1987,6 +2005,100 @@ namespace GameKari.Battle
             }
         }
 
+        private void EndWaveClear()
+        {
+            WaveClearRank rank = EvaluateWaveClearRank();
+            int distanceGain = CalculateWaveDistanceGain(rank);
+            _currentDistance = Mathf.Min(TargetDistance, _currentDistance + distanceGain);
+
+            bool appliedPartyHeal = rank == WaveClearRank.OneTurn;
+            if (appliedPartyHeal)
+            {
+                HealLivingPartyMembers(_allies, OneTurnClearPartyHeal);
+                HealLivingPartyMembers(_reserves, OneTurnClearPartyHeal);
+            }
+
+            _battleEnded = true;
+            _phase = BattlePhase.BattleEnded;
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            SetCommandUiVisible(false);
+            HideActionOverlay();
+            ShowWaveResultPanel(rank, distanceGain, appliedPartyHeal);
+            RedrawBoard();
+
+            Debug.Log($"[Wave] Clear: {FormatWaveClearRank(rank)}, Distance +{distanceGain}, Progress {_currentDistance}/{TargetDistance}.");
+        }
+
+        private WaveClearRank EvaluateWaveClearRank()
+        {
+            if (_waveTurn <= 1)
+            {
+                return WaveClearRank.OneTurn;
+            }
+
+            if (_waveTurn == 2)
+            {
+                return WaveClearRank.TwoTurn;
+            }
+
+            if (_waveTurn == 3)
+            {
+                return WaveClearRank.ThreeTurn;
+            }
+
+            return WaveClearRank.FourPlusTurn;
+        }
+
+        private static int CalculateWaveDistanceGain(WaveClearRank rank)
+        {
+            float multiplier = rank switch
+            {
+                WaveClearRank.OneTurn => 2.0f,
+                WaveClearRank.TwoTurn => 1.5f,
+                WaveClearRank.ThreeTurn => 1.2f,
+                _ => 1.0f
+            };
+
+            return Mathf.RoundToInt(BaseWaveDistance * multiplier);
+        }
+
+        private static string FormatWaveClearRank(WaveClearRank rank)
+        {
+            return rank switch
+            {
+                WaveClearRank.OneTurn => "1Turn Clear",
+                WaveClearRank.TwoTurn => "2Turn Clear",
+                WaveClearRank.ThreeTurn => "3Turn Clear",
+                _ => "4+Turn Clear"
+            };
+        }
+
+        private static void HealLivingPartyMembers(List<BattleUnit> units, int healAmount)
+        {
+            if (units == null || healAmount <= 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnit unit = units[i];
+                if (unit == null || unit.IsDead || unit.Data == null)
+                {
+                    continue;
+                }
+
+                int beforeHp = unit.CurrentHP;
+                unit.CurrentHP = Mathf.Min(unit.Data.MaxHP, unit.CurrentHP + healAmount);
+
+                if (unit.CurrentHP != beforeHp)
+                {
+                    Debug.Log($"[Wave] {unit.Name} recovered HP {beforeHp}->{unit.CurrentHP}/{unit.Data.MaxHP}.");
+                }
+            }
+        }
         private void EndBattle(string result)
         {
             _battleEnded = true;
@@ -2067,6 +2179,7 @@ namespace GameKari.Battle
 
             _previewEnemyActionStates.Clear();
 
+            _waveTurn++;
             RecoverAllAllyMP();
             TickBuffsAtTurnStart();
 
@@ -2079,7 +2192,7 @@ namespace GameKari.Battle
             }
 
             RedrawBoard();
-            Debug.Log("[Turn] New turn started.");
+            Debug.Log($"[Turn] New turn started. WaveTurn={_waveTurn}.");
         }
 
         private BattleUnit TryGetForwardAlly(BattleUnit user)
@@ -2690,6 +2803,44 @@ namespace GameKari.Battle
             Debug.Log("[Battle] Restarted battle.");
         }
 
+        private void ShowWaveResultPanel(WaveClearRank rank, int distanceGain, bool appliedPartyHeal)
+        {
+            EnsureResultPanel();
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(true);
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.text = "Wave Clear";
+            }
+
+            if (_resultSubText != null)
+            {
+                string healText = appliedPartyHeal
+                    ? $"+{OneTurnClearPartyHeal}"
+                    : "-";
+
+                _resultSubText.text =
+                    $"Clear: {FormatWaveClearRank(rank)}\n" +
+                    $"Distance: +{distanceGain}\n" +
+                    $"Progress: {_currentDistance}/{TargetDistance}\n" +
+                    $"Party HP: {healText}";
+            }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                // 将来はNext Waveへ置き換える想定。現時点では同じBattleを再開始する。
+                _resultReturnButtonText.text = "Return";
+            }
+        }
         private void ShowResultPanel(string result)
         {
             EnsureResultPanel();
@@ -3346,6 +3497,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

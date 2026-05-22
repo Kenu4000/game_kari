@@ -1,4 +1,4 @@
-# MP Policy
+﻿# MP Policy
 
 ## Status
 
@@ -365,3 +365,22 @@ The following are explicitly deferred:
 - Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
 - Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
+
+## Temporary Wave / Distance implementation
+
+- Current battle is treated as one Wave.
+- Wave ends when all active enemies and enemy reserves are defeated.
+- WaveTurn starts at 1.
+- WaveTurn +1 happens at the same timing as turn-top MP recovery.
+- If enemies are defeated during WaveTurn = 1, the result is 1Turn Clear.
+- 1Turn Clear: BaseDistance * 2.0.
+- 2Turn Clear: BaseDistance * 1.5.
+- 3Turn Clear: BaseDistance * 1.2.
+- 4+Turn Clear: BaseDistance * 1.0.
+- Distance starts at 0 and is clamped at TargetDistance.
+- Initial temporary values are TargetDistance 100 and BaseWaveDistance 20.
+- Wave Result is always displayed after enemy wipeout.
+- 1Turn Clear heals living front-line and reserve allies by HP +5.
+- The HP +5 heal is clamped at MaxHP and does not revive KO units.
+- KO units do not recover MP, but their current MP value is preserved.
+- Return currently restarts the same battle; later this can be replaced with Next Wave.
