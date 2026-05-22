@@ -1,4 +1,4 @@
-﻿# MP Policy
+# MP Policy
 
 ## Status
 
@@ -60,6 +60,7 @@ Current implementation status:
 - `CommandPanelController` no longer creates inventory items directly; it only displays and updates the inventory list it receives.
 - `Pass` is implemented as an item with count 99 through the default inventory loadout.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
+- Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
 - Ally status UI shows MP in the existing status text area.
 - Insufficient-MP skills are visually dimmed but remain interactable.
 - `BattleUIManager` blocks insufficient-MP skill execution.
@@ -250,10 +251,11 @@ Early clear bonus information is not shown as a constant battle UI element. It i
 
 ### KO position and replacement
 
-- KO allies remain in their position if there is no reserve replacement.
-- A KO ally's grid cell is treated as occupied when the KO unit remains there.
 - If a living reserve exists when an ally is KO'd, the current auto-replacement behavior remains.
-- Swap and Item are expected to handle bad board states caused by KO.
+- If no living reserve exists when an ally is KO'd, the KO ally is removed from the active grid.
+- The vacated grid cell becomes empty.
+- The KO ally's KO state and current MP are preserved on the unit.
+- Swap and Item are expected to handle bad board states caused by KO and empty cells.
 
 ## Character model
 
@@ -365,22 +367,3 @@ The following are explicitly deferred:
 - Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
 - Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
-
-## Temporary Wave / Distance implementation
-
-- Current battle is treated as one Wave.
-- Wave ends when all active enemies and enemy reserves are defeated.
-- WaveTurn starts at 1.
-- WaveTurn +1 happens at the same timing as turn-top MP recovery.
-- If enemies are defeated during WaveTurn = 1, the result is 1Turn Clear.
-- 1Turn Clear: BaseDistance * 2.0.
-- 2Turn Clear: BaseDistance * 1.5.
-- 3Turn Clear: BaseDistance * 1.2.
-- 4+Turn Clear: BaseDistance * 1.0.
-- Distance starts at 0 and is clamped at TargetDistance.
-- Initial temporary values are TargetDistance 100 and BaseWaveDistance 20.
-- Wave Result is always displayed after enemy wipeout.
-- 1Turn Clear heals living front-line and reserve allies by HP +5.
-- The HP +5 heal is clamped at MaxHP and does not revive KO units.
-- KO units do not recover MP, but their current MP value is preserved.
-- Return currently restarts the same battle; later this can be replaced with Next Wave.
