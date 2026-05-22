@@ -2646,6 +2646,7 @@ namespace GameKari.Battle
                 }
 
                 TryBindExistingResultReturnButton();
+                ApplyResultPanelLayout();
                 return;
             }
 
@@ -2690,6 +2691,50 @@ namespace GameKari.Battle
             subRect.offsetMax = Vector2.zero;
 
             CreateResultReturnButton();
+            ApplyResultPanelLayout();
+        }
+
+        private void ApplyResultPanelLayout()
+        {
+            if (_resultPanelObject != null)
+            {
+                RectTransform panelRect = _resultPanelObject.GetComponent<RectTransform>();
+                if (panelRect != null)
+                {
+                    panelRect.anchorMin = new Vector2(0.32f, 0.28f);
+                    panelRect.anchorMax = new Vector2(0.68f, 0.72f);
+                    panelRect.offsetMin = Vector2.zero;
+                    panelRect.offsetMax = Vector2.zero;
+                }
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.fontSize = 38f;
+
+                RectTransform titleRect = _resultTitleText.GetComponent<RectTransform>();
+                if (titleRect != null)
+                {
+                    titleRect.anchorMin = new Vector2(0f, 0.70f);
+                    titleRect.anchorMax = new Vector2(1f, 0.90f);
+                    titleRect.offsetMin = Vector2.zero;
+                    titleRect.offsetMax = Vector2.zero;
+                }
+            }
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.fontSize = 22f;
+
+                RectTransform subRect = _resultSubText.GetComponent<RectTransform>();
+                if (subRect != null)
+                {
+                    subRect.anchorMin = new Vector2(0f, 0.28f);
+                    subRect.anchorMax = new Vector2(1f, 0.68f);
+                    subRect.offsetMin = Vector2.zero;
+                    subRect.offsetMax = Vector2.zero;
+                }
+            }
         }
 
         private void TryBindExistingResultReturnButton()
@@ -3497,6 +3542,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
