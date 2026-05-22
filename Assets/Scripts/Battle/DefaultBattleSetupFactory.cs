@@ -5,14 +5,27 @@
         public static BattleSetupData CreateDefaultSetup()
         {
             BattleSetupData setup = new BattleSetupData();
+            QuestData quest = DefaultQuestFactory.CreateDefaultQuest();
 
+            ApplyQuestSettingsToSetup(setup, quest);
             CreateAllies(setup);
-            CreateEnemies(setup);
+            CreateEnemies(setup, quest);
             CreateInventory(setup);
 
             return setup;
         }
 
+        private static void ApplyQuestSettingsToSetup(BattleSetupData setup, QuestData quest)
+        {
+            if (setup == null || quest == null)
+            {
+                return;
+            }
+
+            setup.TargetDistance = quest.TargetDistance;
+            setup.BaseWaveDistance = quest.BaseWaveDistance;
+            setup.OneTurnClearPartyHeal = quest.OneTurnClearPartyHeal;
+        }
         private static void CreateAllies(BattleSetupData setup)
         {
             BattleUnit heroA = DefaultBattleUnitFactory.CreateAllyUnitById("knight");
@@ -40,10 +53,20 @@
             setup.InventoryItems.AddRange(DefaultInventoryProvider.CreateDefaultItems());
         }
 
-        private static void CreateEnemies(BattleSetupData setup)
+        private static void CreateEnemies(BattleSetupData setup, QuestData quest)
         {
-            WaveData wave = DefaultWaveFactory.CreateDefaultWave();
+            WaveData wave = GetFirstWave(quest);
             ApplyWaveDataToSetup(setup, wave);
+        }
+
+        private static WaveData GetFirstWave(QuestData quest)
+        {
+            if (quest == null || quest.Waves.Count == 0)
+            {
+                return DefaultWaveFactory.CreateDefaultWave();
+            }
+
+            return quest.Waves[0];
         }
 
 
