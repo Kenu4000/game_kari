@@ -16,6 +16,7 @@ namespace GameKari.Battle
         public int BaseWaveDistance = 20;
         public int OneTurnClearPartyHeal = 5;
 
+        public QuestProgressState QuestProgress;
         public BattleUnit FallbackActive;
     }
 
@@ -31,3 +32,4 @@ namespace GameKari.Battle
         }
     }
 }
+

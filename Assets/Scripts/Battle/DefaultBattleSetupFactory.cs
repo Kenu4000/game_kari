@@ -7,6 +7,7 @@
             BattleSetupData setup = new BattleSetupData();
             QuestData quest = DefaultQuestFactory.CreateDefaultQuest();
             QuestProgressState questProgress = new QuestProgressState(quest);
+            setup.QuestProgress = questProgress;
 
             ApplyQuestSettingsToSetup(setup, quest);
             CreateAllies(setup);
@@ -83,6 +84,7 @@
         }
     }
 }
+
 
 
 

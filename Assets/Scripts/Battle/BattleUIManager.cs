@@ -70,6 +70,7 @@ namespace GameKari.Battle
         private bool _battleEnded;
         private BattlePhase _phase;
         private WaveProgressState _waveProgress;
+        private QuestProgressState _questProgress;
         private int _oneTurnClearPartyHeal = DefaultOneTurnClearPartyHeal;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
@@ -122,6 +123,9 @@ namespace GameKari.Battle
             public int CurrentDistance;
             public int TargetDistance;
             public int PartyHealAmount;
+            public int WaveNumber;
+            public int TotalWaves;
+            public bool HasNextWave;
         }
         private enum BattlePhase
         {
@@ -248,6 +252,10 @@ namespace GameKari.Battle
 
         private void ApplyWaveProgressSettings(BattleSetupData setup)
         {
+            _questProgress = setup == null
+                ? null
+                : setup.QuestProgress;
+
             int targetDistance = setup == null
                 ? DefaultTargetDistance
                 : setup.TargetDistance;
@@ -2064,7 +2072,10 @@ namespace GameKari.Battle
                 TargetDistance = _waveProgress.TargetDistance,
                 PartyHealAmount = rank == WaveClearRank.OneTurn
                     ? _oneTurnClearPartyHeal
-                    : 0
+                    : 0,
+                WaveNumber = GetCurrentWaveNumber(),
+                TotalWaves = GetTotalWaveCount(),
+                HasNextWave = _questProgress != null && _questProgress.HasNextWave
             };
         }
 
@@ -2074,6 +2085,26 @@ namespace GameKari.Battle
             {
                 _waveProgress = new WaveProgressState(DefaultTargetDistance, DefaultBaseWaveDistance);
             }
+        }
+
+        private int GetCurrentWaveNumber()
+        {
+            if (_questProgress == null)
+            {
+                return 1;
+            }
+
+            return _questProgress.CurrentWaveIndex + 1;
+        }
+
+        private int GetTotalWaveCount()
+        {
+            if (_questProgress == null || _questProgress.Quest == null)
+            {
+                return 1;
+            }
+
+            return Mathf.Max(1, _questProgress.Quest.Waves.Count);
         }
 
         private void ApplyWaveClearRewards(WaveClearResult result)
@@ -2922,7 +2953,7 @@ namespace GameKari.Battle
 
             if (_resultTitleText != null)
             {
-                _resultTitleText.text = "Wave Clear";
+                _resultTitleText.text = $"Wave Clear ({result.WaveNumber}/{result.TotalWaves})";
             }
 
             if (_resultSubText != null)
@@ -3615,6 +3646,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
