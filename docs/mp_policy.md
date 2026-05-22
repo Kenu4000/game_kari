@@ -1,4 +1,4 @@
-# MP Policy
+﻿# MP Policy
 
 ## Status
 
@@ -367,3 +367,4 @@ The following are explicitly deferred:
 - Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
 - Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
+
