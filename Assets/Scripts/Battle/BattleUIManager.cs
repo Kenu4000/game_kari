@@ -2271,7 +2271,8 @@ namespace GameKari.Battle
                 TargetDistance = _waveProgress == null ? DefaultTargetDistance : _waveProgress.TargetDistance,
                 AlivePartyCount = CountLivingPartyMembers(_partyMembers),
                 KnockedOutPartyCount = CountKnockedOutPartyMembers(_partyMembers),
-                TotalPartyCount = CountKnownPartyMembers(_partyMembers)
+                TotalPartyCount = CountKnownPartyMembers(_partyMembers),
+                ReturnsToBase = true
             };
 
             Debug.Log($"[Quest] Result created. Waves={questResult.ClearedWaveCount}/{questResult.TotalWaveCount}, Distance={questResult.CurrentDistance}/{questResult.TargetDistance}, Alive={questResult.AlivePartyCount}, KO={questResult.KnockedOutPartyCount}.");
@@ -3049,9 +3050,9 @@ namespace GameKari.Battle
                 return;
             }
 
-            Debug.Log("[Result] Return clicked.");
+            Debug.Log("[Result] Return to Base clicked.");
 
-            RestartBattle();
+            ReturnToBase();
         }
 
         private void StartNextWave()
@@ -3145,6 +3146,14 @@ namespace GameKari.Battle
             _enemies.Clear();
             _enemyReserves.Clear();
         }
+        private void ReturnToBase()
+        {
+            // 現時点では拠点画面がないため、拠点帰還処理の仮実装としてBattleを再初期化する。
+            // BootstrapBattle()により、味方HP/MP/KO状態・Inventory・QuestProgressは初期状態に戻る。
+            Debug.Log("[Base] Returned to base. Party state will be reset by restarting the default quest.");
+
+            RestartBattle();
+        }
         private void RestartBattle()
         {
             StopAllCoroutines();
@@ -3204,7 +3213,7 @@ namespace GameKari.Battle
             {
                 _resultReturnButtonText.text = result.HasNextWave
                     ? "Next Wave"
-                    : "Return";
+                    : "Return to Base";
             }
         }
 
@@ -3227,7 +3236,8 @@ namespace GameKari.Battle
                     $"Clear: {FormatWaveClearRank(result.Rank)}\n" +
                     $"Distance: +{result.DistanceGain}\n" +
                     $"Progress: {quest.CurrentDistance}/{quest.TargetDistance}\n" +
-                    $"Party: Alive {quest.AlivePartyCount}/{quest.TotalPartyCount}, KO {quest.KnockedOutPartyCount}";
+                    $"Party: Alive {quest.AlivePartyCount}/{quest.TotalPartyCount}, KO {quest.KnockedOutPartyCount}\n" +
+                    $"Next: Return to Base";
             }
 
             return
@@ -3892,6 +3902,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

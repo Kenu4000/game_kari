@@ -13,5 +13,7 @@
         public int AlivePartyCount;
         public int KnockedOutPartyCount;
         public int TotalPartyCount;
+        public bool ReturnsToBase;
     }
 }
+
