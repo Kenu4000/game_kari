@@ -18,11 +18,7 @@ namespace GameKari.Battle
 
         public BattleUnit FallbackActive;
 
-        public BattleUnit EnemyA;
-        public BattleUnit EnemyB;
-        public BattleUnit EnemyC;
-        public BattleUnit EnemyD;
-        public BattleUnit EnemyReserve;
+
     }
 
     public sealed class BattleUnitPlacement
@@ -113,53 +109,11 @@ namespace GameKari.Battle
             setup.EnemyPlacements.AddRange(wave.EnemyPlacements);
             setup.EnemyReserves.AddRange(wave.EnemyReserves);
 
-            SetLegacyEnemyReferences(setup, wave);
         }
 
-        private static void SetLegacyEnemyReferences(BattleSetupData setup, WaveData wave)
-        {
-            if (setup == null || wave == null)
-            {
-                return;
-            }
 
-            setup.EnemyA = GetPlacedEnemy(wave, GridPos.FrontTop);
-            setup.EnemyB = GetPlacedEnemy(wave, GridPos.BackTop);
-            setup.EnemyC = GetPlacedEnemy(wave, GridPos.FrontBottom);
-            setup.EnemyD = GetPlacedEnemy(wave, GridPos.BackBottom);
-            setup.EnemyReserve = wave.EnemyReserves.Count > 0
-                ? wave.EnemyReserves[0]
-                : null;
-        }
-
-        private static BattleUnit GetPlacedEnemy(WaveData wave, GridPos position)
-        {
-            if (wave == null)
-            {
-                return null;
-            }
-
-            for (int i = 0; i < wave.EnemyPlacements.Count; i++)
-            {
-                BattleUnitPlacement placement = wave.EnemyPlacements[i];
-                if (placement != null && placement.Position == position)
-                {
-                    return placement.Unit;
-                }
-            }
-
-            return null;
-        }
     }
 }
-
-
-
-
-
-
-
-
 
 
 
