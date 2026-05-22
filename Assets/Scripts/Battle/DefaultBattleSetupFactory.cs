@@ -1,6 +1,5 @@
 ﻿namespace GameKari.Battle
 {
-
     public static class DefaultBattleSetupFactory
     {
         public static BattleSetupData CreateDefaultSetup()
@@ -43,29 +42,10 @@
 
         private static void CreateEnemies(BattleSetupData setup)
         {
-            WaveData wave = CreateDefaultWave();
+            WaveData wave = DefaultWaveFactory.CreateDefaultWave();
             ApplyWaveDataToSetup(setup, wave);
         }
 
-        private static WaveData CreateDefaultWave()
-        {
-            WaveData wave = new WaveData();
-
-            BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_a");
-            BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("archer");
-            BattleUnit enemyC = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_b");
-            BattleUnit enemyD = DefaultBattleUnitFactory.CreateEnemyUnitById("shaman");
-            BattleUnit enemyReserve = DefaultBattleUnitFactory.CreateEnemyUnitById("enemy_reserve");
-
-            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, enemyA));
-            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, enemyB));
-            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontBottom, enemyC));
-            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackBottom, enemyD));
-
-            wave.EnemyReserves.Add(enemyReserve);
-
-            return wave;
-        }
 
         private static void ApplyWaveDataToSetup(BattleSetupData setup, WaveData wave)
         {
@@ -76,10 +56,7 @@
 
             setup.EnemyPlacements.AddRange(wave.EnemyPlacements);
             setup.EnemyReserves.AddRange(wave.EnemyReserves);
-
         }
-
-
     }
 }
 
