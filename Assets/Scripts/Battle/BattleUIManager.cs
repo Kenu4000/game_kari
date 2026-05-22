@@ -70,6 +70,7 @@ namespace GameKari.Battle
         private bool _battleEnded;
         private BattlePhase _phase;
         private WaveProgressState _waveProgress;
+        private int _oneTurnClearPartyHeal = DefaultOneTurnClearPartyHeal;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
@@ -101,11 +102,11 @@ namespace GameKari.Battle
         // BattleSprite未設定キャラの名前だけ表示するときの文字サイズ。
         private const float BoardTextOnlyFontSize = 24f;
 
-        // 現在のBattleを1Waveとして扱うための仮Distance設定。
-        // 将来はQuestData / WaveData側へ移す。
-        private const int TargetDistance = 100;
-        private const int BaseWaveDistance = 20;
-        private const int OneTurnClearPartyHeal = 5;
+        // BattleSetupDataにWave/Distance設定がない場合の保険値。
+        // 通常はBattleSetupData側の値を使う。
+        private const int DefaultTargetDistance = 100;
+        private const int DefaultBaseWaveDistance = 20;
+        private const int DefaultOneTurnClearPartyHeal = 5;
 
         private sealed class ActionValuePopup
         {
@@ -220,7 +221,6 @@ namespace GameKari.Battle
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
             _hoveredSkill = null;
-            _waveProgress = new WaveProgressState(TargetDistance, BaseWaveDistance);
 
             _grid = new BattleGrid();
             _formation = new FormationController(_grid);
@@ -229,6 +229,7 @@ namespace GameKari.Battle
             ClearBattleLists();
 
             BattleSetupData setup = DefaultBattleSetupFactory.CreateDefaultSetup();
+            ApplyWaveProgressSettings(setup);
             ApplyBattleSetup(setup);
             SetupInitialTurnState(setup.FallbackActive);
         }
@@ -243,6 +244,23 @@ namespace GameKari.Battle
             _previewEnemyActionStates.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
+        }
+
+        private void ApplyWaveProgressSettings(BattleSetupData setup)
+        {
+            int targetDistance = setup == null
+                ? DefaultTargetDistance
+                : setup.TargetDistance;
+
+            int baseWaveDistance = setup == null
+                ? DefaultBaseWaveDistance
+                : setup.BaseWaveDistance;
+
+            _oneTurnClearPartyHeal = setup == null
+                ? DefaultOneTurnClearPartyHeal
+                : Mathf.Max(0, setup.OneTurnClearPartyHeal);
+
+            _waveProgress = new WaveProgressState(targetDistance, baseWaveDistance);
         }
 
         private void ApplyBattleSetup(BattleSetupData setup)
@@ -2045,7 +2063,7 @@ namespace GameKari.Battle
                 CurrentDistance = currentDistance,
                 TargetDistance = _waveProgress.TargetDistance,
                 PartyHealAmount = rank == WaveClearRank.OneTurn
-                    ? OneTurnClearPartyHeal
+                    ? _oneTurnClearPartyHeal
                     : 0
             };
         }
@@ -2054,7 +2072,7 @@ namespace GameKari.Battle
         {
             if (_waveProgress == null)
             {
-                _waveProgress = new WaveProgressState(TargetDistance, BaseWaveDistance);
+                _waveProgress = new WaveProgressState(DefaultTargetDistance, DefaultBaseWaveDistance);
             }
         }
 
@@ -2093,8 +2111,10 @@ namespace GameKari.Battle
             return WaveClearRank.FourPlusTurn;
         }
 
-        private static int CalculateWaveDistanceGain(WaveClearRank rank)
+        private int CalculateWaveDistanceGain(WaveClearRank rank)
         {
+            EnsureWaveProgress();
+
             float multiplier = rank switch
             {
                 WaveClearRank.OneTurn => 2.0f,
@@ -2103,7 +2123,7 @@ namespace GameKari.Battle
                 _ => 1.0f
             };
 
-            return Mathf.RoundToInt(BaseWaveDistance * multiplier);
+            return Mathf.RoundToInt(_waveProgress.BaseWaveDistance * multiplier);
         }
 
         private static string FormatWaveClearRank(WaveClearRank rank)
@@ -3595,6 +3615,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

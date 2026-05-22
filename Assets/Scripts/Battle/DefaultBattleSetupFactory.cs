@@ -10,6 +10,12 @@ namespace GameKari.Battle
         public readonly List<BattleUnit> EnemyReserves = new();
         public readonly List<InventoryItem> InventoryItems = new();
 
+        // 現在は単発Battleを1Waveとして扱うための仮設定。
+        // 将来はQuestData / WaveData側へ移す。
+        public int TargetDistance = 100;
+        public int BaseWaveDistance = 20;
+        public int OneTurnClearPartyHeal = 5;
+
         public BattleUnit FallbackActive;
 
         public BattleUnit EnemyA;
@@ -94,6 +100,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
