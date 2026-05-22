@@ -190,9 +190,9 @@ namespace GameKari.Battle.Editor
             character.MaxMP = maxMp;
             character.Speed = speed;
 
-            // Visual references and layout values such as FaceIcon, StandingSprite,
-            // BattleSprite, BattleSpriteScale, and BattleSpriteOffset are intentionally
-            // preserved so manually assigned visuals are not overwritten.
+            // 見た目用の参照と表示調整値は、Generate実行時に上書きしない。
+            // FaceIcon / StandingSprite / BattleSprite / BattleSpriteScale / BattleSpriteOffset は
+            // Inspectorで手動調整する前提なので、ここでは保持する。
             character.DefaultSkills.Clear();
             if (defaultSkills != null)
             {
@@ -252,6 +252,7 @@ namespace GameKari.Battle.Editor
         }
     }
 }
+
 
 
 

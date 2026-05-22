@@ -92,8 +92,12 @@ namespace GameKari.Battle
         private const float EnemyStatusSlotHeight = 135f;
         private const float EnemyStatusSlotSpacing = 16f;
         private const float EnemyStatusSlotWidth = 240f;
+        // 盤面Spriteをセルより少し大きく表示するためのアンカー値。
+        // -0.10〜1.10 にすることで、セル範囲から少しはみ出して表示できる。
         private const float BoardSpriteMinAnchor = -0.10f;
         private const float BoardSpriteMaxAnchor = 1.10f;
+
+        // BattleSprite未設定キャラの名前だけ表示するときの文字サイズ。
         private const float BoardTextOnlyFontSize = 24f;
 
         private sealed class ActionValuePopup
@@ -2846,6 +2850,9 @@ namespace GameKari.Battle
             }
         }
 
+        // 盤面セルにユニット情報を反映する入口。
+        // BattleSpriteがある場合はSpriteだけを表示し、名前テキストは消す。
+        // BattleSpriteがない場合は仮表示としてユニット名を出す。
         private static void SetBoardCellUnit(TMP_Text cellLabel, BattleUnit unit)
         {
             if (cellLabel == null)
@@ -2859,6 +2866,9 @@ namespace GameKari.Battle
             SetBoardCellSprite(cellLabel, unit);
         }
 
+        // セル内テキストの基本レイアウトを整える。
+        // 現在はSpriteありの場合テキストを空にしているため、
+        // 主にSprite未設定時の名前仮表示を中央に置くための処理。
         private static void ApplyBoardCellLabelLayout(TMP_Text cellLabel, bool hasSprite)
         {
             if (cellLabel == null)
@@ -2880,6 +2890,8 @@ namespace GameKari.Battle
             cellLabel.fontSize = BoardTextOnlyFontSize;
         }
 
+        // BattleSpriteImageを生成または取得し、盤面セルにSpriteを表示する。
+        // ここでキャラごとのScale/Offset、描画順、KO時の半透明表示をまとめて反映する。
         private static void SetBoardCellSprite(TMP_Text cellLabel, BattleUnit unit)
         {
             if (cellLabel == null || cellLabel.transform.parent == null)
@@ -2887,11 +2899,16 @@ namespace GameKari.Battle
                 return;
             }
 
+            // CharacterDataから表示用Spriteと個別補正値を取り出す。
+            // Scaleは0以下になると表示が破綻するため、最低0.01に丸める。
             Sprite sprite = unit == null || unit.Data == null ? null : unit.Data.BattleSprite;
             float spriteScale = unit == null || unit.Data == null ? 1f : Mathf.Max(0.01f, unit.Data.BattleSpriteScale);
             Vector2 spriteOffset = unit == null || unit.Data == null ? Vector2.zero : unit.Data.BattleSpriteOffset;
 
             Transform cellTransform = cellLabel.transform.parent;
+
+            // 既に作成済みのBattleSpriteImageがあれば再利用する。
+            // なければ、このセル専用のImageオブジェクトを作る。
             Transform existing = cellTransform.Find("BattleSpriteImage");
 
             Image spriteImage;
@@ -2924,11 +2941,14 @@ namespace GameKari.Battle
                 }
             }
 
+            // Spriteはセル内の最背面へ置く。
+            // cellLabelは後で最前面へ戻す。
             spriteImage.transform.SetSiblingIndex(0);
 
             RectTransform imageRect = spriteImage.GetComponent<RectTransform>();
             if (imageRect != null)
             {
+                // アンカーで基本サイズを決め、OffsetとScaleでキャラごとの見た目を微調整する。
                 imageRect.anchorMin = new Vector2(BoardSpriteMinAnchor, BoardSpriteMinAnchor);
                 imageRect.anchorMax = new Vector2(BoardSpriteMaxAnchor, BoardSpriteMaxAnchor);
                 imageRect.offsetMin = spriteOffset;
@@ -2936,11 +2956,18 @@ namespace GameKari.Battle
                 imageRect.localScale = new Vector3(spriteScale, spriteScale, 1f);
             }
 
+            // テキストは最前面に戻す。
+            // 現在はSpriteありの場合テキストを空にしているが、
+            // Sprite未設定時の名前表示や将来のデバッグ表示で隠れないようにする。
             cellLabel.transform.SetAsLastSibling();
+
+            // 盤面Spriteはクリック判定を持たず、画像比率を維持して表示する。
             spriteImage.raycastTarget = false;
             spriteImage.preserveAspect = true;
             spriteImage.sprite = sprite;
             spriteImage.enabled = sprite != null;
+
+            // KO/dead状態のユニットは半透明にして、戦闘不能であることを見た目で示す。
             spriteImage.color = unit != null && unit.IsDead
                 ? new Color(1f, 1f, 1f, 0.45f)
                 : Color.white;
@@ -3319,6 +3346,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
