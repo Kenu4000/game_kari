@@ -79,27 +79,80 @@ namespace GameKari.Battle
 
         private static void CreateEnemies(BattleSetupData setup)
         {
+            WaveData wave = CreateDefaultWave();
+            ApplyWaveDataToSetup(setup, wave);
+        }
+
+        private static WaveData CreateDefaultWave()
+        {
+            WaveData wave = new WaveData();
+
             BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_a");
             BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("archer");
             BattleUnit enemyC = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_b");
             BattleUnit enemyD = DefaultBattleUnitFactory.CreateEnemyUnitById("shaman");
             BattleUnit enemyReserve = DefaultBattleUnitFactory.CreateEnemyUnitById("enemy_reserve");
 
-            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, enemyA));
-            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, enemyB));
-            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontBottom, enemyC));
-            setup.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackBottom, enemyD));
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, enemyA));
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, enemyB));
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontBottom, enemyC));
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackBottom, enemyD));
 
-            setup.EnemyReserves.Add(enemyReserve);
+            wave.EnemyReserves.Add(enemyReserve);
 
-            setup.EnemyA = enemyA;
-            setup.EnemyB = enemyB;
-            setup.EnemyC = enemyC;
-            setup.EnemyD = enemyD;
-            setup.EnemyReserve = enemyReserve;
+            return wave;
+        }
+
+        private static void ApplyWaveDataToSetup(BattleSetupData setup, WaveData wave)
+        {
+            if (setup == null || wave == null)
+            {
+                return;
+            }
+
+            setup.EnemyPlacements.AddRange(wave.EnemyPlacements);
+            setup.EnemyReserves.AddRange(wave.EnemyReserves);
+
+            SetLegacyEnemyReferences(setup, wave);
+        }
+
+        private static void SetLegacyEnemyReferences(BattleSetupData setup, WaveData wave)
+        {
+            if (setup == null || wave == null)
+            {
+                return;
+            }
+
+            setup.EnemyA = GetPlacedEnemy(wave, GridPos.FrontTop);
+            setup.EnemyB = GetPlacedEnemy(wave, GridPos.BackTop);
+            setup.EnemyC = GetPlacedEnemy(wave, GridPos.FrontBottom);
+            setup.EnemyD = GetPlacedEnemy(wave, GridPos.BackBottom);
+            setup.EnemyReserve = wave.EnemyReserves.Count > 0
+                ? wave.EnemyReserves[0]
+                : null;
+        }
+
+        private static BattleUnit GetPlacedEnemy(WaveData wave, GridPos position)
+        {
+            if (wave == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < wave.EnemyPlacements.Count; i++)
+            {
+                BattleUnitPlacement placement = wave.EnemyPlacements[i];
+                if (placement != null && placement.Position == position)
+                {
+                    return placement.Unit;
+                }
+            }
+
+            return null;
         }
     }
 }
+
 
 
 
