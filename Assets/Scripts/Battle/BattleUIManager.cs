@@ -2910,11 +2910,108 @@ namespace GameKari.Battle
 
         private void HandleResultReturnClicked()
         {
+            if (_questProgress != null && _questProgress.HasNextWave)
+            {
+                Debug.Log("[Result] Next Wave clicked.");
+                StartNextWave();
+                return;
+            }
+
             Debug.Log("[Result] Return clicked.");
 
             RestartBattle();
         }
 
+        private void StartNextWave()
+        {
+            if (_questProgress == null || !_questProgress.MoveNextWave())
+            {
+                RestartBattle();
+                return;
+            }
+
+            StopAllCoroutines();
+
+            HideResultPanel();
+            HideActionOverlay();
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            ClearPendingActionFlashTargets();
+            ClearPendingActionValuePopups();
+
+            _battleEnded = false;
+            _phase = BattlePhase.CommandSelect;
+            _formationSettling = false;
+            _hoveredSkill = null;
+
+            ReplaceEnemyWave(_questProgress.CurrentWave);
+
+            _actedUnits.Clear();
+            _turnNumbers.Clear();
+            _previewEnemyActionStates.Clear();
+
+            EnsureWaveProgress();
+
+            int baseWaveDistance = _questProgress.CurrentWave == null
+                ? DefaultBaseWaveDistance
+                : _questProgress.CurrentWave.BaseDistance;
+
+            _waveProgress.StartWave(baseWaveDistance);
+
+            RebuildTurnOrder();
+
+            BattleUnit nextAlly = FindNextUnactedAlly();
+            if (nextAlly != null)
+            {
+                EnterCommandSelect(nextAlly);
+            }
+            else
+            {
+                CheckBattleEnd();
+            }
+
+            if (commandPanel != null)
+            {
+                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
+                commandPanel.SetInteractable(true);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.gameObject.SetActive(true);
+                rotateButton.interactable = true;
+            }
+
+            SetCommandUiVisible(true);
+            RedrawBoard();
+
+            Debug.Log($"[Wave] Started next wave: {GetCurrentWaveNumber()}/{GetTotalWaveCount()}.");
+        }
+
+        private void ReplaceEnemyWave(WaveData wave)
+        {
+            ClearEnemyBoardAndLists();
+
+            if (wave == null)
+            {
+                wave = DefaultWaveFactory.CreateDefaultWave();
+            }
+
+            ApplyBattleUnitPlacements(false, wave.EnemyPlacements, _enemies);
+            _enemyReserves.AddRange(wave.EnemyReserves);
+        }
+
+        private void ClearEnemyBoardAndLists()
+        {
+            _grid.SetUnit(false, GridPos.FrontTop, null);
+            _grid.SetUnit(false, GridPos.BackTop, null);
+            _grid.SetUnit(false, GridPos.FrontBottom, null);
+            _grid.SetUnit(false, GridPos.BackBottom, null);
+
+            _enemies.Clear();
+            _enemyReserves.Clear();
+        }
         private void RestartBattle()
         {
             StopAllCoroutines();
@@ -2968,8 +3065,9 @@ namespace GameKari.Battle
 
             if (_resultReturnButtonText != null)
             {
-                // 将来はNext Waveへ置き換える想定。現時点では同じBattleを再開始する。
-                _resultReturnButtonText.text = "Return";
+                _resultReturnButtonText.text = result.HasNextWave
+                    ? "Next Wave"
+                    : "Return";
             }
         }
 
@@ -3646,6 +3744,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

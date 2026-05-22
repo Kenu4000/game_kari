@@ -15,9 +15,11 @@
             };
 
             quest.Waves.Add(DefaultWaveFactory.CreateDefaultWave());
+            quest.Waves.Add(DefaultWaveFactory.CreateSecondWave());
 
             return quest;
         }
     }
 }
+
 

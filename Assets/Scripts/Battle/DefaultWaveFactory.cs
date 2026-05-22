@@ -24,6 +24,30 @@
 
             return wave;
         }
+
+        public static WaveData CreateSecondWave()
+        {
+            WaveData wave = new WaveData
+            {
+                BaseDistance = 20
+            };
+
+            BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_b");
+            BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("shaman");
+            BattleUnit enemyC = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_a");
+            BattleUnit enemyD = DefaultBattleUnitFactory.CreateEnemyUnitById("archer");
+            BattleUnit enemyReserve = DefaultBattleUnitFactory.CreateEnemyUnitById("enemy_reserve");
+
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontTop, enemyA));
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackTop, enemyB));
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.FrontBottom, enemyC));
+            wave.EnemyPlacements.Add(new BattleUnitPlacement(GridPos.BackBottom, enemyD));
+
+            wave.EnemyReserves.Add(enemyReserve);
+
+            return wave;
+        }
     }
 }
+
 

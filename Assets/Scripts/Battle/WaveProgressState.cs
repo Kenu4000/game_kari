@@ -12,7 +12,7 @@ namespace GameKari.Battle
         public int WaveTurn { get; private set; } = 1;
         public int CurrentDistance { get; private set; }
         public int TargetDistance { get; }
-        public int BaseWaveDistance { get; }
+        public int BaseWaveDistance { get; private set; }
 
         public WaveProgressState(int targetDistance, int baseWaveDistance)
         {
@@ -24,11 +24,17 @@ namespace GameKari.Battle
         public void ResetForQuest()
         {
             CurrentDistance = 0;
-            StartWave();
+            StartWave(BaseWaveDistance);
         }
 
         public void StartWave()
         {
+            WaveTurn = 1;
+        }
+
+        public void StartWave(int baseWaveDistance)
+        {
+            BaseWaveDistance = Mathf.Max(0, baseWaveDistance);
             WaveTurn = 1;
         }
 
@@ -44,3 +50,4 @@ namespace GameKari.Battle
         }
     }
 }
+
