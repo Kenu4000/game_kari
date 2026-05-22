@@ -2114,8 +2114,11 @@ namespace GameKari.Battle
                 return;
             }
 
-            HealLivingPartyMembers(_allies, result.PartyHealAmount);
-            HealLivingPartyMembers(_reserves, result.PartyHealAmount);
+            int eligibleCount = CountLivingPartyMembers(_allies) + CountLivingPartyMembers(_reserves);
+            int changedCount = HealLivingPartyMembers(_allies, result.PartyHealAmount)
+                + HealLivingPartyMembers(_reserves, result.PartyHealAmount);
+
+            Debug.Log($"[Wave] Party HP reward applied. Eligible={eligibleCount}, Changed={changedCount}, Amount=+{result.PartyHealAmount}.");
         }
 
         private WaveClearRank EvaluateWaveClearRank()
@@ -2168,12 +2171,14 @@ namespace GameKari.Battle
             };
         }
 
-        private static void HealLivingPartyMembers(List<BattleUnit> units, int healAmount)
+        private static int HealLivingPartyMembers(List<BattleUnit> units, int healAmount)
         {
             if (units == null || healAmount <= 0)
             {
-                return;
+                return 0;
             }
+
+            int changedCount = 0;
 
             for (int i = 0; i < units.Count; i++)
             {
@@ -2188,9 +2193,39 @@ namespace GameKari.Battle
 
                 if (unit.CurrentHP != beforeHp)
                 {
+                    changedCount++;
                     Debug.Log($"[Wave] {unit.Name} recovered HP {beforeHp}->{unit.CurrentHP}/{unit.Data.MaxHP}.");
                 }
+                else
+                {
+                    Debug.Log($"[Wave] {unit.Name} was eligible for HP reward but stayed at {unit.CurrentHP}/{unit.Data.MaxHP}.");
+                }
             }
+
+            return changedCount;
+        }
+
+        private static int CountLivingPartyMembers(List<BattleUnit> units)
+        {
+            if (units == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnit unit = units[i];
+                if (unit == null || unit.IsDead || unit.Data == null)
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            return count;
         }
         private void EndBattle(string result)
         {
@@ -2958,6 +2993,7 @@ namespace GameKari.Battle
                 : _questProgress.CurrentWave.BaseDistance;
 
             _waveProgress.StartWave(baseWaveDistance);
+            RecoverAllAllyMP();
 
             RebuildTurnOrder();
 
@@ -3050,7 +3086,11 @@ namespace GameKari.Battle
 
             if (_resultTitleText != null)
             {
-                _resultTitleText.text = $"Wave Clear ({result.WaveNumber}/{result.TotalWaves})";
+                string resultTitle = result.HasNextWave
+                    ? "Wave Clear"
+                    : "Quest Clear";
+
+                _resultTitleText.text = $"{resultTitle} ({result.WaveNumber}/{result.TotalWaves})";
             }
 
             if (_resultSubText != null)
@@ -3744,6 +3784,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 

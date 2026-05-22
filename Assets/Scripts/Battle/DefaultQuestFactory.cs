@@ -16,10 +16,12 @@
 
             quest.Waves.Add(DefaultWaveFactory.CreateDefaultWave());
             quest.Waves.Add(DefaultWaveFactory.CreateSecondWave());
+            quest.Waves.Add(DefaultWaveFactory.CreateThirdWave());
 
             return quest;
         }
     }
 }
+
 
 
