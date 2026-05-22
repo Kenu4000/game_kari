@@ -44,6 +44,7 @@ namespace GameKari.Battle
         private readonly List<BattleUnit> _allies = new();
         private readonly List<BattleUnit> _enemies = new();
         private readonly List<BattleUnit> _reserves = new();
+        private readonly List<BattleUnit> _partyMembers = new();
 
         private readonly List<BattleUnit> _enemyReserves = new();
         private readonly List<InventoryItem> _inventoryItems = new();
@@ -126,6 +127,7 @@ namespace GameKari.Battle
             public int WaveNumber;
             public int TotalWaves;
             public bool HasNextWave;
+            public QuestResultData QuestResult;
         }
         private enum BattlePhase
         {
@@ -243,6 +245,7 @@ namespace GameKari.Battle
             _allies.Clear();
             _enemies.Clear();
             _reserves.Clear();
+            _partyMembers.Clear();
             _enemyReserves.Clear();
             _inventoryItems.Clear();
             _previewEnemyActionStates.Clear();
@@ -282,9 +285,30 @@ namespace GameKari.Battle
             ApplyBattleUnitPlacements(false, setup.EnemyPlacements, _enemies);
 
             _reserves.AddRange(setup.AllyReserves);
+            RegisterPartyMembers(_allies);
+            RegisterPartyMembers(_reserves);
+
             _enemyReserves.AddRange(setup.EnemyReserves);
             _inventoryItems.AddRange(setup.InventoryItems);
+        }
 
+        private void RegisterPartyMembers(List<BattleUnit> units)
+        {
+            if (units == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnit unit = units[i];
+                if (unit == null || _partyMembers.Contains(unit))
+                {
+                    continue;
+                }
+
+                _partyMembers.Add(unit);
+            }
         }
 
         private void ApplyBattleUnitPlacements(
@@ -2064,7 +2088,9 @@ namespace GameKari.Battle
             int distanceGain = CalculateWaveDistanceGain(rank);
             int currentDistance = _waveProgress.AddDistance(distanceGain);
 
-            return new WaveClearResult
+            bool hasNextWave = _questProgress != null && _questProgress.HasNextWave;
+
+            WaveClearResult result = new WaveClearResult
             {
                 Rank = rank,
                 DistanceGain = distanceGain,
@@ -2075,8 +2101,15 @@ namespace GameKari.Battle
                     : 0,
                 WaveNumber = GetCurrentWaveNumber(),
                 TotalWaves = GetTotalWaveCount(),
-                HasNextWave = _questProgress != null && _questProgress.HasNextWave
+                HasNextWave = hasNextWave
             };
+
+            if (!hasNextWave)
+            {
+                result.QuestResult = CreateQuestResultData(result);
+            }
+
+            return result;
         }
 
         private void EnsureWaveProgress()
@@ -2218,6 +2251,70 @@ namespace GameKari.Battle
             {
                 BattleUnit unit = units[i];
                 if (unit == null || unit.IsDead || unit.Data == null)
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            return count;
+        }
+
+        private QuestResultData CreateQuestResultData(WaveClearResult waveResult)
+        {
+            QuestResultData questResult = new QuestResultData
+            {
+                ClearedWaveCount = waveResult == null ? GetCurrentWaveNumber() : waveResult.WaveNumber,
+                TotalWaveCount = GetTotalWaveCount(),
+                CurrentDistance = _waveProgress == null ? 0 : _waveProgress.CurrentDistance,
+                TargetDistance = _waveProgress == null ? DefaultTargetDistance : _waveProgress.TargetDistance,
+                AlivePartyCount = CountLivingPartyMembers(_partyMembers),
+                KnockedOutPartyCount = CountKnockedOutPartyMembers(_partyMembers),
+                TotalPartyCount = CountKnownPartyMembers(_partyMembers)
+            };
+
+            Debug.Log($"[Quest] Result created. Waves={questResult.ClearedWaveCount}/{questResult.TotalWaveCount}, Distance={questResult.CurrentDistance}/{questResult.TargetDistance}, Alive={questResult.AlivePartyCount}, KO={questResult.KnockedOutPartyCount}.");
+
+            return questResult;
+        }
+
+        private static int CountKnockedOutPartyMembers(List<BattleUnit> units)
+        {
+            if (units == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnit unit = units[i];
+                if (unit == null || unit.Data == null || !unit.IsDead)
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            return count;
+        }
+
+        private static int CountKnownPartyMembers(List<BattleUnit> units)
+        {
+            if (units == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnit unit = units[i];
+                if (unit == null || unit.Data == null)
                 {
                     continue;
                 }
@@ -3122,6 +3219,17 @@ namespace GameKari.Battle
                 ? $"+{result.PartyHealAmount}"
                 : "-";
 
+            if (result.QuestResult != null)
+            {
+                QuestResultData quest = result.QuestResult;
+
+                return
+                    $"Clear: {FormatWaveClearRank(result.Rank)}\n" +
+                    $"Distance: +{result.DistanceGain}\n" +
+                    $"Progress: {quest.CurrentDistance}/{quest.TargetDistance}\n" +
+                    $"Party: Alive {quest.AlivePartyCount}/{quest.TotalPartyCount}, KO {quest.KnockedOutPartyCount}";
+            }
+
             return
                 $"Clear: {FormatWaveClearRank(result.Rank)}\n" +
                 $"Distance: +{result.DistanceGain}\n" +
@@ -3784,6 +3892,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
