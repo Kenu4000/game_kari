@@ -1,10 +1,10 @@
-﻿# MP Policy
+# MP Policy
 
 ## Status
 
 This document supersedes the previous Battle MVP v0.1 policy that removed MP from the active battle prototype.
 
-MP has been reintroduced as the primary skill resource. The previous cooldown-based skill restriction model is no longer the target design.
+MP has been reintroduced as the primary skill resource. CT and LinkCooldown are no longer part of the target design.
 
 Current implementation status:
 
@@ -18,8 +18,8 @@ Current implementation status:
 - `CharacterAssetProvider` does not have a runtime character fallback path; battle participants are expected to have `CharacterData` assets.
 - `DefaultBattleUnitFactory.CreateAllyUnitById(...)` creates ally units by character id and assigns player skills from `CharacterData.DefaultSkills`.
 - `DefaultBattleUnitFactory.CreateEnemyUnitById(...)` creates enemy units by character id without copying `CharacterData.DefaultSkills`; enemy actions are sourced from `CharacterData.EnemyActionSlots`.
-- `DefaultBattleSetupFactory` now creates default ally and enemy units by character id instead of duplicating HP/Speed values in setup code.
-- `DefaultBattleSetupFactory` now creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
+- `DefaultBattleSetupFactory` currently creates the default single-battle setup by character id.
+- `DefaultBattleSetupFactory` currently creates runtime inventory items from `DefaultInventoryProvider` and stores them on `BattleSetupData.InventoryItems`.
 - `BattleSetupData` stores default battle unit placements, reserves, fallback active unit, enemy references, and runtime inventory.
 - Enemy `CharacterData` assets have empty `DefaultSkills` and weighted `EnemyActionSlot` entries for normal-enemy action selection.
 - Legacy dummy battle factory/setup/helper names have been removed from the battle scripts.
@@ -36,7 +36,6 @@ Current implementation status:
 - Board cells display `CharacterData.BattleSprite` when assigned; if no battle sprite is assigned, the cell falls back to the unit name text.
 - Board cell names are hidden when a battle sprite is available.
 - Board sprite draw order is kept behind the cell text, and dead units are displayed with reduced sprite opacity.
-- Default player skill MP costs and enemy skill target patterns are implemented in `SkillData` assets and accessed through `DefaultSkillAssetProvider`.
 - Ally skills are assigned through `CharacterData.DefaultSkills`.
 - Enemy action candidates are assigned through `CharacterData.EnemyActionSlots`.
 - `UnitSkillInitializer` copies skills from `unit.Data.DefaultSkills` to `unit.Skills` for allies.
@@ -61,7 +60,6 @@ Current implementation status:
 - `CommandPanelController` no longer creates inventory items directly; it only displays and updates the inventory list it receives.
 - `Pass` is implemented as an item with count 99 through the default inventory loadout.
 - Item buttons are generated and positioned under `itemListPanel` when needed.
-- Item button generation now re-parents existing item buttons to `itemListPanel`, creates missing buttons, and reapplies fixed size/position.
 - Ally status UI shows MP in the existing status text area.
 - Insufficient-MP skills are visually dimmed but remain interactable.
 - `BattleUIManager` blocks insufficient-MP skill execution.
@@ -70,7 +68,7 @@ Current implementation status:
 - Accepted Link skill use consumes MP from both the user and the specified partner.
 - Link partner resolution excludes the active user from being their own partner.
 - Reserve partners can pay MP for Link skills, but only active-grid partners are used for source flash cells.
-- `StartNextTurn()` recovers MP +1 for ally front-line and reserve characters.
+- `StartNextTurn()` currently recovers MP +1 for ally front-line and reserve characters; the intended policy is living allies only.
 - Skill CT and LinkCooldown data fields have been removed from the active data model.
 - `WAIT:N`, `LINK:N`, and LinkCooldown status display are no longer part of the active UI flow.
 - `LinkPartnerPolicy` has been removed after confirming no active code references it.
@@ -79,33 +77,23 @@ Current implementation status:
 
 - Ally characters have MP.
 - Initial implementation uses max MP 4 for every ally character.
-- At quest start, all ally front-line and reserve characters start at MP 4/4.
+- At quest start, all brought ally front-line and reserve characters start at MP 4/4.
 - MP is preserved across Waves.
 - Wave start does not grant additional MP recovery.
 - Returning to base restores all allies to MP 4/4.
 - Initial implementation does not give MP to enemies.
 - Enemy action selection does not check MP.
 - Enemy action execution does not consume MP.
-
-## Game loop context
-
-Wave is not a skill.
-
-Wave means one battle segment inside the future quest loop:
-
-- Base
-- Quest selection
-- Conversation event
-- Multiple battles / Waves
-- Result
-- Base
-
-The current battle may continue to behave as a single battle while the broader quest/Wave loop is not implemented.
+- Swap, Rotate, Item, and Pass remain possible at MP 0.
+- MP 0 should not create a completely unwinnable command state by itself.
 
 ## Turn recovery
 
 - `StartNextTurn()` is the MP recovery timing.
-- At `StartNextTurn()`, all ally front-line and reserve characters recover MP +1.
+- `WaveTurn +1` happens at the same timing as turn-top MP recovery.
+- At `StartNextTurn()`, living ally front-line and reserve characters recover MP +1.
+- KO allies do not recover MP, whether they are on the front line or in reserve.
+- KO allies preserve their current MP value.
 - MP recovery is clamped at max MP 4.
 - This is not per-character command-entry recovery.
 
@@ -114,7 +102,7 @@ The current battle may continue to behave as a single battle while the broader q
 - Swap does not change MP.
 - Returning to reserve does not change MP.
 - Reserve allies keep their current MP.
-- Reserve allies are included in the `StartNextTurn()` MP +1 recovery.
+- Reserve allies are included in turn-top MP +1 recovery only if they are alive.
 - Item costs 0 MP.
 - Pass is an item with count 99.
 - Pass costs 0 MP.
@@ -122,56 +110,150 @@ The current battle may continue to behave as a single battle while the broader q
 - Pass does not heal HP.
 - Pass does not grant additional MP recovery.
 
-## Skill costs
+## Skill cost policy
+
+- MP 0 skills are exceptional, defensive, or character-specific fallback tools.
+- MP 0 skills are not distributed to every character by default.
+- MP 0 skills should not be strong enough to play the game by themselves.
+- MP 1 skills are the basic action tier.
+- MP 1 skills should be useful as normal actions, not merely weak attacks.
+- MP 2 skills are main skills.
+- MP 3 skills are large skills.
+- MP 4 skills are finisher-class skills and should be used carefully in early implementation.
+- Link skills initially use user MP 2 + partner MP 2.
+- Link skill use consumes MP from both user and partner.
+- Link skill use consumes only the user's action.
+- The partner's own action is not consumed.
 
 Temporary default player skill costs:
 
-- Slash: MP 0
-- Pierce: MP 1
-- TwinHit: MP 2
-- Focus: MP 0
-
-Temporary default enemy skills:
-
-- Goblin A: Claw, Damage 60, same-grid opponent target
-- Archer: Arrow, Damage 45, front-top opponent target
-- Goblin B: Bite, Damage 60, front-bottom opponent target
-- Shaman: Hex, Damage 25, all opponents target
-- Enemy Reserve: Strike, Damage 60, same-grid opponent target
+- Slash: MP 0.
+- Pierce: MP 1.
+- TwinHit: MP 2.
+- Focus: MP 0.
 
 ## Temporary default skill ownership
 
-- Knight: Slash, Pierce, TwinHit, Focus
-- Mage: Slash, Pierce, Focus
-- Cleric: Slash, Focus
-- Rogue: Slash, Pierce, Focus
-- Reserve: Slash
-- Enemy CharacterData.DefaultSkills: empty
+- Knight: Slash, Pierce, TwinHit, Focus.
+- Mage: Slash, Pierce, Focus.
+- Cleric: Slash, Focus.
+- Rogue: Slash, Pierce, Focus.
+- Reserve: Slash.
+- Enemy CharacterData.DefaultSkills: empty.
 
 ## Temporary default enemy action slots
 
-- Goblin A: Claw 70, Strike 30
-- Archer: Arrow 80, Strike 20
-- Goblin B: Bite 70, Claw 30
-- Shaman: Hex 40, Strike 60
-- Enemy Reserve: Strike 100
+- Goblin A: Claw 70, Strike 30.
+- Archer: Arrow 80, Strike 20.
+- Goblin B: Bite 70, Claw 30.
+- Shaman: Hex 40, Strike 60.
+- Enemy Reserve: Strike 100.
 
-## MP spending
+## Game loop context
 
-- Player skills have `MpCost`.
-- Player MP is checked before player skill execution.
-- If current MP is lower than `MpCost`, the player skill is blocked.
-- If the player skill is accepted, MP is consumed when the skill action begins.
-- Player MP is consumed even if the target cell is empty and the skill misses.
-- Enemy skills currently ignore `MpCost`.
-- Enemy skills currently do not consume MP.
+Wave means one battle segment inside the future quest loop:
 
-## Skill button behavior
+- Base.
+- Quest selection.
+- Conversation event.
+- Multiple battles / Waves.
+- Result.
+- Base.
 
-- Skills with insufficient MP are visually dimmed.
-- Skills with insufficient MP remain interactable so the click still reaches `BattleUIManager`.
-- `BattleUIManager` is responsible for blocking insufficient-MP skill execution.
-- This follows the previous CT-style defensive blocking pattern rather than disabling the button entirely.
+The current single battle is treated as one Wave for the initial Wave/Distance implementation.
+
+## Confirmed Quest / Wave / Distance policy
+
+This section records the current design decisions before the initial Wave/Distance implementation.
+
+### Current implementation scope
+
+- The current single battle is treated as one Wave.
+- Full multi-Wave quest flow is not implemented yet.
+- Quest selection, conversation events, Truck Durability, Cargo Condition, Escort Rank, early-arrival rewards, Lv-up processing, and skill enhancement processing are deferred.
+- Enemy MP is not implemented.
+- CT and LinkCooldown remain removed.
+
+### Wave clear condition
+
+- Wave Clear occurs when all active enemies and enemy reserves are defeated.
+- The current Defeat flow remains separate and continues to represent party defeat.
+- Wave Result is always displayed after enemy wipeout.
+- The current Return button restarts the same battle for now.
+- Later, Return can be replaced by Next Wave or return-to-base behavior.
+
+### WaveTurn
+
+- Wave starts with `WaveTurn = 1`.
+- `WaveTurn +1` happens when the next turn cycle begins.
+- `WaveTurn +1` and turn-top MP recovery happen at the same timing.
+- If enemies are wiped out during `WaveTurn = 1`, the result is `1Turn Clear`.
+- Enemy actions inside `WaveTurn = 1` do not prevent `1Turn Clear` as long as the wipeout occurs before `WaveTurn` increments.
+- `WaveTurn = 2` gives `2Turn Clear`.
+- `WaveTurn = 3` gives `3Turn Clear`.
+- `WaveTurn >= 4` gives `4+Turn Clear`.
+
+### Distance
+
+- Distance starts at 0.
+- Distance progresses toward TargetDistance.
+- Initial temporary values:
+  - TargetDistance: 100.
+  - BaseWaveDistance: 20.
+- Distance gain is clamped at TargetDistance.
+- Distance overrun is not tracked in the initial implementation.
+- Distance rounding uses `Mathf.RoundToInt`.
+
+### Distance gain by clear rank
+
+Distance bonus is based on the Wave's BaseDistance.
+
+- `1Turn Clear`: BaseDistance +100%.
+- `2Turn Clear`: BaseDistance +50%.
+- `3Turn Clear`: BaseDistance +20%.
+- `4+Turn Clear`: BaseDistance +0%.
+
+With BaseDistance 20:
+
+- `1Turn Clear`: 40.
+- `2Turn Clear`: 30.
+- `3Turn Clear`: 24.
+- `4+Turn Clear`: 20.
+
+### Wave Result display
+
+Wave Result should show:
+
+- Clear rank:
+  - `1Turn Clear`.
+  - `2Turn Clear`.
+  - `3Turn Clear`.
+  - `4+Turn Clear`.
+- Distance gain.
+- Current Distance / TargetDistance.
+- `1Turn Clear` party HP recovery.
+
+Early clear bonus information is not shown as a constant battle UI element. It is evaluated and shown on Wave Result.
+
+### HP and KO persistence
+
+- HP is preserved across Waves.
+- Wave Clear does not fully heal the party.
+- `1Turn Clear` grants Party HP +5.
+- Party HP +5 applies to living front-line allies and living reserve allies.
+- Party HP +5 is clamped at each character's MaxHP.
+- Party HP +5 does not revive KO allies.
+- KO allies remain KO after Wave Clear.
+- KO allies are revived only by Item, rest, base return, or future explicit recovery systems.
+- Base return restores all allies and fully recovers HP/MP.
+- KO allies keep their current MP value while KO.
+
+### KO position and replacement
+
+- KO allies remain in their position if there is no reserve replacement.
+- A KO ally's grid cell is treated as occupied when the KO unit remains there.
+- If a living reserve exists when an ally is KO'd, the current auto-replacement behavior remains.
+- Swap and Item are expected to handle bad board states caused by KO.
 
 ## Character model
 
@@ -182,6 +264,8 @@ Temporary default enemy skills:
 - Default battle setup now uses character ids for ally/enemy creation, so HP/MP/Speed/DefaultSkills are sourced from `CharacterData` assets.
 - Allies store player command skills in `CharacterData.DefaultSkills`.
 - Enemies keep `CharacterData.DefaultSkills` empty and store enemy AI action candidates in `CharacterData.EnemyActionSlots`.
+- Later, `CharacterData` should gain attack and defense-related fields.
+- Attack and Defense are not part of the immediate next implementation step.
 
 ## Skill model
 
@@ -225,6 +309,18 @@ Temporary default enemy skills:
 - `CommandPanelController` is now a display/controller consumer of inventory state rather than the inventory creation owner.
 - This separation is intended to make future ScriptableObject-based item definitions and inventories safer.
 
+## Damage and growth policy
+
+- The future target damage formula is `Damage = Round(Attack * SkillRate)`.
+- Initial baseline Attack is 10.
+- Defense is not used in the initial implementation.
+- Random damage, critical hits, and accuracy checks are not used in the initial implementation.
+- Immediate implementation may keep current `SkillData.Damage` values for stability.
+- Later, skill damage should move toward character attack stat and skill power/rate calculation.
+- Lv-up should not increase Attack, Defense, or MaxMP in the current design.
+- Lv-up rewards should focus on MaxHP, skill enhancement resources, new skill candidates, and link skill candidates.
+- Speed should remain mostly fixed in the initial implementation.
+
 ## Cooldown and LinkCooldown policy
 
 - Skill CT is not part of the target design.
@@ -245,10 +341,27 @@ Temporary default enemy skills:
 - Reserve Link partners are not shown as source flash cells because they are not placed on the active grid.
 - Future Link skill cost values may be split into separate user/partner costs if needed.
 
+## Deferred systems
+
+The following are explicitly deferred:
+
+- Multi-Wave quest flow.
+- QuestData ScriptableObject.
+- WaveData ScriptableObject.
+- Truck Durability.
+- Cargo Condition.
+- Escort Rank.
+- Early arrival reward.
+- Enemy MP.
+- CT.
+- LinkCooldown.
+- Lv-up implementation.
+- Skill enhancement implementation.
+- Full damage formula migration.
+
 ## Remaining cleanup
 
 - Move item ownership/count from `DefaultInventoryProvider` to a non-dummy battle loadout or quest state source later.
 - Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
 - Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
-
