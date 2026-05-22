@@ -10,5 +10,10 @@ namespace GameKari.Battle
     {
         public readonly List<BattleUnitPlacement> EnemyPlacements = new();
         public readonly List<BattleUnit> EnemyReserves = new();
+
+        // このWaveをクリアしたときに進む基礎Distance。
+        // 早期クリア補正はBattleUIManager側のWave Clear評価で掛ける。
+        public int BaseDistance = 20;
     }
 }
+

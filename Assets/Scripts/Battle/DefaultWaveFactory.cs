@@ -4,7 +4,10 @@
     {
         public static WaveData CreateDefaultWave()
         {
-            WaveData wave = new WaveData();
+            WaveData wave = new WaveData
+            {
+                BaseDistance = 20
+            };
 
             BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_a");
             BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("archer");
@@ -23,3 +26,4 @@
         }
     }
 }
+

@@ -11,7 +11,6 @@
             QuestData quest = new QuestData
             {
                 TargetDistance = 100,
-                BaseWaveDistance = 20,
                 OneTurnClearPartyHeal = 5
             };
 
@@ -21,3 +20,4 @@
         }
     }
 }
+

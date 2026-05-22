@@ -23,7 +23,6 @@
             }
 
             setup.TargetDistance = quest.TargetDistance;
-            setup.BaseWaveDistance = quest.BaseWaveDistance;
             setup.OneTurnClearPartyHeal = quest.OneTurnClearPartyHeal;
         }
         private static void CreateAllies(BattleSetupData setup)
@@ -77,11 +76,13 @@
                 return;
             }
 
+            setup.BaseWaveDistance = wave.BaseDistance;
             setup.EnemyPlacements.AddRange(wave.EnemyPlacements);
             setup.EnemyReserves.AddRange(wave.EnemyReserves);
         }
     }
 }
+
 
 
 
