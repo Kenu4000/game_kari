@@ -2653,8 +2653,8 @@ namespace GameKari.Battle
             _resultPanelObject.transform.SetParent(canvas.transform, false);
 
             RectTransform panelRect = _resultPanelObject.AddComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.35f, 0.35f);
-            panelRect.anchorMax = new Vector2(0.65f, 0.65f);
+            panelRect.anchorMin = new Vector2(0.32f, 0.28f);
+            panelRect.anchorMax = new Vector2(0.68f, 0.72f);
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
@@ -2666,12 +2666,12 @@ namespace GameKari.Battle
 
             _resultTitleText = titleObject.AddComponent<TextMeshProUGUI>();
             _resultTitleText.alignment = TextAlignmentOptions.Center;
-            _resultTitleText.fontSize = 42f;
+            _resultTitleText.fontSize = 38f;
             _resultTitleText.raycastTarget = false;
 
             RectTransform titleRect = titleObject.GetComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0f, 0.55f);
-            titleRect.anchorMax = new Vector2(1f, 0.85f);
+            titleRect.anchorMin = new Vector2(0f, 0.70f);
+            titleRect.anchorMax = new Vector2(1f, 0.90f);
             titleRect.offsetMin = Vector2.zero;
             titleRect.offsetMax = Vector2.zero;
 
@@ -2680,12 +2680,12 @@ namespace GameKari.Battle
 
             _resultSubText = subObject.AddComponent<TextMeshProUGUI>();
             _resultSubText.alignment = TextAlignmentOptions.Center;
-            _resultSubText.fontSize = 24f;
+            _resultSubText.fontSize = 22f;
             _resultSubText.raycastTarget = false;
 
             RectTransform subRect = subObject.GetComponent<RectTransform>();
-            subRect.anchorMin = new Vector2(0f, 0.25f);
-            subRect.anchorMax = new Vector2(1f, 0.5f);
+            subRect.anchorMin = new Vector2(0f, 0.28f);
+            subRect.anchorMax = new Vector2(1f, 0.68f);
             subRect.offsetMin = Vector2.zero;
             subRect.offsetMax = Vector2.zero;
 
@@ -3497,6 +3497,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
