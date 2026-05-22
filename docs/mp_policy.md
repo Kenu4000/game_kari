@@ -1,4 +1,4 @@
-﻿# MP Policy
+# MP Policy
 
 ## Status
 
@@ -46,6 +46,10 @@ Current implementation status:
 - Enemy action selection does not check or consume MP.
 - Enemy action preview remains in its current implementation and should be treated as undecided / low-priority unless explicitly changed later.
 - `BattleUIManager` stores only preview-fixed enemy action states in `_previewEnemyActionStates`; the previous initialized enemy action state cache has been removed.
+- `BattleUIManager` treats the current single battle as one Wave for the initial Wave/Distance implementation.
+- `BattleUIManager` has initial Wave Clear Result handling through an internal `WaveClearResult` runtime structure.
+- Wave Clear Result text generation is separated from Wave Clear reward application.
+- Enemy wipeout now routes to Wave Clear handling, while party defeat still routes to the normal Defeat result.
 - Enemy-specific `EnemyTargetPattern` has been removed; enemy target preview and enemy damage resolution read `action.Skill.TargetPattern`.
 - Current default enemy skills are `enemy_claw`, `enemy_arrow`, `enemy_bite`, `enemy_hex`, and `enemy_strike`.
 - `ItemData.ItemKind` exists for Heal / Pass item behavior.
@@ -367,4 +371,3 @@ The following are explicitly deferred:
 - Keep enemy action preview unobtrusive unless its final presentation is explicitly decided later.
 - Implement boss conditional action selection later.
 - Implement the broader quest/Wave loop later; the current battle still restarts as a single battle.
-
