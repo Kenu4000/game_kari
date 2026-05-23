@@ -57,6 +57,8 @@ namespace GameKari.Battle
         private GameObject _resultPanelObject;
         private TMP_Text _resultTitleText;
         private TMP_Text _resultSubText;
+        private Button _resultFormationButton;
+        private TMP_Text _resultFormationButtonText;
         private Button _resultReturnButton;
         private TMP_Text _resultReturnButtonText;
         private GameObject _enemyActionPreviewPanelObject;
@@ -2871,6 +2873,7 @@ namespace GameKari.Battle
                     }
                 }
 
+                TryBindExistingResultFormationButton();
                 TryBindExistingResultReturnButton();
                 ApplyResultPanelLayout();
                 return;
@@ -2916,6 +2919,7 @@ namespace GameKari.Battle
             subRect.offsetMin = Vector2.zero;
             subRect.offsetMax = Vector2.zero;
 
+            CreateResultFormationButton();
             CreateResultReturnButton();
             ApplyResultPanelLayout();
         }
@@ -2961,8 +2965,106 @@ namespace GameKari.Battle
                     subRect.offsetMax = Vector2.zero;
                 }
             }
+
+            ApplyResultButtonLayout(_resultFormationButton, 0.08f, 0.46f);
+            ApplyResultButtonLayout(_resultReturnButton, 0.54f, 0.92f);
         }
 
+        private static void ApplyResultButtonLayout(Button button, float minX, float maxX)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            RectTransform buttonRect = button.GetComponent<RectTransform>();
+            if (buttonRect == null)
+            {
+                return;
+            }
+
+            buttonRect.anchorMin = new Vector2(minX, 0.08f);
+            buttonRect.anchorMax = new Vector2(maxX, 0.22f);
+            buttonRect.offsetMin = Vector2.zero;
+            buttonRect.offsetMax = Vector2.zero;
+        }
+
+        private void TryBindExistingResultFormationButton()
+        {
+            if (_resultPanelObject == null)
+            {
+                return;
+            }
+
+            Transform buttonTransform = _resultPanelObject.transform.Find("FormationButton");
+            if (buttonTransform == null)
+            {
+                CreateResultFormationButton();
+                return;
+            }
+
+            _resultFormationButton = buttonTransform.GetComponent<Button>();
+            _resultFormationButtonText = buttonTransform.GetComponentInChildren<TMP_Text>(true);
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.onClick.RemoveListener(HandleResultFormationClicked);
+                _resultFormationButton.onClick.AddListener(HandleResultFormationClicked);
+            }
+        }
+
+        private void CreateResultFormationButton()
+        {
+            if (_resultPanelObject == null)
+            {
+                return;
+            }
+
+            Transform existing = _resultPanelObject.transform.Find("FormationButton");
+            if (existing != null)
+            {
+                _resultFormationButton = existing.GetComponent<Button>();
+                _resultFormationButtonText = existing.GetComponentInChildren<TMP_Text>(true);
+
+                if (_resultFormationButton != null)
+                {
+                    _resultFormationButton.onClick.RemoveListener(HandleResultFormationClicked);
+                    _resultFormationButton.onClick.AddListener(HandleResultFormationClicked);
+                }
+
+                return;
+            }
+
+            GameObject buttonObject = new GameObject("FormationButton");
+            buttonObject.transform.SetParent(_resultPanelObject.transform, false);
+
+            RectTransform buttonRect = buttonObject.AddComponent<RectTransform>();
+            buttonRect.anchorMin = new Vector2(0.08f, 0.08f);
+            buttonRect.anchorMax = new Vector2(0.46f, 0.22f);
+            buttonRect.offsetMin = Vector2.zero;
+            buttonRect.offsetMax = Vector2.zero;
+
+            Image buttonImage = buttonObject.AddComponent<Image>();
+            buttonImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+
+            _resultFormationButton = buttonObject.AddComponent<Button>();
+            _resultFormationButton.onClick.AddListener(HandleResultFormationClicked);
+
+            GameObject textObject = new GameObject("Text");
+            textObject.transform.SetParent(buttonObject.transform, false);
+
+            RectTransform textRect = textObject.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            _resultFormationButtonText = textObject.AddComponent<TextMeshProUGUI>();
+            _resultFormationButtonText.alignment = TextAlignmentOptions.Center;
+            _resultFormationButtonText.fontSize = 24f;
+            _resultFormationButtonText.raycastTarget = false;
+            _resultFormationButtonText.text = "Formation";
+        }
         private void TryBindExistingResultReturnButton()
         {
             if (_resultPanelObject == null)
@@ -3013,8 +3115,8 @@ namespace GameKari.Battle
             buttonObject.transform.SetParent(_resultPanelObject.transform, false);
 
             RectTransform buttonRect = buttonObject.AddComponent<RectTransform>();
-            buttonRect.anchorMin = new Vector2(0.25f, 0.08f);
-            buttonRect.anchorMax = new Vector2(0.75f, 0.22f);
+            buttonRect.anchorMin = new Vector2(0.54f, 0.08f);
+            buttonRect.anchorMax = new Vector2(0.92f, 0.22f);
             buttonRect.offsetMin = Vector2.zero;
             buttonRect.offsetMax = Vector2.zero;
 
@@ -3040,6 +3142,27 @@ namespace GameKari.Battle
             _resultReturnButtonText.text = "Return";
         }
 
+        private void HandleResultFormationClicked()
+        {
+            Debug.Log("[Result] Formation clicked.");
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.text =
+                    "Formation / Preparation\n" +
+                    $"Party: {BuildPartyOverviewText()}\n" +
+                    "Kakera: temporary display\n" +
+                    "Item / Skill / Link check: deferred";
+            }
+        }
+
+        private string BuildPartyOverviewText()
+        {
+            int livingCount = CountLivingPartyMembers(_allies) + CountLivingPartyMembers(_reserves);
+            int totalCount = CountKnownPartyMembers(_allies) + CountKnownPartyMembers(_reserves);
+
+            return $"{livingCount}/{Mathf.Max(1, totalCount)} alive";
+        }
         private void HandleResultReturnClicked()
         {
             if (_questProgress != null && _questProgress.HasNextWave)
@@ -3203,6 +3326,16 @@ namespace GameKari.Battle
                 _resultSubText.text = BuildWaveResultSubText(result);
             }
 
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.gameObject.SetActive(true);
+            }
+
+            if (_resultFormationButtonText != null)
+            {
+                _resultFormationButtonText.text = "Formation";
+            }
+
             if (_resultReturnButton != null)
             {
                 _resultReturnButton.gameObject.SetActive(true);
@@ -3210,9 +3343,7 @@ namespace GameKari.Battle
 
             if (_resultReturnButtonText != null)
             {
-                _resultReturnButtonText.text = result.HasNextWave
-                    ? "Next Wave"
-                    : "Return to Base";
+                _resultReturnButtonText.text = "Next";
             }
         }
 
@@ -3272,7 +3403,7 @@ namespace GameKari.Battle
 
             if (_resultReturnButtonText != null)
             {
-                _resultReturnButtonText.text = "Return";
+                _resultReturnButtonText.text = "Next";
             }
         }
 
@@ -3902,6 +4033,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
