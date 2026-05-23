@@ -132,9 +132,7 @@ namespace GameKari.Battle
         private sealed class WaveClearResult
         {
             public WaveClearRank Rank;
-            public int DistanceGain;
-            public int CurrentDistance;
-            public int TargetDistance;
+
             public int PartyHealAmount;
             public int WaveNumber;
             public int TotalWaves;
@@ -2107,17 +2105,12 @@ namespace GameKari.Battle
             EnsureWaveProgress();
 
             WaveClearRank rank = EvaluateWaveClearRank();
-            int distanceGain = CalculateWaveDistanceGain(rank);
-            int currentDistance = _waveProgress.AddDistance(distanceGain);
 
             bool hasNextWave = _questProgress != null && _questProgress.HasNextWave;
 
             WaveClearResult result = new WaveClearResult
             {
                 Rank = rank,
-                DistanceGain = distanceGain,
-                CurrentDistance = currentDistance,
-                TargetDistance = _waveProgress.TargetDistance,
                 PartyHealAmount = rank == WaveClearRank.OneTurn
                     ? _oneTurnClearPartyHeal
                     : 0,
@@ -2236,21 +2229,6 @@ namespace GameKari.Battle
             }
 
             return WaveClearRank.FourPlusTurn;
-        }
-
-        private int CalculateWaveDistanceGain(WaveClearRank rank)
-        {
-            EnsureWaveProgress();
-
-            float multiplier = rank switch
-            {
-                WaveClearRank.OneTurn => 2.0f,
-                WaveClearRank.TwoTurn => 1.5f,
-                WaveClearRank.ThreeTurn => 1.2f,
-                _ => 1.0f
-            };
-
-            return Mathf.RoundToInt(_waveProgress.BaseWaveDistance * multiplier);
         }
 
         private static string FormatWaveClearRank(WaveClearRank rank)
@@ -4799,6 +4777,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
