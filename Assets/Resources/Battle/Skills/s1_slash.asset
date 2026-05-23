@@ -19,7 +19,7 @@ MonoBehaviour:
   SkillKind: 0
   MpCost: 0
   LinkPartnerCharacterId: 
-  Damage: 20
+  Damage: 100
   EffectType: 0
   EffectTarget: 0
   BuffType: 0

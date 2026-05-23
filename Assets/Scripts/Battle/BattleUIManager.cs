@@ -2077,7 +2077,7 @@ namespace GameKari.Battle
             ShowWaveResultPanel(result);
             RedrawBoard();
 
-            Debug.Log($"[Wave] Clear: {FormatWaveClearRank(result.Rank)}, Distance +{result.DistanceGain}, Progress {result.CurrentDistance}/{result.TargetDistance}.");
+            Debug.Log($"[Battle] Clear: {FormatWaveClearRank(result.Rank)}, Kakera +{CalculateKakeraGain(result.Rank)}.");
         }
 
         private WaveClearResult CreateWaveClearResult()
@@ -2197,10 +2197,9 @@ namespace GameKari.Battle
         {
             return rank switch
             {
-                WaveClearRank.OneTurn => "1Turn Clear",
-                WaveClearRank.TwoTurn => "2Turn Clear",
-                WaveClearRank.ThreeTurn => "3Turn Clear",
-                _ => "4+Turn Clear"
+                WaveClearRank.OneTurn => "1Turn Kill",
+                WaveClearRank.TwoTurn => "2Turn Kill",
+                _ => "3+ Turn"
             };
         }
 
@@ -3224,27 +3223,28 @@ namespace GameKari.Battle
                 return "";
             }
 
-            string healText = result.PartyHealAmount > 0
-                ? $"+{result.PartyHealAmount}"
-                : "-";
-
-            if (result.QuestResult != null)
-            {
-                QuestResultData quest = result.QuestResult;
-
-                return
-                    $"Clear: {FormatWaveClearRank(result.Rank)}\n" +
-                    $"Distance: +{result.DistanceGain}\n" +
-                    $"Progress: {quest.CurrentDistance}/{quest.TargetDistance}\n" +
-                    $"Party: Alive {quest.AlivePartyCount}/{quest.TotalPartyCount}, KO {quest.KnockedOutPartyCount}\n" +
-                    $"Next: Return to Base";
-            }
+            int kakeraGain = CalculateKakeraGain(result.Rank);
+            int expGain = result.HasNextWave ? 10 : 30;
+            string nextText = result.HasNextWave
+                ? "Next Battle"
+                : "Return to Base";
 
             return
                 $"Clear: {FormatWaveClearRank(result.Rank)}\n" +
-                $"Distance: +{result.DistanceGain}\n" +
-                $"Progress: {result.CurrentDistance}/{result.TargetDistance}\n" +
-                $"Party HP: {healText}";
+                $"Kakera: +{kakeraGain}\n" +
+                $"EXP: +{expGain}\n" +
+                $"Lv Up: None\n" +
+                $"Next: {nextText}";
+        }
+
+        private static int CalculateKakeraGain(WaveClearRank rank)
+        {
+            return rank switch
+            {
+                WaveClearRank.OneTurn => 3,
+                WaveClearRank.TwoTurn => 2,
+                _ => 1
+            };
         }
         private void ShowResultPanel(string result)
         {
@@ -3902,6 +3902,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

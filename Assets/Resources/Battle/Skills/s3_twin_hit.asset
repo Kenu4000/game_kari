@@ -15,11 +15,11 @@ MonoBehaviour:
   SkillId: s3
   SkillName: TwinHit
   Description: Temporary Knight link skill. Attack both front opponents with Rogue.
-  TargetPattern: 3
+  TargetPattern: 4
   SkillKind: 1
   MpCost: 2
   LinkPartnerCharacterId: rogue
-  Damage: 15
+  Damage: 100
   EffectType: 0
   EffectTarget: 0
   BuffType: 0
