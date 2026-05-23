@@ -75,12 +75,14 @@ namespace GameKari.Battle
         private bool _showingRouteEvent;
         private bool _showingRouteMovement;
         private bool _showingBattlePreparation;
+        private bool _showingQuestResult;
         private BattlePhase _phase;
         private WaveProgressState _waveProgress;
         private QuestProgressState _questProgress;
         private int _oneTurnClearPartyHeal = DefaultOneTurnClearPartyHeal;
         private int _kakeraStock;
         private int _totalKakeraEarned;
+        private int _totalExpEarned;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
@@ -260,6 +262,7 @@ namespace GameKari.Battle
             _inventoryItems.Clear();
             _kakeraStock = 0;
             _totalKakeraEarned = 0;
+            _totalExpEarned = 0;
             _scoutedWaveIndices.Clear();
             _previewEnemyActionStates.Clear();
             _turnNumbers.Clear();
@@ -2082,6 +2085,7 @@ namespace GameKari.Battle
         {
             WaveClearResult result = CreateWaveClearResult();
             ApplyKakeraReward(result);
+            ApplyExpReward(result);
             ApplyWaveClearRewards(result);
 
             _battleEnded = true;
@@ -2157,6 +2161,28 @@ namespace GameKari.Battle
             return Mathf.Max(1, _questProgress.Quest.Waves.Count);
         }
 
+        private void ApplyExpReward(WaveClearResult result)
+        {
+            if (result == null)
+            {
+                return;
+            }
+
+            int expGain = CalculateExpGain(result);
+            _totalExpEarned += Mathf.Max(0, expGain);
+
+            Debug.Log($"[EXP] Gain +{expGain}. TotalEarned={_totalExpEarned}.");
+        }
+
+        private static int CalculateExpGain(WaveClearResult result)
+        {
+            if (result == null)
+            {
+                return 0;
+            }
+
+            return result.HasNextWave ? 10 : 30;
+        }
         private void ApplyKakeraReward(WaveClearResult result)
         {
             if (result == null)
@@ -3239,6 +3265,14 @@ namespace GameKari.Battle
 
         private void HandleResultReturnClicked()
         {
+            if (_showingQuestResult)
+            {
+                Debug.Log("[Quest] Return to Base clicked.");
+                _showingQuestResult = false;
+                ReturnToBase();
+                return;
+            }
+
             if (_showingRouteEvent)
             {
                 Debug.Log("[Route] Event Next clicked.");
@@ -3265,21 +3299,129 @@ namespace GameKari.Battle
 
             Debug.Log("[Result] Next clicked.");
 
-            if (_questProgress == null || !_questProgress.HasNextRoutePoint)
+            if (_questProgress == null)
             {
                 ReturnToBase();
+                return;
+            }
+
+            if (!_questProgress.HasNextRoutePoint)
+            {
+                ShowQuestResultPanel();
                 return;
             }
 
             ShowRouteMovementPanel();
         }
 
+        private void ShowQuestResultPanel()
+        {
+            EnsureResultPanel();
+
+            _showingRouteEvent = false;
+            _showingRouteMovement = false;
+            _showingBattlePreparation = false;
+            _showingQuestResult = true;
+            _battleEnded = true;
+            _phase = BattlePhase.BattleEnded;
+
+            HideActionOverlay();
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            SetCommandUiVisible(false);
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(true);
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.text = "Quest Clear";
+            }
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.text = BuildQuestResultText();
+            }
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.gameObject.SetActive(false);
+            }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                _resultReturnButtonText.text = "Return to Base";
+            }
+
+            Debug.Log("[Quest] Quest Result shown.");
+        }
+
+        private string BuildQuestResultText()
+        {
+            int clearedBattles = CountClearedBattleRoutePoints();
+            int totalBattles = CountTotalBattleRoutePoints();
+
+            return
+                $"Battles Cleared: {clearedBattles} / {Mathf.Max(1, totalBattles)}\n" +
+                $"Kakera Earned: {_totalKakeraEarned}\n" +
+                $"EXP: {_totalExpEarned}\n" +
+                "Next: Return to Base";
+        }
+
+        private int CountTotalBattleRoutePoints()
+        {
+            if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null)
+            {
+                return GetTotalWaveCount();
+            }
+
+            int count = 0;
+            for (int i = 0; i < _questProgress.Quest.RoutePoints.Count; i++)
+            {
+                RoutePointData point = _questProgress.Quest.RoutePoints[i];
+                if (point != null && point.HasBattleData)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private int CountClearedBattleRoutePoints()
+        {
+            if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null)
+            {
+                return GetCurrentWaveNumber();
+            }
+
+            int count = 0;
+            for (int i = 0; i <= _questProgress.CurrentRoutePointIndex && i < _questProgress.Quest.RoutePoints.Count; i++)
+            {
+                RoutePointData point = _questProgress.Quest.RoutePoints[i];
+                if (point != null && point.HasBattleData)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
         private void ShowRouteMovementPanel()
         {
             EnsureResultPanel();
 
             _showingRouteMovement = true;
             _showingBattlePreparation = false;
+            _showingQuestResult = false;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3466,6 +3608,7 @@ namespace GameKari.Battle
             _showingRouteEvent = true;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
+            _showingQuestResult = false;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3720,6 +3863,7 @@ namespace GameKari.Battle
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
+            _showingQuestResult = false;
             _battleEnded = false;
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
@@ -3800,8 +3944,10 @@ namespace GameKari.Battle
             // BootstrapBattle()により、味方HP/MP/KO状態・Inventory・QuestProgressは初期状態に戻る。
             _kakeraStock = 0;
             _totalKakeraEarned = 0;
+            _totalExpEarned = 0;
+            _showingQuestResult = false;
 
-            Debug.Log("[Base] Returned to base. Party state and Kakera will be reset by restarting the default quest.");
+            Debug.Log("[Base] Returned to base. Party state, Kakera, and EXP display totals will be reset by restarting the default quest.");
 
             RestartBattle();
         }
@@ -3813,6 +3959,7 @@ namespace GameKari.Battle
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
+            _showingQuestResult = false;
 
             HideResultPanel();
             HideActionOverlay();
@@ -4574,6 +4721,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
