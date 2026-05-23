@@ -71,6 +71,7 @@ namespace GameKari.Battle
         private readonly List<TMP_Text> _activeActionValuePopupLabels = new();
 
         private bool _battleEnded;
+        private bool _showingRouteEvent;
         private BattlePhase _phase;
         private WaveProgressState _waveProgress;
         private QuestProgressState _questProgress;
@@ -3186,18 +3187,196 @@ namespace GameKari.Battle
         }
         private void HandleResultReturnClicked()
         {
-            if (_questProgress != null && _questProgress.HasNextWave)
+            if (_showingRouteEvent)
             {
-                Debug.Log("[Result] Next Wave clicked.");
-                StartNextWave();
+                Debug.Log("[Route] Event Next clicked.");
+                _showingRouteEvent = false;
+                ContinueRouteAdvance();
                 return;
             }
 
-            Debug.Log("[Result] Return to Base clicked.");
+            Debug.Log("[Result] Next clicked.");
+
+            ContinueRouteAdvance();
+        }
+
+        private void ContinueRouteAdvance()
+        {
+            if (_questProgress == null)
+            {
+                ReturnToBase();
+                return;
+            }
+
+            if (!_questProgress.HasNextRoutePoint)
+            {
+                ReturnToBase();
+                return;
+            }
+
+            while (_questProgress.MoveNextRoutePoint())
+            {
+                RoutePointData point = _questProgress.CurrentRoutePoint;
+                if (point == null)
+                {
+                    continue;
+                }
+
+                if (point.PointType == RoutePointType.Normal || point.PointType == RoutePointType.Start)
+                {
+                    Debug.Log($"[Route] Passed point: {point.DisplayName} ({point.PointType}).");
+                    continue;
+                }
+
+                if (point.PointType == RoutePointType.Event)
+                {
+                    ShowRouteEventPanel(point);
+                    return;
+                }
+
+                if (point.HasBattleData)
+                {
+                    StartBattleAtCurrentRoutePoint();
+                    return;
+                }
+            }
 
             ReturnToBase();
         }
 
+        private void ShowRouteEventPanel(RoutePointData point)
+        {
+            EnsureResultPanel();
+
+            _showingRouteEvent = true;
+            _battleEnded = true;
+            _phase = BattlePhase.BattleEnded;
+
+            HideActionOverlay();
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            SetCommandUiVisible(false);
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(true);
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.text = "Event";
+            }
+
+            string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
+                ? "Route Event"
+                : point.DisplayName;
+
+            string eventText = point == null || string.IsNullOrEmpty(point.EventText)
+                ? "An event occurs on the route."
+                : point.EventText;
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.text =
+                    $"{displayName}\n" +
+                    $"{eventText}\n" +
+                    "Next: Continue";
+            }
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.gameObject.SetActive(false);
+            }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                _resultReturnButtonText.text = "Next";
+            }
+
+            Debug.Log($"[Route] Event shown: {displayName}");
+        }
+
+        private void StartBattleAtCurrentRoutePoint()
+        {
+            if (_questProgress == null)
+            {
+                ReturnToBase();
+                return;
+            }
+
+            RoutePointData point = _questProgress.CurrentBattleRoutePoint;
+            if (point == null)
+            {
+                ReturnToBase();
+                return;
+            }
+
+            StopAllCoroutines();
+
+            HideResultPanel();
+            HideActionOverlay();
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            ClearPendingActionFlashTargets();
+            ClearPendingActionValuePopups();
+
+            _showingRouteEvent = false;
+            _battleEnded = false;
+            _phase = BattlePhase.CommandSelect;
+            _formationSettling = false;
+            _hoveredSkill = null;
+
+            ReplaceEnemyWave(_questProgress.CurrentWave);
+
+            _actedUnits.Clear();
+            _turnNumbers.Clear();
+            _previewEnemyActionStates.Clear();
+
+            EnsureWaveProgress();
+
+            int baseWaveDistance = _questProgress.CurrentWave == null
+                ? DefaultBaseWaveDistance
+                : _questProgress.CurrentWave.BaseDistance;
+
+            _waveProgress.StartWave(baseWaveDistance);
+            RecoverAllAllyMP();
+
+            RebuildTurnOrder();
+
+            BattleUnit nextAlly = FindNextUnactedAlly();
+            if (nextAlly != null)
+            {
+                EnterCommandSelect(nextAlly);
+            }
+            else
+            {
+                CheckBattleEnd();
+            }
+
+            if (commandPanel != null)
+            {
+                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
+                commandPanel.SetInteractable(true);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.gameObject.SetActive(true);
+                rotateButton.interactable = true;
+            }
+
+            SetCommandUiVisible(true);
+            RedrawBoard();
+
+            Debug.Log($"[Route] Started battle point: {point.DisplayName} ({point.PointType}), WaveIndex={_questProgress.CurrentWaveIndex}.");
+        }
         private void StartNextWave()
         {
             if (_questProgress == null || !_questProgress.MoveNextWave())
@@ -3303,6 +3482,8 @@ namespace GameKari.Battle
         private void RestartBattle()
         {
             StopAllCoroutines();
+
+            _showingRouteEvent = false;
 
             HideResultPanel();
             HideActionOverlay();
@@ -4055,6 +4236,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
