@@ -73,6 +73,7 @@ namespace GameKari.Battle
         private bool _battleEnded;
         private bool _showingRouteEvent;
         private bool _showingRouteMovement;
+        private bool _showingBattlePreparation;
         private BattlePhase _phase;
         private WaveProgressState _waveProgress;
         private QuestProgressState _questProgress;
@@ -3212,6 +3213,14 @@ namespace GameKari.Battle
                 return;
             }
 
+            if (_showingBattlePreparation)
+            {
+                Debug.Log("[Preparation] Start Battle clicked.");
+                _showingBattlePreparation = false;
+                StartBattleAtCurrentRoutePoint();
+                return;
+            }
+
             Debug.Log("[Result] Next clicked.");
 
             if (_questProgress == null || !_questProgress.HasNextRoutePoint)
@@ -3228,6 +3237,7 @@ namespace GameKari.Battle
             EnsureResultPanel();
 
             _showingRouteMovement = true;
+            _showingBattlePreparation = false;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3399,7 +3409,7 @@ namespace GameKari.Battle
 
                 if (point.HasBattleData)
                 {
-                    StartBattleAtCurrentRoutePoint();
+                    ShowBattlePreparationPanel(point);
                     return;
                 }
             }
@@ -3413,6 +3423,7 @@ namespace GameKari.Battle
 
             _showingRouteEvent = true;
             _showingRouteMovement = false;
+            _showingBattlePreparation = false;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3466,6 +3477,84 @@ namespace GameKari.Battle
             Debug.Log($"[Route] Event shown: {displayName}");
         }
 
+        private void ShowBattlePreparationPanel(RoutePointData point)
+        {
+            EnsureResultPanel();
+
+            _showingRouteEvent = false;
+            _showingRouteMovement = false;
+            _showingBattlePreparation = true;
+            _battleEnded = true;
+            _phase = BattlePhase.BattleEnded;
+
+            HideActionOverlay();
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            SetCommandUiVisible(false);
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(true);
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.text = point != null && point.PointType == RoutePointType.Boss
+                    ? "Boss Preparation"
+                    : "Battle Preparation";
+            }
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.text = BuildBattlePreparationText(point);
+            }
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.gameObject.SetActive(false);
+            }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                _resultReturnButtonText.text = "Start Battle";
+            }
+
+            string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
+                ? "Battle Point"
+                : point.DisplayName;
+
+            Debug.Log($"[Preparation] Shown for {displayName}.");
+        }
+
+        private string BuildBattlePreparationText(RoutePointData point)
+        {
+            string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
+                ? "Battle Point"
+                : point.DisplayName;
+
+            return
+                $"{displayName}\n" +
+                $"Party: {BuildPartyOverviewText()}\n" +
+                $"Kakera: {_kakeraStock}/{MaxKakeraStock}\n" +
+                $"Enemy Info: {BuildEnemyScoutStateText(point)}\n" +
+                "Next: Start Battle";
+        }
+
+        private static string BuildEnemyScoutStateText(RoutePointData point)
+        {
+            if (point == null || !point.HasBattleData)
+            {
+                return "Unavailable";
+            }
+
+            return "Unscouted";
+        }
         private void StartBattleAtCurrentRoutePoint()
         {
             if (_questProgress == null)
@@ -3493,6 +3582,7 @@ namespace GameKari.Battle
 
             _showingRouteEvent = false;
             _showingRouteMovement = false;
+            _showingBattlePreparation = false;
             _battleEnded = false;
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
@@ -3585,6 +3675,7 @@ namespace GameKari.Battle
 
             _showingRouteEvent = false;
             _showingRouteMovement = false;
+            _showingBattlePreparation = false;
 
             HideResultPanel();
             HideActionOverlay();
@@ -4341,6 +4432,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
