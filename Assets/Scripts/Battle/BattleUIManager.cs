@@ -69,6 +69,7 @@ namespace GameKari.Battle
         private bool _pendingActionSourceFlashIsAllyBoard;
         private readonly List<ActionValuePopup> _pendingActionValuePopups = new();
         private readonly List<TMP_Text> _activeActionValuePopupLabels = new();
+        private readonly HashSet<int> _scoutedWaveIndices = new();
 
         private bool _battleEnded;
         private bool _showingRouteEvent;
@@ -259,6 +260,7 @@ namespace GameKari.Battle
             _inventoryItems.Clear();
             _kakeraStock = 0;
             _totalKakeraEarned = 0;
+            _scoutedWaveIndices.Clear();
             _previewEnemyActionStates.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
@@ -3175,6 +3177,12 @@ namespace GameKari.Battle
 
         private void HandleResultFormationClicked()
         {
+            if (_showingBattlePreparation)
+            {
+                HandlePreparationScoutClicked();
+                return;
+            }
+
             Debug.Log("[Result] Formation clicked.");
 
             if (_resultSubText != null)
@@ -3185,6 +3193,40 @@ namespace GameKari.Battle
                     $"Kakera: {_kakeraStock}/{MaxKakeraStock}\n" +
                     "Item / Skill / Link check: deferred";
             }
+        }
+
+        private void HandlePreparationScoutClicked()
+        {
+            if (_questProgress == null)
+            {
+                return;
+            }
+
+            RoutePointData point = _questProgress.CurrentBattleRoutePoint;
+            if (point == null || !point.HasBattleData)
+            {
+                return;
+            }
+
+            if (IsRoutePointScouted(point))
+            {
+                RefreshBattlePreparationPanel(point);
+                return;
+            }
+
+            if (_kakeraStock <= 0)
+            {
+                Debug.Log("[Preparation] Scout failed. Kakera is empty.");
+                RefreshBattlePreparationPanel(point);
+                return;
+            }
+
+            _kakeraStock = Mathf.Max(0, _kakeraStock - 1);
+            _scoutedWaveIndices.Add(point.WaveIndex);
+
+            Debug.Log($"[Preparation] Scouted {point.DisplayName}. Kakera={_kakeraStock}/{MaxKakeraStock}.");
+
+            RefreshBattlePreparationPanel(point);
         }
 
         private string BuildPartyOverviewText()
@@ -3510,20 +3552,7 @@ namespace GameKari.Battle
                 _resultSubText.text = BuildBattlePreparationText(point);
             }
 
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.gameObject.SetActive(false);
-            }
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.gameObject.SetActive(true);
-            }
-
-            if (_resultReturnButtonText != null)
-            {
-                _resultReturnButtonText.text = "Start Battle";
-            }
+            RefreshBattlePreparationButtons(point);
 
             string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
                 ? "Battle Point"
@@ -3546,14 +3575,122 @@ namespace GameKari.Battle
                 "Next: Start Battle";
         }
 
-        private static string BuildEnemyScoutStateText(RoutePointData point)
+        private string BuildEnemyScoutStateText(RoutePointData point)
         {
             if (point == null || !point.HasBattleData)
             {
                 return "Unavailable";
             }
 
-            return "Unscouted";
+            if (!IsRoutePointScouted(point))
+            {
+                return "Unscouted";
+            }
+
+            WaveData wave = GetWaveDataForRoutePoint(point);
+            if (wave == null)
+            {
+                return "Scouted\nEnemies: unknown\nRoles: deferred";
+            }
+
+            int activeCount = wave.EnemyPlacements == null ? 0 : wave.EnemyPlacements.Count;
+            int reserveCount = wave.EnemyReserves == null ? 0 : wave.EnemyReserves.Count;
+
+            return
+                "Scouted\n" +
+                $"Enemies: {activeCount} active, {reserveCount} reserve\n" +
+                $"Formation: {BuildEnemyPlacementSummary(wave)}\n" +
+                "Roles: deferred";
+        }
+
+        private void RefreshBattlePreparationPanel(RoutePointData point)
+        {
+            if (_resultSubText != null)
+            {
+                _resultSubText.text = BuildBattlePreparationText(point);
+            }
+
+            RefreshBattlePreparationButtons(point);
+        }
+
+        private void RefreshBattlePreparationButtons(RoutePointData point)
+        {
+            bool canScout = point != null
+                && point.HasBattleData
+                && !IsRoutePointScouted(point)
+                && _kakeraStock > 0;
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.gameObject.SetActive(canScout);
+                _resultFormationButton.interactable = canScout;
+            }
+
+            if (_resultFormationButtonText != null)
+            {
+                _resultFormationButtonText.text = "Scout -1";
+            }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                _resultReturnButtonText.text = "Start Battle";
+            }
+        }
+
+        private bool IsRoutePointScouted(RoutePointData point)
+        {
+            return point != null
+                && point.WaveIndex >= 0
+                && _scoutedWaveIndices.Contains(point.WaveIndex);
+        }
+
+        private WaveData GetWaveDataForRoutePoint(RoutePointData point)
+        {
+            if (_questProgress == null || _questProgress.Quest == null || point == null)
+            {
+                return null;
+            }
+
+            if (point.WaveIndex < 0 || point.WaveIndex >= _questProgress.Quest.Waves.Count)
+            {
+                return null;
+            }
+
+            return _questProgress.Quest.Waves[point.WaveIndex];
+        }
+
+        private static string BuildEnemyPlacementSummary(WaveData wave)
+        {
+            if (wave == null || wave.EnemyPlacements == null || wave.EnemyPlacements.Count == 0)
+            {
+                return "none";
+            }
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+
+            for (int i = 0; i < wave.EnemyPlacements.Count; i++)
+            {
+                BattleUnitPlacement placement = wave.EnemyPlacements[i];
+                if (i > 0)
+                {
+                    builder.Append(", ");
+                }
+
+                string unitName = placement.Unit == null
+                    ? "Unknown"
+                    : placement.Unit.Name;
+
+                builder.Append(placement.Position);
+                builder.Append(": ");
+                builder.Append(unitName);
+            }
+
+            return builder.ToString();
         }
         private void StartBattleAtCurrentRoutePoint()
         {
@@ -3729,6 +3866,11 @@ namespace GameKari.Battle
             if (_resultFormationButtonText != null)
             {
                 _resultFormationButtonText.text = "Formation";
+            }
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.interactable = true;
             }
 
             if (_resultReturnButton != null)
@@ -4432,6 +4574,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
