@@ -72,6 +72,7 @@ namespace GameKari.Battle
 
         private bool _battleEnded;
         private bool _showingRouteEvent;
+        private bool _showingRouteMovement;
         private BattlePhase _phase;
         private WaveProgressState _waveProgress;
         private QuestProgressState _questProgress;
@@ -3203,11 +3204,165 @@ namespace GameKari.Battle
                 return;
             }
 
+            if (_showingRouteMovement)
+            {
+                Debug.Log("[Route] Movement Next clicked.");
+                _showingRouteMovement = false;
+                ContinueRouteAdvance();
+                return;
+            }
+
             Debug.Log("[Result] Next clicked.");
 
-            ContinueRouteAdvance();
+            if (_questProgress == null || !_questProgress.HasNextRoutePoint)
+            {
+                ReturnToBase();
+                return;
+            }
+
+            ShowRouteMovementPanel();
         }
 
+        private void ShowRouteMovementPanel()
+        {
+            EnsureResultPanel();
+
+            _showingRouteMovement = true;
+            _battleEnded = true;
+            _phase = BattlePhase.BattleEnded;
+
+            HideActionOverlay();
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            SetCommandUiVisible(false);
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(true);
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.text = "Movement";
+            }
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.text =
+                    $"{GetQuestRouteTitleText()}\n" +
+                    $"{BuildRouteBarText()}\n" +
+                    $"{GetNextImportantRoutePointText()}\n" +
+                    "Next: Move";
+            }
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.gameObject.SetActive(false);
+            }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                _resultReturnButtonText.text = "Next";
+            }
+
+            Debug.Log("[Route] Movement panel shown.");
+        }
+
+        private string GetQuestRouteTitleText()
+        {
+            if (_questProgress == null || _questProgress.Quest == null)
+            {
+                return "Quest Route";
+            }
+
+            return string.IsNullOrEmpty(_questProgress.Quest.QuestName)
+                ? "Quest Route"
+                : _questProgress.Quest.QuestName;
+        }
+
+        private string BuildRouteBarText()
+        {
+            if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints.Count == 0)
+            {
+                return "Route: unavailable";
+            }
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+
+            for (int i = 0; i < _questProgress.Quest.RoutePoints.Count; i++)
+            {
+                RoutePointData point = _questProgress.Quest.RoutePoints[i];
+                if (i > 0)
+                {
+                    builder.Append(" - ");
+                }
+
+                if (i == _questProgress.CurrentRoutePointIndex)
+                {
+                    builder.Append("[TRUCK]");
+                    continue;
+                }
+
+                builder.Append(GetRoutePointSymbol(point));
+            }
+
+            return builder.ToString();
+        }
+
+        private static string GetRoutePointSymbol(RoutePointData point)
+        {
+            if (point == null)
+            {
+                return "?";
+            }
+
+            return point.PointType switch
+            {
+                RoutePointType.Start => "S",
+                RoutePointType.Normal => "O",
+                RoutePointType.Battle => "B",
+                RoutePointType.Event => "E",
+                RoutePointType.Boss => "Boss",
+                _ => "?"
+            };
+        }
+
+        private string GetNextImportantRoutePointText()
+        {
+            if (_questProgress == null || _questProgress.Quest == null)
+            {
+                return "Next: unknown";
+            }
+
+            for (int i = _questProgress.CurrentRoutePointIndex + 1; i < _questProgress.Quest.RoutePoints.Count; i++)
+            {
+                RoutePointData point = _questProgress.Quest.RoutePoints[i];
+                if (point == null)
+                {
+                    continue;
+                }
+
+                if (point.PointType == RoutePointType.Normal || point.PointType == RoutePointType.Start)
+                {
+                    continue;
+                }
+
+                string displayName = string.IsNullOrEmpty(point.DisplayName)
+                    ? point.PointType.ToString()
+                    : point.DisplayName;
+
+                int distance = Mathf.Max(1, i - _questProgress.CurrentRoutePointIndex);
+                return $"Next Point: {displayName} ({point.PointType}) / {distance} segment(s)";
+            }
+
+            return "Next Point: Base Return";
+        }
         private void ContinueRouteAdvance()
         {
             if (_questProgress == null)
@@ -3257,6 +3412,7 @@ namespace GameKari.Battle
             EnsureResultPanel();
 
             _showingRouteEvent = true;
+            _showingRouteMovement = false;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3336,6 +3492,7 @@ namespace GameKari.Battle
             ClearPendingActionValuePopups();
 
             _showingRouteEvent = false;
+            _showingRouteMovement = false;
             _battleEnded = false;
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
@@ -3427,6 +3584,7 @@ namespace GameKari.Battle
             StopAllCoroutines();
 
             _showingRouteEvent = false;
+            _showingRouteMovement = false;
 
             HideResultPanel();
             HideActionOverlay();
@@ -4183,6 +4341,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
