@@ -76,6 +76,7 @@ namespace GameKari.Battle
         private bool _showingRouteMovement;
         private bool _showingBattlePreparation;
         private bool _showingQuestResult;
+        private bool _showingQuestFailed;
         private BattlePhase _phase;
         private WaveProgressState _waveProgress;
         private QuestProgressState _questProgress;
@@ -2077,7 +2078,7 @@ namespace GameKari.Battle
 
             if (!HasAliveActiveAllies() && !HasAliveAllyReserves())
             {
-                EndBattle("Defeat");
+                ShowQuestFailedPanel();
             }
         }
 
@@ -3265,6 +3266,14 @@ namespace GameKari.Battle
 
         private void HandleResultReturnClicked()
         {
+            if (_showingQuestFailed)
+            {
+                Debug.Log("[Quest] Failed return to Base clicked.");
+                _showingQuestFailed = false;
+                ReturnToBase();
+                return;
+            }
+
             if (_showingQuestResult)
             {
                 Debug.Log("[Quest] Return to Base clicked.");
@@ -3314,6 +3323,70 @@ namespace GameKari.Battle
             ShowRouteMovementPanel();
         }
 
+        private void ShowQuestFailedPanel()
+        {
+            EnsureResultPanel();
+
+            _showingRouteEvent = false;
+            _showingRouteMovement = false;
+            _showingBattlePreparation = false;
+            _showingQuestResult = false;
+            _showingQuestFailed = true;
+            _battleEnded = true;
+            _phase = BattlePhase.BattleEnded;
+
+            ClearTargetPreview();
+            ResetEnemyActionPreviewHighlights();
+            SetEnemyActionPreviewVisible(false);
+            SetCommandUiVisible(false);
+            HideActionOverlay();
+
+            if (_resultPanelObject != null)
+            {
+                _resultPanelObject.SetActive(true);
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.text = "Quest Failed";
+            }
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.text = BuildQuestFailedText();
+            }
+
+            if (_resultFormationButton != null)
+            {
+                _resultFormationButton.gameObject.SetActive(false);
+            }
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.gameObject.SetActive(true);
+            }
+
+            if (_resultReturnButtonText != null)
+            {
+                _resultReturnButtonText.text = "Return to Base";
+            }
+
+            RedrawBoard();
+
+            Debug.Log("[Quest] Quest Failed shown.");
+        }
+
+        private string BuildQuestFailedText()
+        {
+            int clearedBattles = CountClearedBattleRoutePoints();
+            int totalBattles = CountTotalBattleRoutePoints();
+
+            return
+                $"Battles Cleared: {clearedBattles} / {Mathf.Max(1, totalBattles)}\n" +
+                $"Kakera Earned: {_totalKakeraEarned}\n" +
+                $"EXP: {_totalExpEarned}\n" +
+                "Next: Return to Base";
+        }
         private void ShowQuestResultPanel()
         {
             EnsureResultPanel();
@@ -3422,6 +3495,7 @@ namespace GameKari.Battle
             _showingRouteMovement = true;
             _showingBattlePreparation = false;
             _showingQuestResult = false;
+            _showingQuestFailed = false;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3609,6 +3683,7 @@ namespace GameKari.Battle
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
             _showingQuestResult = false;
+            _showingQuestFailed = false;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3864,6 +3939,7 @@ namespace GameKari.Battle
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
             _showingQuestResult = false;
+            _showingQuestFailed = false;
             _battleEnded = false;
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
@@ -3946,6 +4022,7 @@ namespace GameKari.Battle
             _totalKakeraEarned = 0;
             _totalExpEarned = 0;
             _showingQuestResult = false;
+            _showingQuestFailed = false;
 
             Debug.Log("[Base] Returned to base. Party state, Kakera, and EXP display totals will be reset by restarting the default quest.");
 
@@ -3960,6 +4037,7 @@ namespace GameKari.Battle
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
             _showingQuestResult = false;
+            _showingQuestFailed = false;
 
             HideResultPanel();
             HideActionOverlay();
@@ -4721,6 +4799,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
