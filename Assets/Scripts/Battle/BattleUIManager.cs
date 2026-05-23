@@ -75,6 +75,8 @@ namespace GameKari.Battle
         private WaveProgressState _waveProgress;
         private QuestProgressState _questProgress;
         private int _oneTurnClearPartyHeal = DefaultOneTurnClearPartyHeal;
+        private int _kakeraStock;
+        private int _totalKakeraEarned;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
@@ -111,6 +113,7 @@ namespace GameKari.Battle
         private const int DefaultTargetDistance = 100;
         private const int DefaultBaseWaveDistance = 20;
         private const int DefaultOneTurnClearPartyHeal = 5;
+        private const int MaxKakeraStock = 9;
 
         private sealed class ActionValuePopup
         {
@@ -250,6 +253,8 @@ namespace GameKari.Battle
             _partyMembers.Clear();
             _enemyReserves.Clear();
             _inventoryItems.Clear();
+            _kakeraStock = 0;
+            _totalKakeraEarned = 0;
             _previewEnemyActionStates.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
@@ -2067,6 +2072,7 @@ namespace GameKari.Battle
         private void EndWaveClear()
         {
             WaveClearResult result = CreateWaveClearResult();
+            ApplyKakeraReward(result);
             ApplyWaveClearRewards(result);
 
             _battleEnded = true;
@@ -2142,6 +2148,21 @@ namespace GameKari.Battle
             return Mathf.Max(1, _questProgress.Quest.Waves.Count);
         }
 
+        private void ApplyKakeraReward(WaveClearResult result)
+        {
+            if (result == null)
+            {
+                return;
+            }
+
+            int gain = CalculateKakeraGain(result.Rank);
+            int before = _kakeraStock;
+
+            _kakeraStock = Mathf.Clamp(_kakeraStock + gain, 0, MaxKakeraStock);
+            _totalKakeraEarned += Mathf.Max(0, gain);
+
+            Debug.Log($"[Kakera] Gain +{gain}. Stock {before}->{_kakeraStock}/{MaxKakeraStock}, TotalEarned={_totalKakeraEarned}.");
+        }
         private void ApplyWaveClearRewards(WaveClearResult result)
         {
             if (result == null || result.PartyHealAmount <= 0)
@@ -2153,7 +2174,7 @@ namespace GameKari.Battle
             int changedCount = HealLivingPartyMembers(_allies, result.PartyHealAmount)
                 + HealLivingPartyMembers(_reserves, result.PartyHealAmount);
 
-            Debug.Log($"[Wave] Party HP reward applied. Eligible={eligibleCount}, Changed={changedCount}, Amount=+{result.PartyHealAmount}.");
+            Debug.Log($"[Battle] 1Turn Kill HP bonus applied. Eligible={eligibleCount}, Changed={changedCount}, Amount=+{result.PartyHealAmount}.");
         }
 
         private WaveClearRank EvaluateWaveClearRank()
@@ -2228,11 +2249,11 @@ namespace GameKari.Battle
                 if (unit.CurrentHP != beforeHp)
                 {
                     changedCount++;
-                    Debug.Log($"[Wave] {unit.Name} recovered HP {beforeHp}->{unit.CurrentHP}/{unit.Data.MaxHP}.");
+                    Debug.Log($"[Battle] {unit.Name} recovered HP {beforeHp}->{unit.CurrentHP}/{unit.Data.MaxHP}.");
                 }
                 else
                 {
-                    Debug.Log($"[Wave] {unit.Name} was eligible for HP reward but stayed at {unit.CurrentHP}/{unit.Data.MaxHP}.");
+                    Debug.Log($"[Battle] {unit.Name} was eligible for HP reward but stayed at {unit.CurrentHP}/{unit.Data.MaxHP}.");
                 }
             }
 
@@ -3151,7 +3172,7 @@ namespace GameKari.Battle
                 _resultSubText.text =
                     "Formation / Preparation\n" +
                     $"Party: {BuildPartyOverviewText()}\n" +
-                    "Kakera: temporary display\n" +
+                    $"Kakera: {_kakeraStock}/{MaxKakeraStock}\n" +
                     "Item / Skill / Link check: deferred";
             }
         }
@@ -3272,7 +3293,10 @@ namespace GameKari.Battle
         {
             // 現時点では拠点画面がないため、拠点帰還処理の仮実装としてBattleを再初期化する。
             // BootstrapBattle()により、味方HP/MP/KO状態・Inventory・QuestProgressは初期状態に戻る。
-            Debug.Log("[Base] Returned to base. Party state will be reset by restarting the default quest.");
+            _kakeraStock = 0;
+            _totalKakeraEarned = 0;
+
+            Debug.Log("[Base] Returned to base. Party state and Kakera will be reset by restarting the default quest.");
 
             RestartBattle();
         }
@@ -3314,11 +3338,9 @@ namespace GameKari.Battle
 
             if (_resultTitleText != null)
             {
-                string resultTitle = result.HasNextWave
-                    ? "Wave Clear"
-                    : "Quest Clear";
-
-                _resultTitleText.text = $"{resultTitle} ({result.WaveNumber}/{result.TotalWaves})";
+                _resultTitleText.text = result.HasNextWave
+                    ? "Battle Clear"
+                    : "Boss Clear";
             }
 
             if (_resultSubText != null)
@@ -3347,7 +3369,7 @@ namespace GameKari.Battle
             }
         }
 
-        private static string BuildWaveResultSubText(WaveClearResult result)
+        private string BuildWaveResultSubText(WaveClearResult result)
         {
             if (result == null)
             {
@@ -3362,7 +3384,7 @@ namespace GameKari.Battle
 
             return
                 $"Clear: {FormatWaveClearRank(result.Rank)}\n" +
-                $"Kakera: +{kakeraGain}\n" +
+                $"Kakera: +{kakeraGain}  Stock: {_kakeraStock}/{MaxKakeraStock}\n" +
                 $"EXP: +{expGain}\n" +
                 $"Lv Up: None\n" +
                 $"Next: {nextText}";
@@ -4033,6 +4055,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
