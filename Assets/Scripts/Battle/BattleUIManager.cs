@@ -135,6 +135,7 @@ namespace GameKari.Battle
             public bool HasNextWave;
             public QuestResultData QuestResult;
         }
+
         private enum BattlePhase
         {
             CommandSelect,
@@ -533,6 +534,7 @@ namespace GameKari.Battle
 
             return targets;
         }
+
         private void ConsumeSkillMP(BattleUnit user, SkillData skill, BattleUnit linkPartner = null)
         {
             if (user == null || skill == null)
@@ -773,6 +775,7 @@ namespace GameKari.Battle
         {
             return FindBuff(unit, type) != null;
         }
+
         private void ApplyBuff(BattleUnit unit, BuffType type, int turns)
         {
             if (unit == null || unit.IsDead || turns <= 0)
@@ -1807,6 +1810,7 @@ namespace GameKari.Battle
             RedrawBoard();
             AdvanceToNextActor();
         }
+
         private void MarkActiveAsActed()
         {
             if (_active == null || _battleEnded)
@@ -2164,6 +2168,7 @@ namespace GameKari.Battle
 
             Debug.Log($"[Kakera] Gain +{gain}. Stock {before}->{_kakeraStock}/{MaxKakeraStock}, TotalEarned={_totalKakeraEarned}.");
         }
+
         private void ApplyWaveClearRewards(WaveClearResult result)
         {
             if (result == null || result.PartyHealAmount <= 0)
@@ -2348,6 +2353,7 @@ namespace GameKari.Battle
 
             return count;
         }
+
         private void EndBattle(string result)
         {
             _battleEnded = true;
@@ -3087,6 +3093,7 @@ namespace GameKari.Battle
             _resultFormationButtonText.raycastTarget = false;
             _resultFormationButtonText.text = "Formation";
         }
+
         private void TryBindExistingResultReturnButton()
         {
             if (_resultPanelObject == null)
@@ -3185,6 +3192,7 @@ namespace GameKari.Battle
 
             return $"{livingCount}/{Mathf.Max(1, totalCount)} alive";
         }
+
         private void HandleResultReturnClicked()
         {
             if (_showingRouteEvent)
@@ -3377,73 +3385,6 @@ namespace GameKari.Battle
 
             Debug.Log($"[Route] Started battle point: {point.DisplayName} ({point.PointType}), WaveIndex={_questProgress.CurrentWaveIndex}.");
         }
-        private void StartNextWave()
-        {
-            if (_questProgress == null || !_questProgress.MoveNextWave())
-            {
-                RestartBattle();
-                return;
-            }
-
-            StopAllCoroutines();
-
-            HideResultPanel();
-            HideActionOverlay();
-            ClearTargetPreview();
-            ResetEnemyActionPreviewHighlights();
-            SetEnemyActionPreviewVisible(false);
-            ClearPendingActionFlashTargets();
-            ClearPendingActionValuePopups();
-
-            _battleEnded = false;
-            _phase = BattlePhase.CommandSelect;
-            _formationSettling = false;
-            _hoveredSkill = null;
-
-            ReplaceEnemyWave(_questProgress.CurrentWave);
-
-            _actedUnits.Clear();
-            _turnNumbers.Clear();
-            _previewEnemyActionStates.Clear();
-
-            EnsureWaveProgress();
-
-            int baseWaveDistance = _questProgress.CurrentWave == null
-                ? DefaultBaseWaveDistance
-                : _questProgress.CurrentWave.BaseDistance;
-
-            _waveProgress.StartWave(baseWaveDistance);
-            RecoverAllAllyMP();
-
-            RebuildTurnOrder();
-
-            BattleUnit nextAlly = FindNextUnactedAlly();
-            if (nextAlly != null)
-            {
-                EnterCommandSelect(nextAlly);
-            }
-            else
-            {
-                CheckBattleEnd();
-            }
-
-            if (commandPanel != null)
-            {
-                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
-                commandPanel.SetInteractable(true);
-            }
-
-            if (rotateButton != null)
-            {
-                rotateButton.gameObject.SetActive(true);
-                rotateButton.interactable = true;
-            }
-
-            SetCommandUiVisible(true);
-            RedrawBoard();
-
-            Debug.Log($"[Wave] Started next wave: {GetCurrentWaveNumber()}/{GetTotalWaveCount()}.");
-        }
 
         private void ReplaceEnemyWave(WaveData wave)
         {
@@ -3468,6 +3409,7 @@ namespace GameKari.Battle
             _enemies.Clear();
             _enemyReserves.Clear();
         }
+
         private void ReturnToBase()
         {
             // 現時点では拠点画面がないため、拠点帰還処理の仮実装としてBattleを再初期化する。
@@ -3479,6 +3421,7 @@ namespace GameKari.Battle
 
             RestartBattle();
         }
+
         private void RestartBattle()
         {
             StopAllCoroutines();
@@ -3580,6 +3523,7 @@ namespace GameKari.Battle
                 _ => 1
             };
         }
+
         private void ShowResultPanel(string result)
         {
             EnsureResultPanel();
@@ -3862,6 +3806,7 @@ namespace GameKari.Battle
                 ? new Color(1f, 1f, 1f, 0.45f)
                 : Color.white;
         }
+
         private static void SetCellImageColor(TMP_Text cellLabel, Color color)
         {
             if (cellLabel == null || cellLabel.transform.parent == null)
@@ -3905,6 +3850,7 @@ namespace GameKari.Battle
 
             enemyStatusPanel.gameObject.SetActive(visibleEnemyCount > 0);
         }
+
         private void LayoutEnemyStatusSlots(int visibleEnemyCount)
         {
             if (enemyStatusPanel == null)
@@ -3953,6 +3899,7 @@ namespace GameKari.Battle
                 rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
             }
         }
+
         private void RedrawEnemyStatusSlot(int slotNumber, BattleUnit unit)
         {
             Transform slot = enemyStatusPanel == null
@@ -4236,6 +4183,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
