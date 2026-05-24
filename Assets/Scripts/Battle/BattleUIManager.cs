@@ -3615,58 +3615,44 @@ namespace GameKari.Battle
 
         private void ContinueRouteAdvance()
         {
-            if (_questProgress == null)
-            {
-                Debug.Log("[Route] Advance requested, but quest progress is null. Showing Quest Result.");
-                ShowQuestResultPanel();
-                return;
-            }
-
-            int routeCount = _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null
+            int routeCount = _questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null
                 ? 0
                 : _questProgress.Quest.RoutePoints.Count;
+            bool hasNext = _questProgress != null && _questProgress.HasNextRoutePoint;
+            int currentIndex = _questProgress == null ? -1 : _questProgress.CurrentRoutePointIndex;
 
-            Debug.Log($"[Route] Advance start. CurrentIndex={_questProgress.CurrentRoutePointIndex}, RouteCount={routeCount}, HasNext={_questProgress.HasNextRoutePoint}.");
+            Debug.Log($"[Route] Advance start. CurrentIndex={currentIndex}, RouteCount={routeCount}, HasNext={hasNext}.");
 
-            if (!_questProgress.HasNextRoutePoint)
+            RouteAdvanceResult result = RouteAdvanceResolver.Advance(_questProgress);
+            if (result != null)
             {
-                Debug.Log("[Route] No next route point. Showing Quest Result instead of returning to Base.");
+                for (int i = 0; i < result.Logs.Count; i++)
+                {
+                    Debug.Log(result.Logs[i]);
+                }
+            }
+
+            if (result == null)
+            {
                 ShowQuestResultPanel();
                 return;
             }
 
-            while (_questProgress.MoveNextRoutePoint())
+            switch (result.DestinationType)
             {
-                RoutePointData point = _questProgress.CurrentRoutePoint;
-                if (point == null)
-                {
-                    Debug.Log($"[Route] Passed null route point. CurrentIndex={_questProgress.CurrentRoutePointIndex}.");
-                    continue;
-                }
-
-                Debug.Log($"[Route] Arrived point: {point.DisplayName} ({point.PointType}), WaveIndex={point.WaveIndex}, HasBattleData={point.HasBattleData}.");
-
-                if (point.PointType == RoutePointType.Normal || point.PointType == RoutePointType.Start)
-                {
-                    Debug.Log($"[Route] Passed point: {point.DisplayName} ({point.PointType}).");
-                    continue;
-                }
-
-                if (point.PointType == RoutePointType.Event)
-                {
-                    ShowRouteEventPanel(point);
+                case RouteAdvanceDestinationType.Event:
+                    ShowRouteEventPanel(result.Point);
                     return;
-                }
 
-                if (point.HasBattleData)
-                {
-                    ShowBattlePreparationPanel(point);
+                case RouteAdvanceDestinationType.BattlePreparation:
+                    ShowBattlePreparationPanel(result.Point);
                     return;
-                }
+
+                case RouteAdvanceDestinationType.QuestResult:
+                default:
+                    ShowQuestResultPanel();
+                    return;
             }
-
-            Debug.Log("[Route] Route advance reached end. Showing Quest Result instead of returning to Base.");
-            ShowQuestResultPanel();
         }
 
         private void ShowRouteEventPanel(RoutePointData point)
@@ -4640,6 +4626,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
