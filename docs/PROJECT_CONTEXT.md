@@ -594,3 +594,12 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Movement currently uses a temporary `Move` button; later it may auto-transition instead of requiring player input.
 - Movement `Move` advances the route to Event / Battle Preparation / Quest Clear.
 
+
+## Route Overlay Visual Distinction
+
+- Temporary route overlays still use ResultPanel, but visual styles now differ per screen.
+- Movement uses `MOVEMENT / ROUTE`, top-left body text, and a blue-black panel.
+- Event uses `ROUTE EVENT`, centered body text, and a purple-black panel.
+- Battle Preparation / Boss Preparation uses top-left body text and a brown-black panel.
+- Battle Result and Quest Result reset to the normal black result panel style.
+

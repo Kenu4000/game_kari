@@ -3278,6 +3278,31 @@ namespace GameKari.Battle
             }
         }
 
+        private void ApplyResultPanelVisualStyle(Color panelColor, TextAlignmentOptions bodyAlignment, float titleFontSize, float bodyFontSize)
+        {
+            ApplyResultPanelLayout();
+
+            if (_resultPanelObject != null)
+            {
+                Image panelImage = _resultPanelObject.GetComponent<Image>();
+                if (panelImage != null)
+                {
+                    panelImage.color = panelColor;
+                }
+            }
+
+            if (_resultTitleText != null)
+            {
+                _resultTitleText.fontSize = titleFontSize;
+                _resultTitleText.alignment = TextAlignmentOptions.Center;
+            }
+
+            if (_resultSubText != null)
+            {
+                _resultSubText.fontSize = bodyFontSize;
+                _resultSubText.alignment = bodyAlignment;
+            }
+        }
         private void SetResultTitleAndBody(string title, string body)
         {
             if (_resultTitleText != null)
@@ -3396,6 +3421,7 @@ namespace GameKari.Battle
             _showingQuestFailed = true;
 
             PrepareResultPanelForOverlay();
+            ApplyResultPanelVisualStyle(new Color(0f, 0f, 0f, 0.78f), TextAlignmentOptions.Center, 38f, 22f);
             SetResultTitleAndBody("Quest Failed", BuildQuestFailedText());
             HideResultLeftButton("Return to Base");
             SetResultReturnButtonHandler(HandleQuestReturnToBaseClicked);
@@ -3432,6 +3458,7 @@ namespace GameKari.Battle
             _showingQuestFailed = false;
 
             PrepareResultPanelForOverlay();
+            ApplyResultPanelVisualStyle(new Color(0f, 0f, 0f, 0.78f), TextAlignmentOptions.Center, 38f, 22f);
             SetResultTitleAndBody("Quest Clear", BuildQuestResultText());
             HideResultLeftButton("Return to Base");
             SetResultReturnButtonHandler(HandleQuestReturnToBaseClicked);
@@ -3512,7 +3539,8 @@ namespace GameKari.Battle
             _showingQuestFailed = false;
 
             PrepareResultPanelForOverlay();
-            SetResultTitleAndBody("Movement", BuildRouteMovementText());
+            ApplyResultPanelVisualStyle(new Color(0.05f, 0.10f, 0.18f, 0.90f), TextAlignmentOptions.TopLeft, 40f, 23f);
+            SetResultTitleAndBody("MOVEMENT / ROUTE", BuildRouteMovementText());
             HideResultLeftButton("Move");
 
             if (_resultReturnButton != null)
@@ -3721,12 +3749,13 @@ namespace GameKari.Battle
             _showingQuestFailed = false;
 
             PrepareResultPanelForOverlay();
+            ApplyResultPanelVisualStyle(new Color(0.18f, 0.08f, 0.20f, 0.90f), TextAlignmentOptions.Center, 40f, 24f);
 
             string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
                 ? "Route Event"
                 : point.DisplayName;
 
-            SetResultTitleAndBody("Event", BuildRouteEventText(point));
+            SetResultTitleAndBody("ROUTE EVENT", BuildRouteEventText(point));
             HideResultLeftButton("Next");
 
             if (_resultReturnButton != null)
@@ -3764,10 +3793,11 @@ namespace GameKari.Battle
             _showingQuestFailed = false;
 
             PrepareResultPanelForOverlay();
+            ApplyResultPanelVisualStyle(new Color(0.20f, 0.12f, 0.05f, 0.90f), TextAlignmentOptions.TopLeft, 40f, 22f);
 
             string title = point != null && point.PointType == RoutePointType.Boss
-                ? "Boss Preparation"
-                : "Battle Preparation";
+                ? "BOSS PREPARATION"
+                : "BATTLE PREPARATION";
 
             SetResultTitleAndBody(title, BuildBattlePreparationText(point));
             RefreshBattlePreparationButtons(point);
@@ -4099,6 +4129,7 @@ namespace GameKari.Battle
             _showingQuestFailed = false;
 
             PrepareResultPanelForOverlay();
+            ApplyResultPanelVisualStyle(new Color(0f, 0f, 0f, 0.78f), TextAlignmentOptions.Center, 38f, 22f);
             SetResultTitleAndBody("Battle Result", BuildBattleResultSubText(result));
             SetResultButtons(true, "Formation", true, "Next");
 
@@ -4802,6 +4833,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
