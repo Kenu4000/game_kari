@@ -123,6 +123,18 @@ Canvas
     └── RotateButton
 ```
 
+Prefab保存先候補:
+
+```text
+Assets/Prefabs/UI/BattleUIRoot.prefab
+```
+
+更新日: 2026-05-24
+
+- ユーザー報告により、`Assets/Prefabs/UI/` は作成済み。
+- 空フォルダだけではGitに記録されない可能性がある。
+- `BattleUIRoot.prefab` などのPrefab実体を作成した時点で、Git管理対象になる。
+
 注意:
 
 - `BattleUIManager` はPrefabに含めない。
