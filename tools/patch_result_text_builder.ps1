@@ -63,13 +63,16 @@ $text = Replace-MethodByName `
         {
             int kakeraGain = result == null ? 0 : CalculateKakeraGain(result.Rank);
             int expGain = result == null ? 0 : CalculateExpGain(result);
+            int partyHealAmount = result == null ? 0 : result.PartyHealAmount;
 
             return ResultTextBuilder.BuildBattleResultText(
-                result,
+                result != null,
+                result == null ? string.Empty : FormatBattleClearRank(result.Rank),
                 _kakeraStock,
                 MaxKakeraStock,
                 kakeraGain,
-                expGain);
+                expGain,
+                partyHealAmount);
         }
 '@ `
     -Label "BuildBattleResultSubText"
