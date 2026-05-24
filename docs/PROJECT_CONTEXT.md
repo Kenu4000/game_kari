@@ -585,3 +585,12 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - `OneTurnClearPartyHeal` is also copied from setup into BattleUIManager.
 - This fixes the issue where Battle Result `Next` immediately restarted the default battle because `_questProgress` was null.
 
+
+## Movement Between Route Steps
+
+- Future route flow keeps a Movement screen between battle/event results and the next route resolution.
+- Battle Result `Next` now shows Movement first.
+- Event `Next` now shows Movement first.
+- Movement currently uses a temporary `Move` button; later it may auto-transition instead of requiring player input.
+- Movement `Move` advances the route to Event / Battle Preparation / Quest Clear.
+

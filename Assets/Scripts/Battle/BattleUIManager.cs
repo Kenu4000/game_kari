@@ -3199,12 +3199,12 @@ namespace GameKari.Battle
 
             if (_showingBattleResult)
             {
-                Debug.Log("[Result] Battle Result Next clicked. Advancing route.");
+                Debug.Log("[Result] Battle Result Next clicked. Showing Movement before route advance.");
                 _showingBattleResult = false;
 
                 if (_questProgress == null)
                 {
-                    ReturnToBase();
+                    ShowQuestResultPanel();
                     return;
                 }
 
@@ -3214,7 +3214,7 @@ namespace GameKari.Battle
                     return;
                 }
 
-                ContinueRouteAdvance();
+                ShowRouteMovementPanel();
                 return;
             }
 
@@ -3308,12 +3308,12 @@ namespace GameKari.Battle
 
         private void HandleBattleResultNextClicked()
         {
-            Debug.Log("[Result] Battle Result Next clicked. Advancing route.");
+            Debug.Log("[Result] Battle Result Next clicked. Showing Movement before route advance.");
             _showingBattleResult = false;
 
             if (_questProgress == null)
             {
-                ReturnToBase();
+                ShowQuestResultPanel();
                 return;
             }
 
@@ -3323,19 +3323,19 @@ namespace GameKari.Battle
                 return;
             }
 
-            ContinueRouteAdvance();
+            ShowRouteMovementPanel();
         }
 
         private void HandleRouteMovementMoveClicked()
         {
-            Debug.Log("[Route] Movement Move clicked.");
+            Debug.Log("[Route] Movement Move clicked. Advancing route.");
             _showingRouteMovement = false;
             ContinueRouteAdvance();
         }
 
         private void HandleRouteEventNextClicked()
         {
-            Debug.Log("[Route] Event Next clicked.");
+            Debug.Log("[Route] Event Next clicked. Showing Movement before next route advance.");
             _showingRouteEvent = false;
             ShowRouteMovementPanel();
         }
@@ -3514,7 +3514,12 @@ namespace GameKari.Battle
             PrepareResultPanelForOverlay();
             SetResultTitleAndBody("Movement", BuildRouteMovementText());
             HideResultLeftButton("Move");
-            SetResultReturnButtonHandler(HandleRouteMovementMoveClicked);
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.onClick.RemoveAllListeners();
+                _resultReturnButton.onClick.AddListener(HandleRouteMovementMoveClicked);
+            }
 
             Debug.Log("[Route] Movement panel shown.");
         }
@@ -3723,7 +3728,12 @@ namespace GameKari.Battle
 
             SetResultTitleAndBody("Event", BuildRouteEventText(point));
             HideResultLeftButton("Next");
-            SetResultReturnButtonHandler(HandleRouteEventNextClicked);
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.onClick.RemoveAllListeners();
+                _resultReturnButton.onClick.AddListener(HandleRouteEventNextClicked);
+            }
 
             Debug.Log($"[Route] Event shown: {displayName}");
         }
@@ -4091,7 +4101,12 @@ namespace GameKari.Battle
             PrepareResultPanelForOverlay();
             SetResultTitleAndBody("Battle Result", BuildBattleResultSubText(result));
             SetResultButtons(true, "Formation", true, "Next");
-            SetResultReturnButtonHandler(HandleBattleResultNextClicked);
+
+            if (_resultReturnButton != null)
+            {
+                _resultReturnButton.onClick.RemoveAllListeners();
+                _resultReturnButton.onClick.AddListener(HandleBattleResultNextClicked);
+            }
 
             Debug.Log("[Battle] Battle Result shown.");
         }
@@ -4787,6 +4802,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
