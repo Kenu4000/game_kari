@@ -577,3 +577,11 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Route advancement logs current route index, route count, next availability, and arrived point.
 - Battle Result `Next` should now advance to Event / Battle Preparation, or Quest Clear at route end.
 
+
+## QuestProgress Setup Fix
+
+- `BattleUIManager.ApplyBattleSetup()` now assigns `setup.QuestProgress` to `_questProgress`.
+- Battle Result `Next` can now use route progression instead of falling back to Base reset.
+- `OneTurnClearPartyHeal` is also copied from setup into BattleUIManager.
+- This fixes the issue where Battle Result `Next` immediately restarted the default battle because `_questProgress` was null.
+

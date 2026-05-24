@@ -272,6 +272,9 @@ namespace GameKari.Battle
                 return;
             }
 
+            _questProgress = setup.QuestProgress;
+            _oneTurnClearPartyHeal = setup.OneTurnClearPartyHeal;
+
             ApplyBattleUnitPlacements(true, setup.AllyPlacements, _allies);
             ApplyBattleUnitPlacements(false, setup.EnemyPlacements, _enemies);
 
@@ -4784,6 +4787,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
