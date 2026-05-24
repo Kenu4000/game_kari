@@ -2302,17 +2302,14 @@ namespace GameKari.Battle
         {
             QuestResultData questResult = new QuestResultData
             {
-                ClearedWaveCount = waveResult == null ? GetCurrentWaveNumber() : waveResult.WaveNumber,
-                TotalWaveCount = GetTotalWaveCount(),
-                CurrentDistance = _waveProgress == null ? 0 : _waveProgress.CurrentDistance,
-                TargetDistance = _waveProgress == null ? DefaultTargetDistance : _waveProgress.TargetDistance,
-                AlivePartyCount = CountLivingPartyMembers(_partyMembers),
-                KnockedOutPartyCount = CountKnockedOutPartyMembers(_partyMembers),
-                TotalPartyCount = CountKnownPartyMembers(_partyMembers),
+                ClearedBattleCount = CountClearedBattleRoutePoints(),
+                TotalBattleCount = CountTotalBattleRoutePoints(),
+                TotalKakeraEarned = _totalKakeraEarned,
+                TotalExpEarned = _totalExpEarned,
                 ReturnsToBase = true
             };
 
-            Debug.Log($"[Quest] Result created. Waves={questResult.ClearedWaveCount}/{questResult.TotalWaveCount}, Distance={questResult.CurrentDistance}/{questResult.TargetDistance}, Alive={questResult.AlivePartyCount}, KO={questResult.KnockedOutPartyCount}.");
+            Debug.Log($"[Quest] Result data created. Battles={questResult.ClearedBattleCount}/{questResult.TotalBattleCount}, Kakera={questResult.TotalKakeraEarned}, EXP={questResult.TotalExpEarned}.");
 
             return questResult;
         }
@@ -4777,6 +4774,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
