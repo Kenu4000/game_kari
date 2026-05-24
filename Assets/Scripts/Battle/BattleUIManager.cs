@@ -137,7 +137,6 @@ namespace GameKari.Battle
             public int WaveNumber;
             public int TotalWaves;
             public bool HasNextWave;
-            public QuestResultData QuestResult;
         }
 
         private enum BattlePhase
@@ -2119,11 +2118,6 @@ namespace GameKari.Battle
                 HasNextWave = hasNextWave
             };
 
-            if (!hasNextWave)
-            {
-                result.QuestResult = CreateQuestResultData(result);
-            }
-
             return result;
         }
 
@@ -2298,44 +2292,9 @@ namespace GameKari.Battle
             return count;
         }
 
-        private QuestResultData CreateQuestResultData(WaveClearResult waveResult)
-        {
-            QuestResultData questResult = new QuestResultData
-            {
-                ClearedBattleCount = CountClearedBattleRoutePoints(),
-                TotalBattleCount = CountTotalBattleRoutePoints(),
-                TotalKakeraEarned = _totalKakeraEarned,
-                TotalExpEarned = _totalExpEarned,
-                ReturnsToBase = true
-            };
 
-            Debug.Log($"[Quest] Result data created. Battles={questResult.ClearedBattleCount}/{questResult.TotalBattleCount}, Kakera={questResult.TotalKakeraEarned}, EXP={questResult.TotalExpEarned}.");
 
-            return questResult;
-        }
 
-        private static int CountKnockedOutPartyMembers(List<BattleUnit> units)
-        {
-            if (units == null)
-            {
-                return 0;
-            }
-
-            int count = 0;
-
-            for (int i = 0; i < units.Count; i++)
-            {
-                BattleUnit unit = units[i];
-                if (unit == null || unit.Data == null || !unit.IsDead)
-                {
-                    continue;
-                }
-
-                count++;
-            }
-
-            return count;
-        }
 
         private static int CountKnownPartyMembers(List<BattleUnit> units)
         {
@@ -4774,6 +4733,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
