@@ -3234,15 +3234,10 @@ namespace GameKari.Battle
             ShowRouteMovementPanel();
         }
 
-        private void ShowQuestFailedPanel()
+        private void PrepareResultPanelForOverlay()
         {
             EnsureResultPanel();
 
-            _showingRouteEvent = false;
-            _showingRouteMovement = false;
-            _showingBattlePreparation = false;
-            _showingQuestResult = false;
-            _showingQuestFailed = true;
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
 
@@ -3256,20 +3251,36 @@ namespace GameKari.Battle
             {
                 _resultPanelObject.SetActive(true);
             }
+        }
 
+        private void SetResultTitleAndBody(string title, string body)
+        {
             if (_resultTitleText != null)
             {
-                _resultTitleText.text = "Quest Failed";
+                _resultTitleText.text = title;
             }
 
             if (_resultSubText != null)
             {
-                _resultSubText.text = BuildQuestFailedText();
+                _resultSubText.text = body;
             }
+        }
 
+        private void SetResultButtons(
+            bool showLeftButton,
+            string leftText,
+            bool leftInteractable,
+            string rightText)
+        {
             if (_resultFormationButton != null)
             {
-                _resultFormationButton.gameObject.SetActive(false);
+                _resultFormationButton.gameObject.SetActive(showLeftButton);
+                _resultFormationButton.interactable = leftInteractable;
+            }
+
+            if (_resultFormationButtonText != null)
+            {
+                _resultFormationButtonText.text = leftText;
             }
 
             if (_resultReturnButton != null)
@@ -3279,8 +3290,25 @@ namespace GameKari.Battle
 
             if (_resultReturnButtonText != null)
             {
-                _resultReturnButtonText.text = "Return to Base";
+                _resultReturnButtonText.text = rightText;
             }
+        }
+
+        private void HideResultLeftButton(string rightText)
+        {
+            SetResultButtons(false, string.Empty, false, rightText);
+        }
+        private void ShowQuestFailedPanel()
+        {
+            _showingRouteEvent = false;
+            _showingRouteMovement = false;
+            _showingBattlePreparation = false;
+            _showingQuestResult = false;
+            _showingQuestFailed = true;
+
+            PrepareResultPanelForOverlay();
+            SetResultTitleAndBody("Quest Failed", BuildQuestFailedText());
+            HideResultLeftButton("Return to Base");
 
             RedrawBoard();
 
@@ -3288,6 +3316,11 @@ namespace GameKari.Battle
         }
 
         private string BuildQuestFailedText()
+        {
+            return BuildQuestEndSummaryText();
+        }
+
+        private string BuildQuestEndSummaryText()
         {
             int clearedBattles = CountClearedBattleRoutePoints();
             int totalBattles = CountTotalBattleRoutePoints();
@@ -3301,64 +3334,22 @@ namespace GameKari.Battle
 
         private void ShowQuestResultPanel()
         {
-            EnsureResultPanel();
-
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
             _showingQuestResult = true;
-            _battleEnded = true;
-            _phase = BattlePhase.BattleEnded;
+            _showingQuestFailed = false;
 
-            HideActionOverlay();
-            ClearTargetPreview();
-            ResetEnemyActionPreviewHighlights();
-            SetEnemyActionPreviewVisible(false);
-            SetCommandUiVisible(false);
-
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(true);
-            }
-
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.text = "Quest Clear";
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.text = BuildQuestResultText();
-            }
-
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.gameObject.SetActive(false);
-            }
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.gameObject.SetActive(true);
-            }
-
-            if (_resultReturnButtonText != null)
-            {
-                _resultReturnButtonText.text = "Return to Base";
-            }
+            PrepareResultPanelForOverlay();
+            SetResultTitleAndBody("Quest Clear", BuildQuestResultText());
+            HideResultLeftButton("Return to Base");
 
             Debug.Log("[Quest] Quest Result shown.");
         }
 
         private string BuildQuestResultText()
         {
-            int clearedBattles = CountClearedBattleRoutePoints();
-            int totalBattles = CountTotalBattleRoutePoints();
-
-            return
-                $"Battles Cleared: {clearedBattles} / {Mathf.Max(1, totalBattles)}\n" +
-                $"Kakera Earned: {_totalKakeraEarned}\n" +
-                $"EXP: {_totalExpEarned}\n" +
-                "Next: Return to Base";
+            return BuildQuestEndSummaryText();
         }
 
         private int CountTotalBattleRoutePoints()
@@ -3403,25 +3394,12 @@ namespace GameKari.Battle
 
         private void ShowRouteMovementPanel()
         {
-            EnsureResultPanel();
-
             _showingRouteMovement = true;
             _showingBattlePreparation = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
-            _battleEnded = true;
-            _phase = BattlePhase.BattleEnded;
 
-            HideActionOverlay();
-            ClearTargetPreview();
-            ResetEnemyActionPreviewHighlights();
-            SetEnemyActionPreviewVisible(false);
-            SetCommandUiVisible(false);
-
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(true);
-            }
+            PrepareResultPanelForOverlay();
 
             if (_resultTitleText != null)
             {
@@ -3437,20 +3415,7 @@ namespace GameKari.Battle
                     "Next: Move";
             }
 
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.gameObject.SetActive(false);
-            }
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.gameObject.SetActive(true);
-            }
-
-            if (_resultReturnButtonText != null)
-            {
-                _resultReturnButtonText.text = "Next";
-            }
+            HideResultLeftButton("Next");
 
             Debug.Log("[Route] Movement panel shown.");
         }
@@ -3486,7 +3451,7 @@ namespace GameKari.Battle
 
                 if (i == _questProgress.CurrentRoutePointIndex)
                 {
-                    builder.Append("[TRUCK]");
+                    builder.Append("[Truck]");
                     continue;
                 }
 
@@ -3506,9 +3471,9 @@ namespace GameKari.Battle
             return point.PointType switch
             {
                 RoutePointType.Start => "S",
-                RoutePointType.Normal => "O",
-                RoutePointType.Battle => "B",
-                RoutePointType.Event => "E",
+                RoutePointType.Normal => "·",
+                RoutePointType.Battle => "Battle",
+                RoutePointType.Event => "Event",
                 RoutePointType.Boss => "Boss",
                 _ => "?"
             };
@@ -3538,8 +3503,8 @@ namespace GameKari.Battle
                     ? point.PointType.ToString()
                     : point.DisplayName;
 
-                int distance = Mathf.Max(1, i - _questProgress.CurrentRoutePointIndex);
-                return $"Next Point: {displayName} ({point.PointType}) / {distance} segment(s)";
+                int segmentCount = Mathf.Max(1, i - _questProgress.CurrentRoutePointIndex);
+                return $"Next Point: {displayName} ({point.PointType}) / {segmentCount} segment(s)";
             }
 
             return "Next Point: Base Return";
@@ -3633,20 +3598,7 @@ namespace GameKari.Battle
                     "Next: Continue";
             }
 
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.gameObject.SetActive(false);
-            }
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.gameObject.SetActive(true);
-            }
-
-            if (_resultReturnButtonText != null)
-            {
-                _resultReturnButtonText.text = "Next";
-            }
+            HideResultLeftButton("Next");
 
             Debug.Log($"[Route] Event shown: {displayName}");
         }
@@ -4709,6 +4661,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

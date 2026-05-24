@@ -500,3 +500,12 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - WaveData and QuestData.Waves remain as compatibility data for enemy battle definitions.
 - Battle Result internals use BattleClear* naming rather than WaveClear* naming.
 
+
+## Result Panel Cleanup Status
+
+- Quest Clear and Quest Failed now share the same summary text builder.
+- Result overlay setup is centralized through helper methods in BattleUIManager.
+- Route Movement and Event temporary panels use the same button setup policy.
+- The temporary route bar uses readable RoutePoint labels while keeping the UI provisional.
+- WaveData and QuestData.Waves remain as compatibility data for battle definitions.
+
