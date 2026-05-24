@@ -2056,7 +2056,7 @@ namespace GameKari.Battle
             ShowBattleResultPanel(result);
             RedrawBoard();
 
-            Debug.Log($"[Battle] Clear: {FormatBattleClearRank(result.Rank)}, Kakera +{CalculateKakeraGain(result.Rank)}.");
+            Debug.Log($"[Battle] Clear: {BattleClearRewardCalculator.FormatRank(result.Rank)}, Kakera +{BattleClearRewardCalculator.CalculateKakeraGain(result.Rank)}.");
         }
 
         private BattleClearResult CreateBattleClearResult()
@@ -2116,20 +2116,10 @@ namespace GameKari.Battle
                 return;
             }
 
-            int expGain = CalculateExpGain(result);
+            int expGain = BattleClearRewardCalculator.CalculateExpGain(result);
             _totalExpEarned += Mathf.Max(0, expGain);
 
             Debug.Log($"[EXP] Gain +{expGain}. TotalEarned={_totalExpEarned}.");
-        }
-
-        private static int CalculateExpGain(BattleClearResult result)
-        {
-            if (result == null)
-            {
-                return 0;
-            }
-
-            return result.HasNextWave ? 10 : 30;
         }
 
         private void ApplyKakeraReward(BattleClearResult result)
@@ -2139,7 +2129,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            int gain = CalculateKakeraGain(result.Rank);
+            int gain = BattleClearRewardCalculator.CalculateKakeraGain(result.Rank);
             int before = _kakeraStock;
 
             _kakeraStock = Mathf.Clamp(_kakeraStock + gain, 0, MaxKakeraStock);
@@ -2165,35 +2155,7 @@ namespace GameKari.Battle
         private BattleClearRank EvaluateBattleClearRank()
         {
             EnsureWaveProgress();
-
-            int battleTurn = _waveProgress.WaveTurn;
-
-            if (battleTurn <= 1)
-            {
-                return BattleClearRank.OneTurn;
-            }
-
-            if (battleTurn == 2)
-            {
-                return BattleClearRank.TwoTurn;
-            }
-
-            if (battleTurn == 3)
-            {
-                return BattleClearRank.ThreeTurn;
-            }
-
-            return BattleClearRank.FourPlusTurn;
-        }
-
-        private static string FormatBattleClearRank(BattleClearRank rank)
-        {
-            return rank switch
-            {
-                BattleClearRank.OneTurn => "1Turn Kill",
-                BattleClearRank.TwoTurn => "2Turn Kill",
-                _ => "3+ Turn"
-            };
+            return BattleClearRewardCalculator.EvaluateRank(_waveProgress.WaveTurn);
         }
 
         private static int HealLivingPartyMembers(List<BattleUnit> units, int healAmount)
@@ -3484,28 +3446,18 @@ namespace GameKari.Battle
 
         private string BuildBattleResultSubText(BattleClearResult result)
         {
-            int kakeraGain = result == null ? 0 : CalculateKakeraGain(result.Rank);
-            int expGain = result == null ? 0 : CalculateExpGain(result);
+            int kakeraGain = result == null ? 0 : BattleClearRewardCalculator.CalculateKakeraGain(result.Rank);
+            int expGain = result == null ? 0 : BattleClearRewardCalculator.CalculateExpGain(result);
             int partyHealAmount = result == null ? 0 : result.PartyHealAmount;
 
             return ResultTextBuilder.BuildBattleResultText(
                 result != null,
-                result == null ? string.Empty : FormatBattleClearRank(result.Rank),
+                result == null ? string.Empty : BattleClearRewardCalculator.FormatRank(result.Rank),
                 _kakeraStock,
                 MaxKakeraStock,
                 kakeraGain,
                 expGain,
                 partyHealAmount);
-        }
-
-        private static int CalculateKakeraGain(BattleClearRank rank)
-        {
-            return rank switch
-            {
-                BattleClearRank.OneTurn => 3,
-                BattleClearRank.TwoTurn => 2,
-                _ => 1
-            };
         }
 
         private void ShowResultPanel(string result)
@@ -4142,6 +4094,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
