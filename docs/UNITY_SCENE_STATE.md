@@ -51,6 +51,8 @@ BattleTest
 
 - ユーザー報告により、Canvas配下の既存戦闘UI部品は親Objectにまとめ済み。
 - ユーザー報告により、まとめた後も問題なし。
+- ユーザー報告により、戦闘UI親ObjectのPrefab作成済み。
+- ユーザー報告により、Prefab化後の確認も問題なし。
 - ルートObject名は未記録。想定名は `BattleUIRoot`。
 - `BattleUIManager` はScene直下に残す方針。
 - `BattleUIManager` を戦闘UI親ObjectのPrefabには含めない方針。
@@ -85,6 +87,7 @@ BattleTest
 - `Ui References` は現時点では `None` でも問題ない。
 - 既存の個別SerializeField参照を正として扱う。
 - 戦闘UI部品を親Objectにまとめた後も問題なしと報告済み。
+- 戦闘UI親ObjectをPrefab化した後も問題なしと報告済み。
 
 ## 現在の戦闘UI方針
 
@@ -92,6 +95,19 @@ BattleTest
 - 背景、キャラSprite、敵Sprite、HP/MPバー、CommandPanel、Grid、StatusPanelの既存紐づけは壊さない。
 - 戦闘UIを作り直さない。
 - `BattleUIReferences` は将来的に参照をまとめるための補助として使うが、現時点で必須ではない。
+
+## Prefab化状態
+
+更新日: 2026-05-24
+
+- ユーザー報告により、`Assets/Prefabs/UI/` は作成済み。
+- ユーザー報告により、戦闘UI親ObjectのPrefab作成済み。
+- ユーザー報告により、Prefab作成後の動作確認は問題なし。
+- Prefabの正式ファイル名は未記録。想定保存先は以下。
+
+```text
+Assets/Prefabs/UI/BattleUIRoot.prefab
+```
 
 ## Prefab化方針
 
@@ -101,39 +117,8 @@ BattleTest
 Scene
 ├── BattleUIManager   // Scene直下に残す
 └── Canvas
-    └── BattleUIRoot  // 戦闘UI一式。Prefab化候補
+    └── BattleUIRoot  // 戦闘UI一式。Prefab化済み候補
 ```
-
-Prefab化する場合は、いきなり作り直すのではなく、既存UIを親ObjectにまとめてからPrefab化する。
-
-候補構造:
-
-```text
-Canvas
-└── BattleUIRoot
-    ├── BattleBackground
-    ├── TruckRoot
-    ├── BossNamePlate
-    ├── TopActionPanel
-    ├── CommandPanel
-    ├── EnemyGridPanel
-    ├── AllyGridPanel
-    ├── EnemyStatusPanel
-    ├── AllyStatusPanel
-    └── RotateButton
-```
-
-Prefab保存先候補:
-
-```text
-Assets/Prefabs/UI/BattleUIRoot.prefab
-```
-
-更新日: 2026-05-24
-
-- ユーザー報告により、`Assets/Prefabs/UI/` は作成済み。
-- 空フォルダだけではGitに記録されない可能性がある。
-- `BattleUIRoot.prefab` などのPrefab実体を作成した時点で、Git管理対象になる。
 
 注意:
 
@@ -156,8 +141,7 @@ Assets/Prefabs/UI/BattleUIRoot.prefab
 以下の状態が分かったら追記する。
 
 - 戦闘UI親Objectの正式名
-- `BattleUIRoot` をPrefab化したか
-- Prefab保存先
+- Prefab正式保存先
 - `BattleUIManager` の参照が維持されたか
 - `BattleUIReferences` を使うかどうか
 - Movement / Preparation / Result UIをどの親Object配下に置くか
