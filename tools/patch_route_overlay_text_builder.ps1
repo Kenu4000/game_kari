@@ -7,36 +7,58 @@ if (!(Test-Path $path)) {
 
 $text = Get-Content -Path $path -Raw -Encoding UTF8
 
-function Replace-Required {
+function Replace-MethodByName {
     param(
         [string]$Source,
-        [string]$Old,
-        [string]$New,
+        [string]$Signature,
+        [string]$Replacement,
         [string]$Label
     )
 
-    if (!$Source.Contains($Old)) {
+    $start = $Source.IndexOf($Signature)
+    if ($start -lt 0) {
+        if ($Source.Contains($Replacement.Trim())) {
+            Write-Host "Already patched: $Label"
+            return $Source
+        }
+
         throw "Patch anchor not found: $Label"
     }
 
-    return $Source.Replace($Old, $New)
+    $braceStart = $Source.IndexOf("{", $start)
+    if ($braceStart -lt 0) {
+        throw "Method body start not found: $Label"
+    }
+
+    $depth = 0
+    $end = -1
+
+    for ($i = $braceStart; $i -lt $Source.Length; $i++) {
+        $char = $Source[$i]
+
+        if ($char -eq '{') {
+            $depth++
+        }
+        elseif ($char -eq '}') {
+            $depth--
+            if ($depth -eq 0) {
+                $end = $i + 1
+                break
+            }
+        }
+    }
+
+    if ($end -lt 0) {
+        throw "Method body end not found: $Label"
+    }
+
+    return $Source.Substring(0, $start) + $Replacement + $Source.Substring($end)
 }
 
-$text = Replace-Required `
+$text = Replace-MethodByName `
     -Source $text `
-    -Old @'
-        private string BuildRouteMovementText()
-        {
-            return
-                $"{GetQuestRouteTitleText()}\n\n" +
-                $"Current\n{GetCurrentRoutePointText()}\n\n" +
-                $"Route\n{BuildRouteBarText()}\n\n" +
-                $"{GetNextImportantRoutePointText()}\n\n" +
-                "Action\n" +
-                "Button: Move";
-        }
-'@ `
-    -New @'
+    -Signature "        private string BuildRouteMovementText()" `
+    -Replacement @'
         private string BuildRouteMovementText()
         {
             return RouteOverlayTextBuilder.BuildRouteMovementText(_questProgress);
@@ -44,27 +66,10 @@ $text = Replace-Required `
 '@ `
     -Label "BuildRouteMovementText"
 
-$text = Replace-Required `
+$text = Replace-MethodByName `
     -Source $text `
-    -Old @'
-        private string BuildRouteEventText(RoutePointData point)
-        {
-            string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
-                ? "Route Event"
-                : point.DisplayName;
-
-            string eventText = point == null || string.IsNullOrEmpty(point.EventText)
-                ? "An event occurs on the route."
-                : point.EventText;
-
-            return
-                $"{displayName}\n\n" +
-                $"{eventText}\n\n" +
-                "After Event\n" +
-                "Button: Next → Movement";
-        }
-'@ `
-    -New @'
+    -Signature "        private string BuildRouteEventText(RoutePointData point)" `
+    -Replacement @'
         private string BuildRouteEventText(RoutePointData point)
         {
             return RouteOverlayTextBuilder.BuildRouteEventText(point);
@@ -72,26 +77,10 @@ $text = Replace-Required `
 '@ `
     -Label "BuildRouteEventText"
 
-$text = Replace-Required `
+$text = Replace-MethodByName `
     -Source $text `
-    -Old @'
-        private string BuildBattlePreparationText(RoutePointData point)
-        {
-            string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
-                ? "Battle Point"
-                : point.DisplayName;
-
-            return
-                $"{displayName}\n\n" +
-                $"Party\n{BuildPartyOverviewText()}\n\n" +
-                $"Kakera\n{_kakeraStock}/{MaxKakeraStock}\n\n" +
-                $"Enemy Info\n{BuildEnemyScoutStateText(point)}\n\n" +
-                $"{BuildPreparationActionHintText(point)}\n\n" +
-                "Action\n" +
-                "Button: Start Battle";
-        }
-'@ `
-    -New @'
+    -Signature "        private string BuildBattlePreparationText(RoutePointData point)" `
+    -Replacement @'
         private string BuildBattlePreparationText(RoutePointData point)
         {
             return RouteOverlayTextBuilder.BuildBattlePreparationText(
