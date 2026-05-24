@@ -1,4 +1,4 @@
-using GameKari.Battle;
+﻿using GameKari.Battle;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -34,11 +34,6 @@ public static class BattleUIReferenceBinder
         Debug.Log($"Battle UI references bound on {root.name}. Check Inspector for missing fields.");
     }
 
-    [MenuItem("Tools/Battle UI/Bind References On Selected Root", true)]
-    public static bool ValidateBindReferencesOnSelectedRoot()
-    {
-        return Selection.activeGameObject != null;
-    }
 
     private static void AssignRootReferences(GameObject root, BattleUIReferences refs)
     {
@@ -167,3 +162,4 @@ public static class BattleUIReferenceBinder
         return null;
     }
 }
+

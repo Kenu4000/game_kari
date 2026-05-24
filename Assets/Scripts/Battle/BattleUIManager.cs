@@ -9,6 +9,9 @@ namespace GameKari.Battle
     public class BattleUIManager : MonoBehaviour
     {
         // Serialized references
+        [Header("Battle UI References")]
+        [SerializeField] private BattleUIReferences uiReferences;
+
         [Header("Controllers")]
         [SerializeField] private CommandPanelController commandPanel;
         [SerializeField] private Button rotateButton;
@@ -135,9 +138,45 @@ namespace GameKari.Battle
             public GridPos Position;
         }
 
+        private void ApplyBattleUIReferences()
+        {
+            BattleUIReferences refs = uiReferences;
+            if (refs == null)
+            {
+                refs = GetComponentInChildren<BattleUIReferences>(true);
+            }
+
+            if (refs == null)
+            {
+                return;
+            }
+
+            commandPanel = refs.commandPanel != null ? refs.commandPanel : commandPanel;
+            rotateButton = refs.rotateButton != null ? refs.rotateButton : rotateButton;
+
+            enemyFrontTop = refs.enemyFrontTop != null ? refs.enemyFrontTop : enemyFrontTop;
+            enemyBackTop = refs.enemyBackTop != null ? refs.enemyBackTop : enemyBackTop;
+            enemyFrontBottom = refs.enemyFrontBottom != null ? refs.enemyFrontBottom : enemyFrontBottom;
+            enemyBackBottom = refs.enemyBackBottom != null ? refs.enemyBackBottom : enemyBackBottom;
+
+            allyFrontTop = refs.allyFrontTop != null ? refs.allyFrontTop : allyFrontTop;
+            allyBackTop = refs.allyBackTop != null ? refs.allyBackTop : allyBackTop;
+            allyFrontBottom = refs.allyFrontBottom != null ? refs.allyFrontBottom : allyFrontBottom;
+            allyBackBottom = refs.allyBackBottom != null ? refs.allyBackBottom : allyBackBottom;
+
+            actionSkillName = refs.actionSkillName != null ? refs.actionSkillName : actionSkillName;
+            actionUserName = refs.actionUserName != null ? refs.actionUserName : actionUserName;
+
+            enemyFTHighlight = refs.enemyFTHighlight != null ? refs.enemyFTHighlight : enemyFTHighlight;
+            enemyFBHighlight = refs.enemyFBHighlight != null ? refs.enemyFBHighlight : enemyFBHighlight;
+
+            enemyStatusPanel = refs.enemyStatusPanel != null ? refs.enemyStatusPanel : enemyStatusPanel;
+            allyStatusPanel = refs.allyStatusPanel != null ? refs.allyStatusPanel : allyStatusPanel;
+        }
         // Battle setup
         private void Start()
         {
+            ApplyBattleUIReferences();
             BootstrapBattle();
             BindUI();
             EnsureResultPanel();
@@ -3834,5 +3873,6 @@ namespace GameKari.Battle
 
     }
 }
+
 
 

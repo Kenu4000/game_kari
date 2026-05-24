@@ -1402,6 +1402,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ce60114a78548a4893285d4c4c457a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.BattleUIManager
+  uiReferences: {fileID: 0}
   commandPanel: {fileID: 108107264}
   rotateButton: {fileID: 256837347}
   enemyFrontTop: {fileID: 1066169938}

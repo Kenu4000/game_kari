@@ -1,7 +1,8 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using GameKari.Battle;
 
 public static class BattleUICreator
 {
@@ -20,12 +21,15 @@ public static class BattleUICreator
 
         Undo.RegisterFullObjectHierarchyUndo(canvas.gameObject, "Create Battle UI");
         RemoveExistingBattleUI(canvas.transform);
-        CreateMainPanels(canvas.transform);
+        GameObject battleScreenRoot = CreateBattleScreenRoot(canvas.transform);
+        CreateMainPanels(battleScreenRoot.transform);
+        AssignBattleUIReferences(battleScreenRoot);
         Debug.Log("Battle UI created from Tools > Create Battle UI");
     }
 
     private static readonly string[] GeneratedRootNames =
     {
+        "BattleScreenRoot",
         "TopActionPanel",
         "CommandPanel",
         "EnemyGridPanel",
@@ -48,6 +52,19 @@ public static class BattleUICreator
         }
     }
 
+    private static GameObject CreateBattleScreenRoot(Transform canvas)
+    {
+        GameObject root = GetOrCreate(canvas, "BattleScreenRoot");
+        RectTransform rt = EnsureRectTransform(root);
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        EnsureComponent<BattleUIReferences>(root);
+        return root;
+    }
     private static void CreateMainPanels(Transform canvas)
     {
         GameObject bossNamePlate = CreatePanel(canvas, "BossNamePlate", new Vector2(960, 1035), new Vector2(640, 58), PanelColor());
@@ -58,6 +75,7 @@ public static class BattleUICreator
         CreateLabel(topAction.transform, "UserName", "User Name", 22, new Vector2(0, -16), new Vector2(660, 28));
 
         GameObject commandPanel = CreatePanel(canvas, "CommandPanel", new Vector2(960, 800), new Vector2(840, 220), PanelColor());
+        EnsureComponent<CommandPanelController>(commandPanel);
         CreateCommandPanelChildren(commandPanel.transform);
 
         GameObject enemyGridPanel = CreatePanel(canvas, "EnemyGridPanel", new Vector2(700, 500), new Vector2(520, 420), PanelColor());
@@ -140,6 +158,73 @@ public static class BattleUICreator
         CreateButton(canvas, "RotateButton", "Rotate", pos, new Vector2(140, 54));
     }
 
+    private static void AssignBattleUIReferences(GameObject root)
+    {
+        if (root == null)
+        {
+            return;
+        }
+
+        BattleUIReferences refs = EnsureComponent<BattleUIReferences>(root);
+
+        GameObject commandPanelObject = FindChild(root.transform, "CommandPanel");
+        GameObject rotateButtonObject = FindChild(root.transform, "RotateButton");
+        GameObject enemyGridPanelObject = FindChild(root.transform, "EnemyGridPanel");
+        GameObject allyGridPanelObject = FindChild(root.transform, "AllyGridPanel");
+        GameObject enemyStatusPanelObject = FindChild(root.transform, "EnemyStatusPanel");
+        GameObject allyStatusPanelObject = FindChild(root.transform, "AllyStatusPanel");
+        GameObject topActionPanelObject = FindChild(root.transform, "TopActionPanel");
+
+        refs.commandPanelRoot = commandPanelObject;
+        refs.commandPanel = commandPanelObject == null ? null : commandPanelObject.GetComponent<CommandPanelController>();
+        refs.rotateButton = rotateButtonObject == null ? null : rotateButtonObject.GetComponent<Button>();
+
+        refs.enemyGridPanel = enemyGridPanelObject;
+        refs.allyGridPanel = allyGridPanelObject;
+        refs.enemyStatusPanelRoot = enemyStatusPanelObject;
+        refs.allyStatusPanelRoot = allyStatusPanelObject;
+        refs.enemyStatusPanel = enemyStatusPanelObject == null ? null : enemyStatusPanelObject.transform;
+        refs.allyStatusPanel = allyStatusPanelObject == null ? null : allyStatusPanelObject.transform;
+
+        refs.bossNamePlate = FindChild(root.transform, "BossNamePlate");
+        refs.topActionPanel = topActionPanelObject;
+        refs.actionSkillName = FindText(topActionPanelObject, "SkillName");
+        refs.actionUserName = FindText(topActionPanelObject, "UserName");
+
+        refs.enemyFrontTop = FindText(enemyGridPanelObject, "Enemy_FrontTop/Name");
+        refs.enemyBackTop = FindText(enemyGridPanelObject, "Enemy_BackTop/Name");
+        refs.enemyFrontBottom = FindText(enemyGridPanelObject, "Enemy_FrontBottom/Name");
+        refs.enemyBackBottom = FindText(enemyGridPanelObject, "Enemy_BackBottom/Name");
+
+        refs.allyFrontTop = FindText(allyGridPanelObject, "Ally_FrontTop/Name");
+        refs.allyBackTop = FindText(allyGridPanelObject, "Ally_BackTop/Name");
+        refs.allyFrontBottom = FindText(allyGridPanelObject, "Ally_FrontBottom/Name");
+        refs.allyBackBottom = FindText(allyGridPanelObject, "Ally_BackBottom/Name");
+
+        EditorUtility.SetDirty(refs);
+    }
+
+    private static GameObject FindChild(Transform parent, string path)
+    {
+        if (parent == null || string.IsNullOrEmpty(path))
+        {
+            return null;
+        }
+
+        Transform child = parent.Find(path);
+        return child == null ? null : child.gameObject;
+    }
+
+    private static TMP_Text FindText(GameObject root, string path)
+    {
+        if (root == null || string.IsNullOrEmpty(path))
+        {
+            return null;
+        }
+
+        Transform target = root.transform.Find(path);
+        return target == null ? null : target.GetComponent<TMP_Text>();
+    }
     private static Color PanelColor() => new Color(0.83f, 0.85f, 0.88f, 0.98f);
     private static Color ChildPanelColor() => new Color(0.9f, 0.93f, 0.96f, 1f);
 
@@ -283,3 +368,4 @@ public static class BattleUICreator
         rt.sizeDelta = size;
     }
 }
+
