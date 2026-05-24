@@ -535,3 +535,11 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Battle Result must not directly start the next battle.
 - The remaining `HasNextWave` field is temporarily fed by `HasNextRoutePoint` until result data naming is cleaned further.
 
+
+## Battle Result Explicit State
+
+- Battle Result now has an explicit `_showingBattleResult` state flag.
+- Battle Result `Next` returns to Movement and does not directly start Battle Preparation or Battle.
+- Movement `Next` remains the only route advancement action.
+- This avoids stale Preparation / Quest result flags affecting the shared ResultPanel button behavior.
+

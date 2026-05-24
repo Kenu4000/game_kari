@@ -75,6 +75,7 @@ namespace GameKari.Battle
         private bool _showingRouteEvent;
         private bool _showingRouteMovement;
         private bool _showingBattlePreparation;
+        private bool _showingBattleResult;
         private bool _showingQuestResult;
         private bool _showingQuestFailed;
         private BattlePhase _phase;
@@ -3193,6 +3194,27 @@ namespace GameKari.Battle
                 return;
             }
 
+            if (_showingBattleResult)
+            {
+                Debug.Log("[Result] Battle Result Next clicked. Returning to Movement.");
+                _showingBattleResult = false;
+
+                if (_questProgress == null)
+                {
+                    ReturnToBase();
+                    return;
+                }
+
+                if (!_questProgress.HasNextRoutePoint)
+                {
+                    ShowQuestResultPanel();
+                    return;
+                }
+
+                ShowRouteMovementPanel();
+                return;
+            }
+
             if (_showingRouteEvent)
             {
                 Debug.Log("[Route] Event Next clicked.");
@@ -3217,7 +3239,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            Debug.Log("[Result] Battle Result Next clicked. Returning to Movement.");
+            Debug.Log("[Result] Fallback Next clicked.");
 
             if (_questProgress == null)
             {
@@ -3303,6 +3325,7 @@ namespace GameKari.Battle
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
+            _showingBattleResult = false;
             _showingQuestResult = false;
             _showingQuestFailed = true;
 
@@ -3415,6 +3438,7 @@ namespace GameKari.Battle
             _showingRouteEvent = false;
             _showingRouteMovement = true;
             _showingBattlePreparation = false;
+            _showingBattleResult = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
@@ -3605,6 +3629,7 @@ namespace GameKari.Battle
             _showingRouteEvent = true;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
+            _showingBattleResult = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
@@ -3641,6 +3666,7 @@ namespace GameKari.Battle
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = true;
+            _showingBattleResult = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
@@ -3848,6 +3874,7 @@ namespace GameKari.Battle
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
+            _showingBattleResult = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
             _battleEnded = false;
@@ -3941,6 +3968,7 @@ namespace GameKari.Battle
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
+            _showingBattleResult = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
@@ -3969,70 +3997,40 @@ namespace GameKari.Battle
 
         private void ShowBattleResultPanel(BattleClearResult result)
         {
-            EnsureResultPanel();
+            _showingRouteEvent = false;
+            _showingRouteMovement = false;
+            _showingBattlePreparation = false;
+            _showingBattleResult = true;
+            _showingQuestResult = false;
+            _showingQuestFailed = false;
 
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(true);
-            }
+            PrepareResultPanelForOverlay();
+            SetResultTitleAndBody("Battle Result", BuildBattleResultSubText(result));
+            SetResultButtons(true, "Formation", true, "Next");
 
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.text = result.HasNextWave
-                    ? "Battle Clear"
-                    : "Boss Clear";
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.text = BuildBattleResultSubText(result);
-            }
-
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.gameObject.SetActive(true);
-            }
-
-            if (_resultFormationButtonText != null)
-            {
-                _resultFormationButtonText.text = "Formation";
-            }
-
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.interactable = true;
-            }
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.gameObject.SetActive(true);
-            }
-
-            if (_resultReturnButtonText != null)
-            {
-                _resultReturnButtonText.text = "Next";
-            }
+            Debug.Log("[Battle] Battle Result shown.");
         }
 
         private string BuildBattleResultSubText(BattleClearResult result)
         {
             if (result == null)
             {
-                return "";
+                return "Next: Movement";
             }
 
+            string rankText = FormatBattleClearRank(result.Rank);
             int kakeraGain = CalculateKakeraGain(result.Rank);
-            int expGain = result.HasNextWave ? 10 : 30;
-            string nextText = result.HasNextWave
-                ? "Next Battle"
-                : "Return to Base";
+            int expGain = CalculateExpGain(result);
+            string healText = result.PartyHealAmount > 0
+                ? $"HP Bonus: +{result.PartyHealAmount}"
+                : "HP Bonus: none";
 
             return
-                $"Clear: {FormatBattleClearRank(result.Rank)}\n" +
-                $"Kakera: +{kakeraGain}  Stock: {_kakeraStock}/{MaxKakeraStock}\n" +
+                $"Clear: {rankText}\n" +
+                $"Kakera: +{kakeraGain} / Stock {_kakeraStock}/{MaxKakeraStock}\n" +
                 $"EXP: +{expGain}\n" +
-                $"Lv Up: None\n" +
-                $"Next: {nextText}";
+                $"{healText}\n" +
+                "Next: Movement";
         }
 
         private static int CalculateKakeraGain(BattleClearRank rank)
@@ -4704,6 +4702,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
