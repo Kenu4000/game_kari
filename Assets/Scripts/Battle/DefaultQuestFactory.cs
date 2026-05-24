@@ -10,7 +10,6 @@
         {
             QuestData quest = new QuestData
             {
-                TargetDistance = 100,
                 OneTurnClearPartyHeal = 5
             };
 
@@ -53,6 +52,8 @@
         }
     }
 }
+
+
 
 
 

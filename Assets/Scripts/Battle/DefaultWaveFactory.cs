@@ -4,10 +4,7 @@
     {
         public static WaveData CreateDefaultWave()
         {
-            WaveData wave = new WaveData
-            {
-                BaseDistance = 20
-            };
+            WaveData wave = new WaveData();
 
             BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_a");
             BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("archer");
@@ -27,10 +24,7 @@
 
         public static WaveData CreateSecondWave()
         {
-            WaveData wave = new WaveData
-            {
-                BaseDistance = 20
-            };
+            WaveData wave = new WaveData();
 
             BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_b");
             BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("shaman");
@@ -50,10 +44,7 @@
 
         public static WaveData CreateThirdWave()
         {
-            WaveData wave = new WaveData
-            {
-                BaseDistance = 20
-            };
+            WaveData wave = new WaveData();
 
             BattleUnit enemyA = DefaultBattleUnitFactory.CreateEnemyUnitById("shaman");
             BattleUnit enemyB = DefaultBattleUnitFactory.CreateEnemyUnitById("goblin_a");
@@ -72,6 +63,8 @@
         }
     }
 }
+
+
 
 
 

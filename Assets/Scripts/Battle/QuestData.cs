@@ -18,13 +18,11 @@ namespace GameKari.Battle
         // RoutePointData.WaveIndexから参照される固定戦闘データとして使う。
         public readonly List<WaveData> Waves = new();
 
-        // 旧Distance実装の移行中フィールド。
-        // 新仕様ではDistance / Progressは表示・報酬として使わない。
-        public int TargetDistance = 100;
 
         // 1Turn Kill時の生存者HP回復量。
         public int OneTurnClearPartyHeal = 5;
     }
 }
+
 
 
