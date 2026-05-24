@@ -518,3 +518,12 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Enemy formation scout output is displayed line-by-line for readability.
 - This remains a temporary text-based UI until dedicated Movement / Preparation panels are created.
 
+
+## Route Movement Text Cleanup
+
+- Movement temporary UI now builds its body through `BuildRouteMovementText()`.
+- Movement display is grouped into Quest title, Current point, Route bar, Next point, and Next action.
+- Route bar uses `->` separators and readable route point labels while remaining provisional.
+- Current point display includes route index information when available.
+- Next important point display now reports segments without using Distance terminology.
+

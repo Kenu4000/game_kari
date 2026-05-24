@@ -3394,30 +3394,27 @@ namespace GameKari.Battle
 
         private void ShowRouteMovementPanel()
         {
+            _showingRouteEvent = false;
             _showingRouteMovement = true;
             _showingBattlePreparation = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
             PrepareResultPanelForOverlay();
-
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.text = "Movement";
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.text =
-                    $"{GetQuestRouteTitleText()}\n" +
-                    $"{BuildRouteBarText()}\n" +
-                    $"{GetNextImportantRoutePointText()}\n" +
-                    "Next: Move";
-            }
-
+            SetResultTitleAndBody("Movement", BuildRouteMovementText());
             HideResultLeftButton("Next");
 
             Debug.Log("[Route] Movement panel shown.");
+        }
+
+        private string BuildRouteMovementText()
+        {
+            return
+                $"{GetQuestRouteTitleText()}\n\n" +
+                $"Current\n{GetCurrentRoutePointText()}\n\n" +
+                $"Route\n{BuildRouteBarText()}\n\n" +
+                $"{GetNextImportantRoutePointText()}\n" +
+                "Next: Move";
         }
 
         private string GetQuestRouteTitleText()
@@ -3430,6 +3427,25 @@ namespace GameKari.Battle
             return string.IsNullOrEmpty(_questProgress.Quest.QuestName)
                 ? "Quest Route"
                 : _questProgress.Quest.QuestName;
+        }
+
+        private string GetCurrentRoutePointText()
+        {
+            if (_questProgress == null || _questProgress.CurrentRoutePoint == null)
+            {
+                return "Unknown";
+            }
+
+            RoutePointData current = _questProgress.CurrentRoutePoint;
+            string displayName = GetRoutePointDisplayName(current);
+            int currentIndex = Mathf.Max(0, _questProgress.CurrentRoutePointIndex);
+            int totalCount = _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null
+                ? 0
+                : _questProgress.Quest.RoutePoints.Count;
+
+            return totalCount <= 0
+                ? $"{displayName} ({current.PointType})"
+                : $"{displayName} ({current.PointType}) / {currentIndex + 1} of {totalCount}";
         }
 
         private string BuildRouteBarText()
@@ -3446,7 +3462,7 @@ namespace GameKari.Battle
                 RoutePointData point = _questProgress.Quest.RoutePoints[i];
                 if (i > 0)
                 {
-                    builder.Append(" - ");
+                    builder.Append(" -> ");
                 }
 
                 if (i == _questProgress.CurrentRoutePointIndex)
@@ -3470,7 +3486,7 @@ namespace GameKari.Battle
 
             return point.PointType switch
             {
-                RoutePointType.Start => "S",
+                RoutePointType.Start => "Start",
                 RoutePointType.Normal => "·",
                 RoutePointType.Battle => "Battle",
                 RoutePointType.Event => "Event",
@@ -3483,7 +3499,7 @@ namespace GameKari.Battle
         {
             if (_questProgress == null || _questProgress.Quest == null)
             {
-                return "Next: unknown";
+                return "Next Point: unknown";
             }
 
             for (int i = _questProgress.CurrentRoutePointIndex + 1; i < _questProgress.Quest.RoutePoints.Count; i++)
@@ -3499,15 +3515,28 @@ namespace GameKari.Battle
                     continue;
                 }
 
-                string displayName = string.IsNullOrEmpty(point.DisplayName)
-                    ? point.PointType.ToString()
-                    : point.DisplayName;
-
+                string displayName = GetRoutePointDisplayName(point);
                 int segmentCount = Mathf.Max(1, i - _questProgress.CurrentRoutePointIndex);
-                return $"Next Point: {displayName} ({point.PointType}) / {segmentCount} segment(s)";
+
+                return
+                    "Next Point\n" +
+                    $"{displayName} ({point.PointType})\n" +
+                    $"Segments: {segmentCount}";
             }
 
-            return "Next Point: Base Return";
+            return "Next Point\nBase Return";
+        }
+
+        private static string GetRoutePointDisplayName(RoutePointData point)
+        {
+            if (point == null)
+            {
+                return "Unknown";
+            }
+
+            return string.IsNullOrEmpty(point.DisplayName)
+                ? point.PointType.ToString()
+                : point.DisplayName;
         }
 
         private void ContinueRouteAdvance()
@@ -4658,6 +4687,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
