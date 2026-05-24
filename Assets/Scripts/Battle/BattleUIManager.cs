@@ -3392,6 +3392,24 @@ namespace GameKari.Battle
             return count;
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         private void ShowRouteMovementPanel()
         {
             _showingRouteEvent = false;
@@ -3405,16 +3423,6 @@ namespace GameKari.Battle
             HideResultLeftButton("Next");
 
             Debug.Log("[Route] Movement panel shown.");
-        }
-
-        private string BuildRouteMovementText()
-        {
-            return
-                $"{GetQuestRouteTitleText()}\n\n" +
-                $"Current\n{GetCurrentRoutePointText()}\n\n" +
-                $"Route\n{BuildRouteBarText()}\n\n" +
-                $"{GetNextImportantRoutePointText()}\n" +
-                "Next: Move";
         }
 
         private string BuildRouteMovementText()
@@ -3548,7 +3556,6 @@ namespace GameKari.Battle
                 ? point.PointType.ToString()
                 : point.DisplayName;
         }
-
         private void ContinueRouteAdvance()
         {
             if (_questProgress == null)
@@ -4697,6 +4704,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
