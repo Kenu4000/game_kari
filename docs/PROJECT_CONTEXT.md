@@ -527,3 +527,11 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Current point display includes route index information when available.
 - Next important point display now reports segments without using Distance terminology.
 
+
+## Battle Result To Movement Flow
+
+- Battle Result `Next` must return to the temporary Movement panel.
+- Movement `Next` is the only route action that advances to Event / Battle Preparation / Quest Clear.
+- Battle Result must not directly start the next battle.
+- The remaining `HasNextWave` field is temporarily fed by `HasNextRoutePoint` until result data naming is cleaned further.
+

@@ -2081,7 +2081,7 @@ namespace GameKari.Battle
 
             BattleClearRank rank = EvaluateBattleClearRank();
 
-            bool hasNextWave = _questProgress != null && _questProgress.HasNextWave;
+            bool hasNextWave = _questProgress != null && _questProgress.HasNextRoutePoint;
 
             BattleClearResult result = new BattleClearResult
             {
@@ -3197,7 +3197,7 @@ namespace GameKari.Battle
             {
                 Debug.Log("[Route] Event Next clicked.");
                 _showingRouteEvent = false;
-                ContinueRouteAdvance();
+                ShowRouteMovementPanel();
                 return;
             }
 
@@ -3217,7 +3217,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            Debug.Log("[Result] Next clicked.");
+            Debug.Log("[Result] Battle Result Next clicked. Returning to Movement.");
 
             if (_questProgress == null)
             {
@@ -3405,6 +3405,16 @@ namespace GameKari.Battle
             HideResultLeftButton("Next");
 
             Debug.Log("[Route] Movement panel shown.");
+        }
+
+        private string BuildRouteMovementText()
+        {
+            return
+                $"{GetQuestRouteTitleText()}\n\n" +
+                $"Current\n{GetCurrentRoutePointText()}\n\n" +
+                $"Route\n{BuildRouteBarText()}\n\n" +
+                $"{GetNextImportantRoutePointText()}\n" +
+                "Next: Move";
         }
 
         private string BuildRouteMovementText()
@@ -4687,6 +4697,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
