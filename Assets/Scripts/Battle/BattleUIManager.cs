@@ -54,13 +54,7 @@ namespace GameKari.Battle
         private readonly HashSet<BattleUnit> _actedUnits = new();
         private BattleUnit _active;
         private SkillData _hoveredSkill;
-        private GameObject _resultPanelObject;
-        private TMP_Text _resultTitleText;
-        private TMP_Text _resultSubText;
-        private Button _resultFormationButton;
-        private TMP_Text _resultFormationButtonText;
-        private Button _resultReturnButton;
-        private TMP_Text _resultReturnButtonText;
+
         private readonly ResultPanelPresenter _resultPanelPresenter = new();
         private readonly RouteOverlayPresenter _routeOverlayPresenter = new();
         private GameObject _enemyActionPreviewPanelObject;
@@ -2855,184 +2849,6 @@ namespace GameKari.Battle
             _resultPanelPresenter.Ensure(GetOverlayCanvas(), FindUiGameObjectByName, HandleResultFormationClicked, HandleResultReturnClicked);
         }
 
-        private void ApplyResultPanelLayout()
-        {
-            EnsureResultPanel();
-        }
-
-        private static void ApplyResultButtonLayout(Button button, float minX, float maxX)
-        {
-            if (button == null)
-            {
-                return;
-            }
-
-            RectTransform buttonRect = button.GetComponent<RectTransform>();
-            if (buttonRect == null)
-            {
-                return;
-            }
-
-            buttonRect.anchorMin = new Vector2(minX, 0.08f);
-            buttonRect.anchorMax = new Vector2(maxX, 0.22f);
-            buttonRect.offsetMin = Vector2.zero;
-            buttonRect.offsetMax = Vector2.zero;
-        }
-
-        private void TryBindExistingResultFormationButton()
-        {
-            if (_resultPanelObject == null)
-            {
-                return;
-            }
-
-            Transform buttonTransform = _resultPanelObject.transform.Find("FormationButton");
-            if (buttonTransform == null)
-            {
-                CreateResultFormationButton();
-                return;
-            }
-
-            _resultFormationButton = buttonTransform.GetComponent<Button>();
-            _resultFormationButtonText = buttonTransform.GetComponentInChildren<TMP_Text>(true);
-
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.onClick.RemoveListener(HandleResultFormationClicked);
-                _resultFormationButton.onClick.AddListener(HandleResultFormationClicked);
-            }
-        }
-
-        private void CreateResultFormationButton()
-        {
-            if (_resultPanelObject == null)
-            {
-                return;
-            }
-
-            Transform existing = _resultPanelObject.transform.Find("FormationButton");
-            if (existing != null)
-            {
-                _resultFormationButton = existing.GetComponent<Button>();
-                _resultFormationButtonText = existing.GetComponentInChildren<TMP_Text>(true);
-
-                if (_resultFormationButton != null)
-                {
-                    _resultFormationButton.onClick.RemoveListener(HandleResultFormationClicked);
-                    _resultFormationButton.onClick.AddListener(HandleResultFormationClicked);
-                }
-
-                return;
-            }
-
-            GameObject buttonObject = new GameObject("FormationButton");
-            buttonObject.transform.SetParent(_resultPanelObject.transform, false);
-
-            RectTransform buttonRect = buttonObject.AddComponent<RectTransform>();
-            buttonRect.anchorMin = new Vector2(0.08f, 0.08f);
-            buttonRect.anchorMax = new Vector2(0.46f, 0.22f);
-            buttonRect.offsetMin = Vector2.zero;
-            buttonRect.offsetMax = Vector2.zero;
-
-            Image buttonImage = buttonObject.AddComponent<Image>();
-            buttonImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
-
-            _resultFormationButton = buttonObject.AddComponent<Button>();
-            _resultFormationButton.onClick.AddListener(HandleResultFormationClicked);
-
-            GameObject textObject = new GameObject("Text");
-            textObject.transform.SetParent(buttonObject.transform, false);
-
-            RectTransform textRect = textObject.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            _resultFormationButtonText = textObject.AddComponent<TextMeshProUGUI>();
-            _resultFormationButtonText.alignment = TextAlignmentOptions.Center;
-            _resultFormationButtonText.fontSize = 24f;
-            _resultFormationButtonText.raycastTarget = false;
-            _resultFormationButtonText.text = "Formation";
-        }
-
-        private void TryBindExistingResultReturnButton()
-        {
-            if (_resultPanelObject == null)
-            {
-                return;
-            }
-
-            Transform buttonTransform = _resultPanelObject.transform.Find("ReturnButton");
-            if (buttonTransform == null)
-            {
-                CreateResultReturnButton();
-                return;
-            }
-
-            _resultReturnButton = buttonTransform.GetComponent<Button>();
-            _resultReturnButtonText = buttonTransform.GetComponentInChildren<TMP_Text>(true);
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.onClick.RemoveListener(HandleResultReturnClicked);
-                _resultReturnButton.onClick.AddListener(HandleResultReturnClicked);
-            }
-        }
-
-        private void CreateResultReturnButton()
-        {
-            if (_resultPanelObject == null)
-            {
-                return;
-            }
-
-            Transform existing = _resultPanelObject.transform.Find("ReturnButton");
-            if (existing != null)
-            {
-                _resultReturnButton = existing.GetComponent<Button>();
-                _resultReturnButtonText = existing.GetComponentInChildren<TMP_Text>(true);
-
-                if (_resultReturnButton != null)
-                {
-                    _resultReturnButton.onClick.RemoveListener(HandleResultReturnClicked);
-                    _resultReturnButton.onClick.AddListener(HandleResultReturnClicked);
-                }
-
-                return;
-            }
-
-            GameObject buttonObject = new GameObject("ReturnButton");
-            buttonObject.transform.SetParent(_resultPanelObject.transform, false);
-
-            RectTransform buttonRect = buttonObject.AddComponent<RectTransform>();
-            buttonRect.anchorMin = new Vector2(0.54f, 0.08f);
-            buttonRect.anchorMax = new Vector2(0.92f, 0.22f);
-            buttonRect.offsetMin = Vector2.zero;
-            buttonRect.offsetMax = Vector2.zero;
-
-            Image buttonImage = buttonObject.AddComponent<Image>();
-            buttonImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
-
-            _resultReturnButton = buttonObject.AddComponent<Button>();
-            _resultReturnButton.onClick.AddListener(HandleResultReturnClicked);
-
-            GameObject textObject = new GameObject("Text");
-            textObject.transform.SetParent(buttonObject.transform, false);
-
-            RectTransform textRect = textObject.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            _resultReturnButtonText = textObject.AddComponent<TextMeshProUGUI>();
-            _resultReturnButtonText.alignment = TextAlignmentOptions.Center;
-            _resultReturnButtonText.fontSize = 24f;
-            _resultReturnButtonText.raycastTarget = false;
-            _resultReturnButtonText.text = "Return";
-        }
-
         private void HandleResultFormationClicked()
         {
             if (_showingBattlePreparation)
@@ -3716,11 +3532,7 @@ namespace GameKari.Battle
             SetResultTitleAndBody("Battle Result", BuildBattleResultSubText(result));
             SetResultButtons(true, "Formation", true, "Next");
 
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.onClick.RemoveAllListeners();
-                _resultReturnButton.onClick.AddListener(HandleBattleResultNextClicked);
-            }
+            SetResultReturnButtonHandler(HandleBattleResultNextClicked);
 
             Debug.Log("[Battle] Battle Result shown.");
         }
@@ -4391,6 +4203,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
