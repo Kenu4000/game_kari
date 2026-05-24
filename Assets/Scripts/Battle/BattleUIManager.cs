@@ -122,14 +122,12 @@ namespace GameKari.Battle
             public string Text;
         }
 
-
         private enum BattlePhase
         {
             CommandSelect,
             ResolvingAction,
             BattleEnded
         }
-
 
         private class DefeatedEnemyInfo
         {
@@ -283,14 +281,6 @@ namespace GameKari.Battle
 
                 _partyMembers.Add(unit);
             }
-        }
-
-        private void ApplyBattleUnitPlacements(
-            bool isAlly,
-            List<BattleUnitPlacement> placements,
-            List<BattleUnit> units)
-        {
-            BattleUnitPlacementApplier.Apply(_grid, isAlly, placements, units);
         }
 
         // Enemy action selection
@@ -967,7 +957,6 @@ namespace GameKari.Battle
 
             Debug.Log($"[KO] {replacement.Name} entered enemy grid at {position}. Replacement cannot act this turn.");
         }
-
 
         // Enemy action preview
         private void RedrawEnemyActionPreviewHighlights()
@@ -1745,7 +1734,6 @@ namespace GameKari.Battle
             }
         }
 
-
         // Turn progression
         private IEnumerator FinishPlayerActionAfterDelay()
         {
@@ -2146,13 +2134,19 @@ namespace GameKari.Battle
         private static int HealLivingPartyMembers(List<BattleUnit> units, int healAmount)
         {
             return BattlePartyStateUtility.HealLivingMembers(units, healAmount);
-        }        private static int CountLivingPartyMembers(List<BattleUnit> units)
+        }
+
+        private static int CountLivingPartyMembers(List<BattleUnit> units)
         {
             return BattlePartyStateUtility.CountLivingMembers(units);
-        }        private static int CountKnownPartyMembers(List<BattleUnit> units)
+        }
+
+        private static int CountKnownPartyMembers(List<BattleUnit> units)
         {
             return BattlePartyStateUtility.CountKnownMembers(units);
-        }        private void EndBattle(string result)
+        }
+
+        private void EndBattle(string result)
         {
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
@@ -2863,6 +2857,7 @@ namespace GameKari.Battle
             EnsureResultPanel();
             _resultPanelPresenter.ApplyVisualStyle(panelColor, bodyAlignment, titleFontSize, bodyFontSize);
         }
+
         private void SetResultTitleAndBody(string title, string body)
         {
             EnsureResultPanel();
@@ -2923,6 +2918,7 @@ namespace GameKari.Battle
             _showingQuestFailed = false;
             ReturnToBase();
         }
+
         private void SetResultButtons(
             bool showLeftButton,
             string leftText,
@@ -2937,6 +2933,7 @@ namespace GameKari.Battle
         {
             SetResultButtons(false, string.Empty, false, rightText);
         }
+
         private void ShowQuestFailedPanel()
         {
             _showingRouteEvent = false;
@@ -2987,10 +2984,14 @@ namespace GameKari.Battle
         private int CountTotalBattleRoutePoints()
         {
             return QuestBattleCountUtility.CountTotalBattleRoutePoints(_questProgress, GetTotalBattleCount());
-        }        private int CountClearedBattleRoutePoints()
+        }
+
+        private int CountClearedBattleRoutePoints()
         {
             return QuestBattleCountUtility.CountClearedBattleRoutePoints(_questProgress, GetCurrentBattleNumber());
-        }        private void ShowRouteMovementPanel()
+        }
+
+        private void ShowRouteMovementPanel()
         {
             _showingRouteEvent = false;
             _showingRouteMovement = true;
@@ -3533,7 +3534,7 @@ namespace GameKari.Battle
                 return;
             }
 
-            // CharacterDataから表示用Spriteと個別補正値を取り出す。
+        // CharacterDataから表示用Spriteと個別補正値を取り出す。
             // Scaleは0以下になると表示が破綻するため、最低0.01に丸める。
             Sprite sprite = unit == null || unit.Data == null ? null : unit.Data.BattleSprite;
             float spriteScale = unit == null || unit.Data == null ? 1f : Mathf.Max(0.01f, unit.Data.BattleSpriteScale);
@@ -3575,7 +3576,7 @@ namespace GameKari.Battle
                 }
             }
 
-            // Spriteはセル内の最背面へ置く。
+        // Spriteはセル内の最背面へ置く。
             // cellLabelは後で最前面へ戻す。
             spriteImage.transform.SetSiblingIndex(0);
 
@@ -3590,7 +3591,7 @@ namespace GameKari.Battle
                 imageRect.localScale = new Vector3(spriteScale, spriteScale, 1f);
             }
 
-            // テキストは最前面に戻す。
+        // テキストは最前面に戻す。
             // 現在はSpriteありの場合テキストを空にしているが、
             // Sprite未設定時の名前表示や将来のデバッグ表示で隠れないようにする。
             cellLabel.transform.SetAsLastSibling();
@@ -3688,7 +3689,7 @@ namespace GameKari.Battle
                     continue;
                 }
 
-                // Do not change parent panel anchor / pivot here.
+        // Do not change parent panel anchor / pivot here.
                 // Place each slot from the top edge of the panel.
                 float y =
                     (panelHeight * 0.5f)
@@ -3796,7 +3797,7 @@ namespace GameKari.Battle
                 return "";
             }
 
-            // Acted units should not display a number, but they must still
+        // Acted units should not display a number, but they must still
             // occupy their original turn-order position when numbering
             // the remaining visible units.
             bool shouldHideNumber = _actedUnits.Contains(unit);
@@ -3983,5 +3984,6 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
