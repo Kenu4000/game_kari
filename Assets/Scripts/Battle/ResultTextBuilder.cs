@@ -8,20 +8,21 @@ namespace GameKari.Battle
     internal static class ResultTextBuilder
     {
         public static string BuildBattleResultText(
-            BattleClearResult result,
+            bool hasResult,
+            string rankText,
             int kakeraStock,
             int maxKakeraStock,
             int kakeraGain,
-            int expGain)
+            int expGain,
+            int partyHealAmount)
         {
-            if (result == null)
+            if (!hasResult)
             {
                 return "Next: Movement";
             }
 
-            string rankText = FormatBattleClearRank(result.Rank);
-            string healText = result.PartyHealAmount > 0
-                ? $"HP Bonus: +{result.PartyHealAmount}"
+            string healText = partyHealAmount > 0
+                ? $"HP Bonus: +{partyHealAmount}"
                 : "HP Bonus: none";
 
             return
@@ -39,17 +40,6 @@ namespace GameKari.Battle
                 $"Kakera Earned: {totalKakeraEarned}\n" +
                 $"EXP: {totalExpEarned}\n" +
                 "Next: Return to Base";
-        }
-
-        private static string FormatBattleClearRank(BattleClearRank rank)
-        {
-            return rank switch
-            {
-                BattleClearRank.OneTurn => "One Turn Clear",
-                BattleClearRank.TwoTurn => "Two Turn Clear",
-                BattleClearRank.ThreeTurn => "Three Turn Clear",
-                _ => "Clear"
-            };
         }
     }
 }
