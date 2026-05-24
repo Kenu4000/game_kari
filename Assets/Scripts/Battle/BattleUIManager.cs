@@ -3112,14 +3112,11 @@ namespace GameKari.Battle
 
         private string BuildQuestEndSummaryText()
         {
-            int clearedBattles = CountClearedBattleRoutePoints();
-            int totalBattles = CountTotalBattleRoutePoints();
-
-            return
-                $"Battles Cleared: {clearedBattles} / {Mathf.Max(1, totalBattles)}\n" +
-                $"Kakera Earned: {_totalKakeraEarned}\n" +
-                $"EXP: {_totalExpEarned}\n" +
-                "Next: Return to Base";
+            return ResultTextBuilder.BuildQuestEndSummaryText(
+                CountClearedBattleRoutePoints(),
+                CountTotalBattleRoutePoints(),
+                _totalKakeraEarned,
+                _totalExpEarned);
         }
 
         private void ShowQuestResultPanel()
@@ -3539,24 +3536,18 @@ namespace GameKari.Battle
 
         private string BuildBattleResultSubText(BattleClearResult result)
         {
-            if (result == null)
-            {
-                return "Next: Movement";
-            }
+            int kakeraGain = result == null ? 0 : CalculateKakeraGain(result.Rank);
+            int expGain = result == null ? 0 : CalculateExpGain(result);
+            int partyHealAmount = result == null ? 0 : result.PartyHealAmount;
 
-            string rankText = FormatBattleClearRank(result.Rank);
-            int kakeraGain = CalculateKakeraGain(result.Rank);
-            int expGain = CalculateExpGain(result);
-            string healText = result.PartyHealAmount > 0
-                ? $"HP Bonus: +{result.PartyHealAmount}"
-                : "HP Bonus: none";
-
-            return
-                $"Clear: {rankText}\n" +
-                $"Kakera: +{kakeraGain} / Stock {_kakeraStock}/{MaxKakeraStock}\n" +
-                $"EXP: +{expGain}\n" +
-                $"{healText}\n" +
-                "Next: Movement";
+            return ResultTextBuilder.BuildBattleResultText(
+                result != null,
+                result == null ? string.Empty : FormatBattleClearRank(result.Rank),
+                _kakeraStock,
+                MaxKakeraStock,
+                kakeraGain,
+                expGain,
+                partyHealAmount);
         }
 
         private static int CalculateKakeraGain(BattleClearRank rank)
@@ -4203,6 +4194,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
