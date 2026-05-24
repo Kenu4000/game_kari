@@ -3291,6 +3291,20 @@ namespace GameKari.Battle
 
             StopAllCoroutines();
 
+            ResetOverlayAndPreviewBeforeBattleStart();
+            ResetRouteAndResultFlagsForBattleStart();
+            ResetBattleRuntimeStateForBattleStart();
+            ReplaceEnemyWave(_questProgress.CurrentWave);
+            StartCurrentWaveProgress();
+            EnterInitialActorForStartedBattle();
+            RestoreBattleCommandUi();
+            RedrawBoard();
+
+            Debug.Log($"[Route] Started battle point: {point.DisplayName} ({point.PointType}), WaveIndex={_questProgress.CurrentWaveIndex}.");
+        }
+
+        private void ResetOverlayAndPreviewBeforeBattleStart()
+        {
             HideResultPanel();
             HideRouteOverlayPanels();
             HideActionOverlay();
@@ -3299,40 +3313,52 @@ namespace GameKari.Battle
             SetEnemyActionPreviewVisible(false);
             ClearPendingActionFlashTargets();
             ClearPendingActionValuePopups();
+        }
 
+        private void ResetRouteAndResultFlagsForBattleStart()
+        {
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
             _showingBattleResult = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
+        }
+
+        private void ResetBattleRuntimeStateForBattleStart()
+        {
             _battleEnded = false;
             _phase = BattlePhase.CommandSelect;
             _formationSettling = false;
             _hoveredSkill = null;
 
-            ReplaceEnemyWave(_questProgress.CurrentWave);
-
             _actedUnits.Clear();
             _turnNumbers.Clear();
             _previewEnemyActionStates.Clear();
+        }
 
+        private void StartCurrentWaveProgress()
+        {
             EnsureWaveProgress();
             _waveProgress.StartWave();
             RecoverAllAllyMP();
-
             RebuildTurnOrder();
+        }
 
+        private void EnterInitialActorForStartedBattle()
+        {
             BattleUnit nextAlly = FindNextUnactedAlly();
             if (nextAlly != null)
             {
                 EnterCommandSelect(nextAlly);
-            }
-            else
-            {
-                CheckBattleEnd();
+                return;
             }
 
+            CheckBattleEnd();
+        }
+
+        private void RestoreBattleCommandUi()
+        {
             if (commandPanel != null)
             {
                 commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
@@ -3346,9 +3372,6 @@ namespace GameKari.Battle
             }
 
             SetCommandUiVisible(true);
-            RedrawBoard();
-
-            Debug.Log($"[Route] Started battle point: {point.DisplayName} ({point.PointType}), WaveIndex={_questProgress.CurrentWaveIndex}.");
         }
 
         private void ReplaceEnemyWave(WaveData wave)
@@ -4094,6 +4117,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
