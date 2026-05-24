@@ -255,8 +255,8 @@ namespace GameKari.Battle
             _questProgress = setup.QuestProgress;
             _oneTurnClearPartyHeal = setup.OneTurnClearPartyHeal;
 
-            ApplyBattleUnitPlacements(true, setup.AllyPlacements, _allies);
-            ApplyBattleUnitPlacements(false, setup.EnemyPlacements, _enemies);
+            BattleUnitPlacementApplier.Apply(_grid, true, setup.AllyPlacements, _allies);
+            BattleUnitPlacementApplier.Apply(_grid, false, setup.EnemyPlacements, _enemies);
 
             _reserves.AddRange(setup.AllyReserves);
             RegisterPartyMembers(_allies);
@@ -290,25 +290,8 @@ namespace GameKari.Battle
             List<BattleUnitPlacement> placements,
             List<BattleUnit> units)
         {
-            if (placements == null || units == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < placements.Count; i++)
-            {
-                BattleUnitPlacement placement = placements[i];
-
-                if (placement == null || placement.Unit == null)
-                {
-                    continue;
-                }
-
-                _grid.SetUnit(isAlly, placement.Position, placement.Unit);
-                units.Add(placement.Unit);
-            }
-        }
-        // Enemy action selection
+            BattleUnitPlacementApplier.Apply(_grid, isAlly, placements, units);
+        }        // Enemy action selection
         private EnemyActionState ResolveEnemyActionState(BattleUnit enemy)
         {
             return EnemyActionSelector.ResolveEnemyActionState(enemy);
@@ -3376,29 +3359,11 @@ namespace GameKari.Battle
 
         private void ReplaceEnemyWave(WaveData wave)
         {
-            ClearEnemyBoardAndLists();
-
-            if (wave == null)
-            {
-                wave = DefaultWaveFactory.CreateDefaultWave();
-            }
-
-            ApplyBattleUnitPlacements(false, wave.EnemyPlacements, _enemies);
-            _enemyReserves.AddRange(wave.EnemyReserves);
-        }
-
-        private void ClearEnemyBoardAndLists()
+            BattleUnitPlacementApplier.ReplaceEnemyWave(_grid, wave, _enemies, _enemyReserves);
+        }        private void ClearEnemyBoardAndLists()
         {
-            _grid.SetUnit(false, GridPos.FrontTop, null);
-            _grid.SetUnit(false, GridPos.BackTop, null);
-            _grid.SetUnit(false, GridPos.FrontBottom, null);
-            _grid.SetUnit(false, GridPos.BackBottom, null);
-
-            _enemies.Clear();
-            _enemyReserves.Clear();
-        }
-
-        private void ReturnToBase()
+            BattleUnitPlacementApplier.ClearEnemySide(_grid, _enemies, _enemyReserves);
+        }        private void ReturnToBase()
         {
             // 現時点では拠点画面がないため、拠点帰還処理の仮実装としてBattleを再初期化する。
             // BootstrapBattle()により、味方HP/MP/KO状態・Inventory・QuestProgressは初期状態に戻る。
@@ -4117,5 +4082,6 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
