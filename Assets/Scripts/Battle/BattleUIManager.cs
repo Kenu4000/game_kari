@@ -3556,32 +3556,26 @@ namespace GameKari.Battle
 
         private void ShowRouteEventPanel(RoutePointData point)
         {
-            EnsureResultPanel();
-
             _showingRouteEvent = true;
             _showingRouteMovement = false;
             _showingBattlePreparation = false;
             _showingQuestResult = false;
             _showingQuestFailed = false;
-            _battleEnded = true;
-            _phase = BattlePhase.BattleEnded;
 
-            HideActionOverlay();
-            ClearTargetPreview();
-            ResetEnemyActionPreviewHighlights();
-            SetEnemyActionPreviewVisible(false);
-            SetCommandUiVisible(false);
+            PrepareResultPanelForOverlay();
 
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(true);
-            }
+            string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
+                ? "Route Event"
+                : point.DisplayName;
 
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.text = "Event";
-            }
+            SetResultTitleAndBody("Event", BuildRouteEventText(point));
+            HideResultLeftButton("Next");
 
+            Debug.Log($"[Route] Event shown: {displayName}");
+        }
+
+        private string BuildRouteEventText(RoutePointData point)
+        {
             string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
                 ? "Route Event"
                 : point.DisplayName;
@@ -3590,52 +3584,27 @@ namespace GameKari.Battle
                 ? "An event occurs on the route."
                 : point.EventText;
 
-            if (_resultSubText != null)
-            {
-                _resultSubText.text =
-                    $"{displayName}\n" +
-                    $"{eventText}\n" +
-                    "Next: Continue";
-            }
-
-            HideResultLeftButton("Next");
-
-            Debug.Log($"[Route] Event shown: {displayName}");
+            return
+                $"{displayName}\n" +
+                $"{eventText}\n\n" +
+                "Next: Continue";
         }
 
         private void ShowBattlePreparationPanel(RoutePointData point)
         {
-            EnsureResultPanel();
-
             _showingRouteEvent = false;
             _showingRouteMovement = false;
             _showingBattlePreparation = true;
-            _battleEnded = true;
-            _phase = BattlePhase.BattleEnded;
+            _showingQuestResult = false;
+            _showingQuestFailed = false;
 
-            HideActionOverlay();
-            ClearTargetPreview();
-            ResetEnemyActionPreviewHighlights();
-            SetEnemyActionPreviewVisible(false);
-            SetCommandUiVisible(false);
+            PrepareResultPanelForOverlay();
 
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(true);
-            }
+            string title = point != null && point.PointType == RoutePointType.Boss
+                ? "Boss Preparation"
+                : "Battle Preparation";
 
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.text = point != null && point.PointType == RoutePointType.Boss
-                    ? "Boss Preparation"
-                    : "Battle Preparation";
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.text = BuildBattlePreparationText(point);
-            }
-
+            SetResultTitleAndBody(title, BuildBattlePreparationText(point));
             RefreshBattlePreparationButtons(point);
 
             string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
@@ -3652,11 +3621,32 @@ namespace GameKari.Battle
                 : point.DisplayName;
 
             return
-                $"{displayName}\n" +
-                $"Party: {BuildPartyOverviewText()}\n" +
-                $"Kakera: {_kakeraStock}/{MaxKakeraStock}\n" +
-                $"Enemy Info: {BuildEnemyScoutStateText(point)}\n" +
+                $"{displayName}\n\n" +
+                $"Party\n{BuildPartyOverviewText()}\n\n" +
+                $"Kakera\n{_kakeraStock}/{MaxKakeraStock}\n\n" +
+                $"Enemy Info\n{BuildEnemyScoutStateText(point)}\n\n" +
+                $"{BuildPreparationActionHintText(point)}\n" +
                 "Next: Start Battle";
+        }
+
+        private string BuildPreparationActionHintText(RoutePointData point)
+        {
+            if (point == null || !point.HasBattleData)
+            {
+                return "Scout: unavailable";
+            }
+
+            if (IsRoutePointScouted(point))
+            {
+                return "Scout: already completed";
+            }
+
+            if (_kakeraStock <= 0)
+            {
+                return "Scout: requires Kakera 1";
+            }
+
+            return "Scout: available for Kakera 1";
         }
 
         private string BuildEnemyScoutStateText(RoutePointData point)
@@ -3668,7 +3658,7 @@ namespace GameKari.Battle
 
             if (!IsRoutePointScouted(point))
             {
-                return "Unscouted";
+                return "Unscouted\nDetails hidden.";
             }
 
             WaveData wave = GetWaveDataForRoutePoint(point);
@@ -3682,8 +3672,8 @@ namespace GameKari.Battle
 
             return
                 "Scouted\n" +
-                $"Enemies: {activeCount} active, {reserveCount} reserve\n" +
-                $"Formation: {BuildEnemyPlacementSummary(wave)}\n" +
+                $"Enemies: {activeCount} active / {reserveCount} reserve\n" +
+                $"Formation:\n{BuildEnemyPlacementSummary(wave)}\n" +
                 "Roles: deferred";
         }
 
@@ -3760,21 +3750,28 @@ namespace GameKari.Battle
             for (int i = 0; i < wave.EnemyPlacements.Count; i++)
             {
                 BattleUnitPlacement placement = wave.EnemyPlacements[i];
-                if (i > 0)
+
+                if (placement == null)
                 {
-                    builder.Append(", ");
+                    continue;
                 }
 
                 string unitName = placement.Unit == null
                     ? "Unknown"
                     : placement.Unit.Name;
 
+                builder.Append("- ");
                 builder.Append(placement.Position);
                 builder.Append(": ");
                 builder.Append(unitName);
+
+                if (i < wave.EnemyPlacements.Count - 1)
+                {
+                    builder.AppendLine();
+                }
             }
 
-            return builder.ToString();
+            return builder.Length == 0 ? "none" : builder.ToString();
         }
 
         private void StartBattleAtCurrentRoutePoint()
@@ -4661,6 +4658,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

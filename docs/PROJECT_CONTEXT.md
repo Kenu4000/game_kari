@@ -509,3 +509,12 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - The temporary route bar uses readable RoutePoint labels while keeping the UI provisional.
 - WaveData and QuestData.Waves remain as compatibility data for battle definitions.
 
+
+## Route Preparation Text Polish
+
+- Route Event and Battle Preparation temporary panels now use the shared result overlay setup helper.
+- Battle Preparation text is grouped into Party, Kakera, Enemy Info, Scout action hint, and Start Battle.
+- Scout state now distinguishes hidden details, completed scout, and insufficient Kakera.
+- Enemy formation scout output is displayed line-by-line for readability.
+- This remains a temporary text-based UI until dedicated Movement / Preparation panels are created.
+
