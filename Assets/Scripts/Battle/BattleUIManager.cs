@@ -137,8 +137,6 @@ namespace GameKari.Battle
             public GridPos Position;
         }
 
-
-
         // Battle setup
         private void Start()
         {
@@ -246,8 +244,6 @@ namespace GameKari.Battle
             _turnNumbers.Clear();
             _actedUnits.Clear();
         }
-
-
 
         private void ApplyBattleSetup(BattleSetupData setup)
         {
@@ -2257,10 +2253,6 @@ namespace GameKari.Battle
             return count;
         }
 
-
-
-
-
         private static int CountKnownPartyMembers(List<BattleUnit> units)
         {
             if (units == null)
@@ -3080,18 +3072,13 @@ namespace GameKari.Battle
 
             PrepareResultPanelForOverlay();
             ApplyResultPanelVisualStyle(new Color(0f, 0f, 0f, 0.78f), TextAlignmentOptions.Center, 38f, 22f);
-            SetResultTitleAndBody("Quest Failed", BuildQuestFailedText());
+            SetResultTitleAndBody("Quest Failed", BuildQuestEndSummaryText());
             HideResultLeftButton("Return to Base");
             SetResultReturnButtonHandler(HandleQuestReturnToBaseClicked);
 
             RedrawBoard();
 
             Debug.Log("[Quest] Quest Failed shown.");
-        }
-
-        private string BuildQuestFailedText()
-        {
-            return BuildQuestEndSummaryText();
         }
 
         private string BuildQuestEndSummaryText()
@@ -3114,16 +3101,11 @@ namespace GameKari.Battle
 
             PrepareResultPanelForOverlay();
             ApplyResultPanelVisualStyle(new Color(0f, 0f, 0f, 0.78f), TextAlignmentOptions.Center, 38f, 22f);
-            SetResultTitleAndBody("Quest Clear", BuildQuestResultText());
+            SetResultTitleAndBody("Quest Clear", BuildQuestEndSummaryText());
             HideResultLeftButton("Return to Base");
             SetResultReturnButtonHandler(HandleQuestReturnToBaseClicked);
 
             Debug.Log("[Quest] Quest Result shown.");
-        }
-
-        private string BuildQuestResultText()
-        {
-            return BuildQuestEndSummaryText();
         }
 
         private int CountTotalBattleRoutePoints()
@@ -3165,24 +3147,6 @@ namespace GameKari.Battle
 
             return count;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         private void ShowRouteMovementPanel()
         {
@@ -4178,148 +4142,5 @@ namespace GameKari.Battle
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
