@@ -50,6 +50,7 @@ BattleTest
 更新日: 2026-05-24
 
 - ユーザー報告により、Canvas配下の既存戦闘UI部品は親Objectにまとめ済み。
+- ユーザー報告により、まとめた後も問題なし。
 - ルートObject名は未記録。想定名は `BattleUIRoot`。
 - `BattleUIManager` はScene直下に残す方針。
 - `BattleUIManager` を戦闘UI親ObjectのPrefabには含めない方針。
@@ -83,6 +84,7 @@ BattleTest
 - `CommandPanel`, `RotateButton`, 各Gridラベル, `EnemyStatusPanel`, `AllyStatusPanel` などは既に紐づいている。
 - `Ui References` は現時点では `None` でも問題ない。
 - 既存の個別SerializeField参照を正として扱う。
+- 戦闘UI部品を親Objectにまとめた後も問題なしと報告済み。
 
 ## 現在の戦闘UI方針
 
