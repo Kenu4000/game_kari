@@ -19,7 +19,7 @@ MonoBehaviour:
   Speed: 9
   FaceIcon: {fileID: 0}
   StandingSprite: {fileID: 0}
-  BattleSprite: {fileID: 21300000, guid: c84689dcef62a7a4e8a13e7d1a338d6b, type: 3}
+  BattleSprite: {fileID: 21300000, guid: 31abafe9603d6774da043192fe29ca47, type: 3}
   BattleSpriteScale: 2
   BattleSpriteOffset: {x: 0, y: 120}
   DefaultSkills:
