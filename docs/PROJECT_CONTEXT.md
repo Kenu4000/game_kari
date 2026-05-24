@@ -489,3 +489,14 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Item usage count display。
 - Real Base scene。
 - Quest Select scene。
+
+## Route Flow Implementation Status
+
+- Quest is currently driven by fixed RoutePoint data: Start / Normal / Battle / Event / Boss.
+- Battle Result uses Kakera / EXP / Lv Up / Next display instead of Distance / Progress.
+- Temporary Route Movement, Event, Battle Preparation, Scout, Quest Clear, and Quest Failed panels are implemented in BattleUIManager.
+- Distance fields and progress calculation have been removed from BattleSetupData, QuestData, WaveData, QuestResultData, and WaveProgressState.
+- WaveProgressState is now responsible only for battle turn tracking used by Clear evaluation.
+- WaveData and QuestData.Waves remain as compatibility data for enemy battle definitions.
+- Battle Result internals use BattleClear* naming rather than WaveClear* naming.
+

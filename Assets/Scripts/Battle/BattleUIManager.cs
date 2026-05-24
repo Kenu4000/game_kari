@@ -115,10 +115,6 @@ namespace GameKari.Battle
         // BattleSprite未設定キャラの名前だけ表示するときの文字サイズ。
         private const float BoardTextOnlyFontSize = 24f;
 
-        // BattleSetupDataにWave/Distance設定がない場合の保険値。
-        // 通常はBattleSetupData側の値を使う。
-        private const int DefaultTargetDistance = 100;
-        private const int DefaultBaseWaveDistance = 20;
         private const int DefaultOneTurnClearPartyHeal = 5;
         private const int MaxKakeraStock = 9;
 
@@ -129,13 +125,13 @@ namespace GameKari.Battle
             public string Text;
         }
 
-        private sealed class WaveClearResult
+        private sealed class BattleClearResult
         {
-            public WaveClearRank Rank;
+            public BattleClearRank Rank;
 
             public int PartyHealAmount;
-            public int WaveNumber;
-            public int TotalWaves;
+            public int BattleNumber;
+            public int TotalBattles;
             public bool HasNextWave;
         }
 
@@ -146,7 +142,7 @@ namespace GameKari.Battle
             BattleEnded
         }
 
-        private enum WaveClearRank
+        private enum BattleClearRank
         {
             OneTurn,
             TwoTurn,
@@ -2049,7 +2045,7 @@ namespace GameKari.Battle
 
             if (!HasAliveActiveEnemies() && !HasAliveEnemyReserves())
             {
-                EndWaveClear();
+                EndBattleClear();
                 return;
             }
 
@@ -2059,12 +2055,12 @@ namespace GameKari.Battle
             }
         }
 
-        private void EndWaveClear()
+        private void EndBattleClear()
         {
-            WaveClearResult result = CreateWaveClearResult();
+            BattleClearResult result = CreateBattleClearResult();
             ApplyKakeraReward(result);
             ApplyExpReward(result);
-            ApplyWaveClearRewards(result);
+            ApplyBattleClearRewards(result);
 
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
@@ -2073,28 +2069,28 @@ namespace GameKari.Battle
             SetEnemyActionPreviewVisible(false);
             SetCommandUiVisible(false);
             HideActionOverlay();
-            ShowWaveResultPanel(result);
+            ShowBattleResultPanel(result);
             RedrawBoard();
 
-            Debug.Log($"[Battle] Clear: {FormatWaveClearRank(result.Rank)}, Kakera +{CalculateKakeraGain(result.Rank)}.");
+            Debug.Log($"[Battle] Clear: {FormatBattleClearRank(result.Rank)}, Kakera +{CalculateKakeraGain(result.Rank)}.");
         }
 
-        private WaveClearResult CreateWaveClearResult()
+        private BattleClearResult CreateBattleClearResult()
         {
             EnsureWaveProgress();
 
-            WaveClearRank rank = EvaluateWaveClearRank();
+            BattleClearRank rank = EvaluateBattleClearRank();
 
             bool hasNextWave = _questProgress != null && _questProgress.HasNextWave;
 
-            WaveClearResult result = new WaveClearResult
+            BattleClearResult result = new BattleClearResult
             {
                 Rank = rank,
-                PartyHealAmount = rank == WaveClearRank.OneTurn
+                PartyHealAmount = rank == BattleClearRank.OneTurn
                     ? _oneTurnClearPartyHeal
                     : 0,
-                WaveNumber = GetCurrentWaveNumber(),
-                TotalWaves = GetTotalWaveCount(),
+                BattleNumber = GetCurrentBattleNumber(),
+                TotalBattles = GetTotalBattleCount(),
                 HasNextWave = hasNextWave
             };
 
@@ -2109,7 +2105,7 @@ namespace GameKari.Battle
             }
         }
 
-        private int GetCurrentWaveNumber()
+        private int GetCurrentBattleNumber()
         {
             if (_questProgress == null)
             {
@@ -2119,7 +2115,7 @@ namespace GameKari.Battle
             return _questProgress.CurrentWaveIndex + 1;
         }
 
-        private int GetTotalWaveCount()
+        private int GetTotalBattleCount()
         {
             if (_questProgress == null || _questProgress.Quest == null)
             {
@@ -2129,7 +2125,7 @@ namespace GameKari.Battle
             return Mathf.Max(1, _questProgress.Quest.Waves.Count);
         }
 
-        private void ApplyExpReward(WaveClearResult result)
+        private void ApplyExpReward(BattleClearResult result)
         {
             if (result == null)
             {
@@ -2142,7 +2138,7 @@ namespace GameKari.Battle
             Debug.Log($"[EXP] Gain +{expGain}. TotalEarned={_totalExpEarned}.");
         }
 
-        private static int CalculateExpGain(WaveClearResult result)
+        private static int CalculateExpGain(BattleClearResult result)
         {
             if (result == null)
             {
@@ -2151,7 +2147,8 @@ namespace GameKari.Battle
 
             return result.HasNextWave ? 10 : 30;
         }
-        private void ApplyKakeraReward(WaveClearResult result)
+
+        private void ApplyKakeraReward(BattleClearResult result)
         {
             if (result == null)
             {
@@ -2167,7 +2164,7 @@ namespace GameKari.Battle
             Debug.Log($"[Kakera] Gain +{gain}. Stock {before}->{_kakeraStock}/{MaxKakeraStock}, TotalEarned={_totalKakeraEarned}.");
         }
 
-        private void ApplyWaveClearRewards(WaveClearResult result)
+        private void ApplyBattleClearRewards(BattleClearResult result)
         {
             if (result == null || result.PartyHealAmount <= 0)
             {
@@ -2181,36 +2178,36 @@ namespace GameKari.Battle
             Debug.Log($"[Battle] 1Turn Kill HP bonus applied. Eligible={eligibleCount}, Changed={changedCount}, Amount=+{result.PartyHealAmount}.");
         }
 
-        private WaveClearRank EvaluateWaveClearRank()
+        private BattleClearRank EvaluateBattleClearRank()
         {
             EnsureWaveProgress();
 
-            int waveTurn = _waveProgress.WaveTurn;
+            int battleTurn = _waveProgress.WaveTurn;
 
-            if (waveTurn <= 1)
+            if (battleTurn <= 1)
             {
-                return WaveClearRank.OneTurn;
+                return BattleClearRank.OneTurn;
             }
 
-            if (waveTurn == 2)
+            if (battleTurn == 2)
             {
-                return WaveClearRank.TwoTurn;
+                return BattleClearRank.TwoTurn;
             }
 
-            if (waveTurn == 3)
+            if (battleTurn == 3)
             {
-                return WaveClearRank.ThreeTurn;
+                return BattleClearRank.ThreeTurn;
             }
 
-            return WaveClearRank.FourPlusTurn;
+            return BattleClearRank.FourPlusTurn;
         }
 
-        private static string FormatWaveClearRank(WaveClearRank rank)
+        private static string FormatBattleClearRank(BattleClearRank rank)
         {
             return rank switch
             {
-                WaveClearRank.OneTurn => "1Turn Kill",
-                WaveClearRank.TwoTurn => "2Turn Kill",
+                BattleClearRank.OneTurn => "1Turn Kill",
+                BattleClearRank.TwoTurn => "2Turn Kill",
                 _ => "3+ Turn"
             };
         }
@@ -3301,6 +3298,7 @@ namespace GameKari.Battle
                 $"EXP: {_totalExpEarned}\n" +
                 "Next: Return to Base";
         }
+
         private void ShowQuestResultPanel()
         {
             EnsureResultPanel();
@@ -3367,7 +3365,7 @@ namespace GameKari.Battle
         {
             if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null)
             {
-                return GetTotalWaveCount();
+                return GetTotalBattleCount();
             }
 
             int count = 0;
@@ -3387,7 +3385,7 @@ namespace GameKari.Battle
         {
             if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null)
             {
-                return GetCurrentWaveNumber();
+                return GetCurrentBattleNumber();
             }
 
             int count = 0;
@@ -3402,6 +3400,7 @@ namespace GameKari.Battle
 
             return count;
         }
+
         private void ShowRouteMovementPanel()
         {
             EnsureResultPanel();
@@ -3545,6 +3544,7 @@ namespace GameKari.Battle
 
             return "Next Point: Base Return";
         }
+
         private void ContinueRouteAdvance()
         {
             if (_questProgress == null)
@@ -3824,6 +3824,7 @@ namespace GameKari.Battle
 
             return builder.ToString();
         }
+
         private void StartBattleAtCurrentRoutePoint()
         {
             if (_questProgress == null)
@@ -3971,7 +3972,7 @@ namespace GameKari.Battle
             Debug.Log("[Battle] Restarted battle.");
         }
 
-        private void ShowWaveResultPanel(WaveClearResult result)
+        private void ShowBattleResultPanel(BattleClearResult result)
         {
             EnsureResultPanel();
 
@@ -3989,7 +3990,7 @@ namespace GameKari.Battle
 
             if (_resultSubText != null)
             {
-                _resultSubText.text = BuildWaveResultSubText(result);
+                _resultSubText.text = BuildBattleResultSubText(result);
             }
 
             if (_resultFormationButton != null)
@@ -4018,7 +4019,7 @@ namespace GameKari.Battle
             }
         }
 
-        private string BuildWaveResultSubText(WaveClearResult result)
+        private string BuildBattleResultSubText(BattleClearResult result)
         {
             if (result == null)
             {
@@ -4032,19 +4033,19 @@ namespace GameKari.Battle
                 : "Return to Base";
 
             return
-                $"Clear: {FormatWaveClearRank(result.Rank)}\n" +
+                $"Clear: {FormatBattleClearRank(result.Rank)}\n" +
                 $"Kakera: +{kakeraGain}  Stock: {_kakeraStock}/{MaxKakeraStock}\n" +
                 $"EXP: +{expGain}\n" +
                 $"Lv Up: None\n" +
                 $"Next: {nextText}";
         }
 
-        private static int CalculateKakeraGain(WaveClearRank rank)
+        private static int CalculateKakeraGain(BattleClearRank rank)
         {
             return rank switch
             {
-                WaveClearRank.OneTurn => 3,
-                WaveClearRank.TwoTurn => 2,
+                BattleClearRank.OneTurn => 3,
+                BattleClearRank.TwoTurn => 2,
                 _ => 1
             };
         }
@@ -4708,6 +4709,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
