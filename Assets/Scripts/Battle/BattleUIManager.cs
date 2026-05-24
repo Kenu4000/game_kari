@@ -3613,127 +3613,6 @@ namespace GameKari.Battle
             return RouteOverlayTextBuilder.BuildRouteMovementText(_questProgress);
         }
 
-        private string GetQuestRouteTitleText()
-        {
-            if (_questProgress == null || _questProgress.Quest == null)
-            {
-                return "Quest Route";
-            }
-
-            return string.IsNullOrEmpty(_questProgress.Quest.QuestName)
-                ? "Quest Route"
-                : _questProgress.Quest.QuestName;
-        }
-
-        private string GetCurrentRoutePointText()
-        {
-            if (_questProgress == null || _questProgress.CurrentRoutePoint == null)
-            {
-                return "Unknown";
-            }
-
-            RoutePointData current = _questProgress.CurrentRoutePoint;
-            string displayName = GetRoutePointDisplayName(current);
-            int currentIndex = Mathf.Max(0, _questProgress.CurrentRoutePointIndex);
-            int totalCount = _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null
-                ? 0
-                : _questProgress.Quest.RoutePoints.Count;
-
-            return totalCount <= 0
-                ? $"{displayName} ({current.PointType})"
-                : $"{displayName} ({current.PointType}) / {currentIndex + 1} of {totalCount}";
-        }
-
-        private string BuildRouteBarText()
-        {
-            if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints.Count == 0)
-            {
-                return "Route: unavailable";
-            }
-
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-
-            for (int i = 0; i < _questProgress.Quest.RoutePoints.Count; i++)
-            {
-                RoutePointData point = _questProgress.Quest.RoutePoints[i];
-                if (i > 0)
-                {
-                    builder.Append(" -> ");
-                }
-
-                if (i == _questProgress.CurrentRoutePointIndex)
-                {
-                    builder.Append("[Truck]");
-                    continue;
-                }
-
-                builder.Append(GetRoutePointSymbol(point));
-            }
-
-            return builder.ToString();
-        }
-
-        private static string GetRoutePointSymbol(RoutePointData point)
-        {
-            if (point == null)
-            {
-                return "?";
-            }
-
-            return point.PointType switch
-            {
-                RoutePointType.Start => "Start",
-                RoutePointType.Normal => "·",
-                RoutePointType.Battle => "Battle",
-                RoutePointType.Event => "Event",
-                RoutePointType.Boss => "Boss",
-                _ => "?"
-            };
-        }
-
-        private string GetNextImportantRoutePointText()
-        {
-            if (_questProgress == null || _questProgress.Quest == null)
-            {
-                return "Next Point: unknown";
-            }
-
-            for (int i = _questProgress.CurrentRoutePointIndex + 1; i < _questProgress.Quest.RoutePoints.Count; i++)
-            {
-                RoutePointData point = _questProgress.Quest.RoutePoints[i];
-                if (point == null)
-                {
-                    continue;
-                }
-
-                if (point.PointType == RoutePointType.Normal || point.PointType == RoutePointType.Start)
-                {
-                    continue;
-                }
-
-                string displayName = GetRoutePointDisplayName(point);
-                int segmentCount = Mathf.Max(1, i - _questProgress.CurrentRoutePointIndex);
-
-                return
-                    "Next Point\n" +
-                    $"{displayName} ({point.PointType})\n" +
-                    $"Segments: {segmentCount}";
-            }
-
-            return "Next Point\nBase Return";
-        }
-
-        private static string GetRoutePointDisplayName(RoutePointData point)
-        {
-            if (point == null)
-            {
-                return "Unknown";
-            }
-
-            return string.IsNullOrEmpty(point.DisplayName)
-                ? point.PointType.ToString()
-                : point.DisplayName;
-        }
         private void ContinueRouteAdvance()
         {
             if (_questProgress == null)
@@ -3852,54 +3731,6 @@ namespace GameKari.Battle
                 GetWaveDataForRoutePoint(point));
         }
 
-        private string BuildPreparationActionHintText(RoutePointData point)
-        {
-            if (point == null || !point.HasBattleData)
-            {
-                return "Scout: unavailable";
-            }
-
-            if (IsRoutePointScouted(point))
-            {
-                return "Scout: already completed";
-            }
-
-            if (_kakeraStock <= 0)
-            {
-                return "Scout: requires Kakera 1";
-            }
-
-            return "Scout: available for Kakera 1";
-        }
-
-        private string BuildEnemyScoutStateText(RoutePointData point)
-        {
-            if (point == null || !point.HasBattleData)
-            {
-                return "Unavailable";
-            }
-
-            if (!IsRoutePointScouted(point))
-            {
-                return "Unscouted\nDetails hidden.";
-            }
-
-            WaveData wave = GetWaveDataForRoutePoint(point);
-            if (wave == null)
-            {
-                return "Scouted\nEnemies: unknown\nRoles: deferred";
-            }
-
-            int activeCount = wave.EnemyPlacements == null ? 0 : wave.EnemyPlacements.Count;
-            int reserveCount = wave.EnemyReserves == null ? 0 : wave.EnemyReserves.Count;
-
-            return
-                "Scouted\n" +
-                $"Enemies: {activeCount} active / {reserveCount} reserve\n" +
-                $"Formation:\n{BuildEnemyPlacementSummary(wave)}\n" +
-                "Roles: deferred";
-        }
-
         private void RefreshBattlePreparationPanel(RoutePointData point)
         {
             if (_battlePreparationPanel != null && _battlePreparationPanel.BodyText != null)
@@ -3941,42 +3772,6 @@ namespace GameKari.Battle
             }
 
             return _questProgress.Quest.Waves[point.WaveIndex];
-        }
-
-        private static string BuildEnemyPlacementSummary(WaveData wave)
-        {
-            if (wave == null || wave.EnemyPlacements == null || wave.EnemyPlacements.Count == 0)
-            {
-                return "none";
-            }
-
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-
-            for (int i = 0; i < wave.EnemyPlacements.Count; i++)
-            {
-                BattleUnitPlacement placement = wave.EnemyPlacements[i];
-
-                if (placement == null)
-                {
-                    continue;
-                }
-
-                string unitName = placement.Unit == null
-                    ? "Unknown"
-                    : placement.Unit.Name;
-
-                builder.Append("- ");
-                builder.Append(placement.Position);
-                builder.Append(": ");
-                builder.Append(unitName);
-
-                if (i < wave.EnemyPlacements.Count - 1)
-                {
-                    builder.AppendLine();
-                }
-            }
-
-            return builder.Length == 0 ? "none" : builder.ToString();
         }
 
         private void StartBattleAtCurrentRoutePoint()
@@ -4845,6 +4640,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
