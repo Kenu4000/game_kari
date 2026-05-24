@@ -291,7 +291,9 @@ namespace GameKari.Battle
             List<BattleUnit> units)
         {
             BattleUnitPlacementApplier.Apply(_grid, isAlly, placements, units);
-        }        // Enemy action selection
+        }
+
+        // Enemy action selection
         private EnemyActionState ResolveEnemyActionState(BattleUnit enemy)
         {
             return EnemyActionSelector.ResolveEnemyActionState(enemy);
@@ -2143,85 +2145,14 @@ namespace GameKari.Battle
 
         private static int HealLivingPartyMembers(List<BattleUnit> units, int healAmount)
         {
-            if (units == null || healAmount <= 0)
-            {
-                return 0;
-            }
-
-            int changedCount = 0;
-
-            for (int i = 0; i < units.Count; i++)
-            {
-                BattleUnit unit = units[i];
-                if (unit == null || unit.IsDead || unit.Data == null)
-                {
-                    continue;
-                }
-
-                int beforeHp = unit.CurrentHP;
-                unit.CurrentHP = Mathf.Min(unit.Data.MaxHP, unit.CurrentHP + healAmount);
-
-                if (unit.CurrentHP != beforeHp)
-                {
-                    changedCount++;
-                    Debug.Log($"[Battle] {unit.Name} recovered HP {beforeHp}->{unit.CurrentHP}/{unit.Data.MaxHP}.");
-                }
-                else
-                {
-                    Debug.Log($"[Battle] {unit.Name} was eligible for HP reward but stayed at {unit.CurrentHP}/{unit.Data.MaxHP}.");
-                }
-            }
-
-            return changedCount;
-        }
-
-        private static int CountLivingPartyMembers(List<BattleUnit> units)
+            return BattlePartyStateUtility.HealLivingMembers(units, healAmount);
+        }        private static int CountLivingPartyMembers(List<BattleUnit> units)
         {
-            if (units == null)
-            {
-                return 0;
-            }
-
-            int count = 0;
-
-            for (int i = 0; i < units.Count; i++)
-            {
-                BattleUnit unit = units[i];
-                if (unit == null || unit.IsDead || unit.Data == null)
-                {
-                    continue;
-                }
-
-                count++;
-            }
-
-            return count;
-        }
-
-        private static int CountKnownPartyMembers(List<BattleUnit> units)
+            return BattlePartyStateUtility.CountLivingMembers(units);
+        }        private static int CountKnownPartyMembers(List<BattleUnit> units)
         {
-            if (units == null)
-            {
-                return 0;
-            }
-
-            int count = 0;
-
-            for (int i = 0; i < units.Count; i++)
-            {
-                BattleUnit unit = units[i];
-                if (unit == null || unit.Data == null)
-                {
-                    continue;
-                }
-
-                count++;
-            }
-
-            return count;
-        }
-
-        private void EndBattle(string result)
+            return BattlePartyStateUtility.CountKnownMembers(units);
+        }        private void EndBattle(string result)
         {
             _battleEnded = true;
             _phase = BattlePhase.BattleEnded;
@@ -3055,45 +2986,11 @@ namespace GameKari.Battle
 
         private int CountTotalBattleRoutePoints()
         {
-            if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null)
-            {
-                return GetTotalBattleCount();
-            }
-
-            int count = 0;
-            for (int i = 0; i < _questProgress.Quest.RoutePoints.Count; i++)
-            {
-                RoutePointData point = _questProgress.Quest.RoutePoints[i];
-                if (point != null && point.HasBattleData)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
-
-        private int CountClearedBattleRoutePoints()
+            return QuestBattleCountUtility.CountTotalBattleRoutePoints(_questProgress, GetTotalBattleCount());
+        }        private int CountClearedBattleRoutePoints()
         {
-            if (_questProgress == null || _questProgress.Quest == null || _questProgress.Quest.RoutePoints == null)
-            {
-                return GetCurrentBattleNumber();
-            }
-
-            int count = 0;
-            for (int i = 0; i <= _questProgress.CurrentRoutePointIndex && i < _questProgress.Quest.RoutePoints.Count; i++)
-            {
-                RoutePointData point = _questProgress.Quest.RoutePoints[i];
-                if (point != null && point.HasBattleData)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
-
-        private void ShowRouteMovementPanel()
+            return QuestBattleCountUtility.CountClearedBattleRoutePoints(_questProgress, GetCurrentBattleNumber());
+        }        private void ShowRouteMovementPanel()
         {
             _showingRouteEvent = false;
             _showingRouteMovement = true;
@@ -3360,10 +3257,14 @@ namespace GameKari.Battle
         private void ReplaceEnemyWave(WaveData wave)
         {
             BattleUnitPlacementApplier.ReplaceEnemyWave(_grid, wave, _enemies, _enemyReserves);
-        }        private void ClearEnemyBoardAndLists()
+        }
+
+        private void ClearEnemyBoardAndLists()
         {
             BattleUnitPlacementApplier.ClearEnemySide(_grid, _enemies, _enemyReserves);
-        }        private void ReturnToBase()
+        }
+
+        private void ReturnToBase()
         {
             // 現時点では拠点画面がないため、拠点帰還処理の仮実装としてBattleを再初期化する。
             // BootstrapBattle()により、味方HP/MP/KO状態・Inventory・QuestProgressは初期状態に戻る。
@@ -4082,6 +3983,5 @@ namespace GameKari.Battle
 
     }
 }
-
 
 
