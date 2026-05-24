@@ -2486,16 +2486,22 @@ namespace GameKari.Battle
         private void EnsureEnemyActionPreviewPanel()
         {
             // Enemy action preview is intentionally disabled.
-        }        private void UpdateEnemyActionPreview()
+        }
+
+        private void UpdateEnemyActionPreview()
         {
             // Enemy action preview is intentionally disabled.
-        }        private void SetEnemyActionPreviewVisible(bool visible)
+        }
+
+        private void SetEnemyActionPreviewVisible(bool visible)
         {
             if (_enemyActionPreviewPanelObject != null)
             {
                 _enemyActionPreviewPanelObject.SetActive(false);
             }
-        }        private Canvas GetOverlayCanvas()
+        }
+
+        private Canvas GetOverlayCanvas()
         {
             Canvas canvas = GetComponentInParent<Canvas>();
             if (canvas == null && commandPanel != null)
@@ -3828,6 +3834,5 @@ namespace GameKari.Battle
 
     }
 }
-
 
 
