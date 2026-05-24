@@ -603,3 +603,11 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Battle Preparation / Boss Preparation uses top-left body text and a brown-black panel.
 - Battle Result and Quest Result reset to the normal black result panel style.
 
+
+## Route Overlay Text Polish
+
+- Movement body now labels its operation as `Button: Move`.
+- Event body now states `Button: Next → Movement`.
+- Battle Preparation body now states `Button: Start Battle`.
+- These remain temporary text overlays until dedicated route UI panels are implemented.
+

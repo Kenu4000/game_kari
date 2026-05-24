@@ -3558,8 +3558,9 @@ namespace GameKari.Battle
                 $"{GetQuestRouteTitleText()}\n\n" +
                 $"Current\n{GetCurrentRoutePointText()}\n\n" +
                 $"Route\n{BuildRouteBarText()}\n\n" +
-                $"{GetNextImportantRoutePointText()}\n" +
-                "Next: Move";
+                $"{GetNextImportantRoutePointText()}\n\n" +
+                "Action\n" +
+                "Button: Move";
         }
 
         private string GetQuestRouteTitleText()
@@ -3778,9 +3779,10 @@ namespace GameKari.Battle
                 : point.EventText;
 
             return
-                $"{displayName}\n" +
+                $"{displayName}\n\n" +
                 $"{eventText}\n\n" +
-                "Next: Continue";
+                "After Event\n" +
+                "Button: Next → Movement";
         }
 
         private void ShowBattlePreparationPanel(RoutePointData point)
@@ -3821,8 +3823,9 @@ namespace GameKari.Battle
                 $"Party\n{BuildPartyOverviewText()}\n\n" +
                 $"Kakera\n{_kakeraStock}/{MaxKakeraStock}\n\n" +
                 $"Enemy Info\n{BuildEnemyScoutStateText(point)}\n\n" +
-                $"{BuildPreparationActionHintText(point)}\n" +
-                "Next: Start Battle";
+                $"{BuildPreparationActionHintText(point)}\n\n" +
+                "Action\n" +
+                "Button: Start Battle";
         }
 
         private string BuildPreparationActionHintText(RoutePointData point)
@@ -4833,6 +4836,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
