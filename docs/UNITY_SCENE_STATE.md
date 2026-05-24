@@ -22,7 +22,9 @@ Scene名:
 BattleTest
 ```
 
-Hierarchy概略:
+## 以前のHierarchy概略
+
+2026-05-24時点のスクリーンショットでは、戦闘UI要素はCanvas直下に並んでいた。
 
 ```text
 BattleTest
@@ -39,6 +41,37 @@ BattleTest
 │   ├── EnemyStatusPanel
 │   ├── AllyStatusPanel
 │   └── RotateButton
+├── EventSystem
+└── BattleUIManager
+```
+
+## 現在のHierarchy状態
+
+更新日: 2026-05-24
+
+- ユーザー報告により、Canvas配下の既存戦闘UI部品は親Objectにまとめ済み。
+- ルートObject名は未記録。想定名は `BattleUIRoot`。
+- `BattleUIManager` はScene直下に残す方針。
+- `BattleUIManager` を戦闘UI親ObjectのPrefabには含めない方針。
+
+想定構造:
+
+```text
+BattleTest
+├── Main Camera
+├── Directional Light
+├── Canvas
+│   └── BattleUIRoot または既存UI親Object
+│       ├── BattleBackground
+│       ├── TruckRoot
+│       ├── BossNamePlate
+│       ├── TopActionPanel
+│       ├── CommandPanel
+│       ├── EnemyGridPanel
+│       ├── AllyGridPanel
+│       ├── EnemyStatusPanel
+│       ├── AllyStatusPanel
+│       └── RotateButton
 ├── EventSystem
 └── BattleUIManager
 ```
@@ -66,10 +99,9 @@ BattleTest
 Scene
 ├── BattleUIManager   // Scene直下に残す
 └── Canvas
-    └── 戦闘UI一式     // 将来的にBattleUIRootとしてPrefab化候補
+    └── BattleUIRoot  // 戦闘UI一式。Prefab化候補
 ```
 
-現在はCanvas直下に戦闘UI要素が並んでいる。
 Prefab化する場合は、いきなり作り直すのではなく、既存UIを親ObjectにまとめてからPrefab化する。
 
 候補構造:
@@ -109,7 +141,7 @@ Canvas
 
 以下の状態が分かったら追記する。
 
-- `BattleUIRoot` を作ったか
+- 戦闘UI親Objectの正式名
 - `BattleUIRoot` をPrefab化したか
 - Prefab保存先
 - `BattleUIManager` の参照が維持されたか
