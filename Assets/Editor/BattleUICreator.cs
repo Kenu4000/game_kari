@@ -9,9 +9,20 @@ public static class BattleUICreator
     private const float ReferenceWidth = 1920f;
     private const float ReferenceHeight = 1080f;
 
-    [MenuItem("Tools/Create Battle UI")]
+    [MenuItem("Tools/Battle UI/Legacy/Create Battle UI Template (Rebuilds Generated UI)")]
     public static void CreateBattleUI()
     {
+        bool confirmed = EditorUtility.DisplayDialog(
+            "Create Battle UI Template",
+            "This is a legacy template generator. It may remove generated battle UI roots under the Canvas. Do not use this for the current hand-edited BattleTest UI unless you intentionally want to rebuild a template.",
+            "Create Template",
+            "Cancel");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
         Canvas canvas = Object.FindAnyObjectByType<Canvas>();
         if (canvas == null)
         {
@@ -24,7 +35,7 @@ public static class BattleUICreator
         GameObject battleScreenRoot = CreateBattleScreenRoot(canvas.transform);
         CreateMainPanels(battleScreenRoot.transform);
         AssignBattleUIReferences(battleScreenRoot);
-        Debug.Log("Battle UI created from Tools > Create Battle UI");
+        Debug.Log("Battle UI template created from Tools > Battle UI > Legacy > Create Battle UI Template.");
     }
 
     private static readonly string[] GeneratedRootNames =
@@ -368,4 +379,5 @@ public static class BattleUICreator
         rt.sizeDelta = size;
     }
 }
+
 
