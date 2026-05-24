@@ -61,6 +61,7 @@ namespace GameKari.Battle
         private TMP_Text _resultFormationButtonText;
         private Button _resultReturnButton;
         private TMP_Text _resultReturnButtonText;
+        private readonly ResultPanelPresenter _resultPanelPresenter = new();
         private readonly RouteOverlayPresenter _routeOverlayPresenter = new();
         private GameObject _enemyActionPreviewPanelObject;
         private TMP_Text _enemyActionPreviewText;
@@ -2851,140 +2852,12 @@ namespace GameKari.Battle
         // Result UI
         private void EnsureResultPanel()
         {
-            if (_resultPanelObject != null)
-            {
-                return;
-            }
-
-            Canvas canvas = GetComponentInParent<Canvas>();
-            if (canvas == null && commandPanel != null)
-            {
-                canvas = commandPanel.GetComponentInParent<Canvas>();
-            }
-
-            if (canvas == null)
-            {
-                return;
-            }
-
-            GameObject existing = FindUiGameObjectByName("ResultPanel");
-            if (existing != null)
-            {
-                _resultPanelObject = existing;
-                TMP_Text[] labels = _resultPanelObject.GetComponentsInChildren<TMP_Text>(true);
-                for (int i = 0; i < labels.Length; i++)
-                {
-                    if (labels[i] == null)
-                    {
-                        continue;
-                    }
-
-                    string lowerName = labels[i].name.ToLowerInvariant();
-                    if (lowerName.Contains("title"))
-                    {
-                        _resultTitleText = labels[i];
-                    }
-                    else if (lowerName.Contains("sub"))
-                    {
-                        _resultSubText = labels[i];
-                    }
-                }
-
-                TryBindExistingResultFormationButton();
-                TryBindExistingResultReturnButton();
-                ApplyResultPanelLayout();
-                return;
-            }
-
-            _resultPanelObject = new GameObject("ResultPanel");
-            _resultPanelObject.transform.SetParent(canvas.transform, false);
-
-            RectTransform panelRect = _resultPanelObject.AddComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.32f, 0.28f);
-            panelRect.anchorMax = new Vector2(0.68f, 0.72f);
-            panelRect.offsetMin = Vector2.zero;
-            panelRect.offsetMax = Vector2.zero;
-
-            Image panelImage = _resultPanelObject.AddComponent<Image>();
-            panelImage.color = new Color(0f, 0f, 0f, 0.78f);
-
-            GameObject titleObject = new GameObject("ResultTitle");
-            titleObject.transform.SetParent(_resultPanelObject.transform, false);
-
-            _resultTitleText = titleObject.AddComponent<TextMeshProUGUI>();
-            _resultTitleText.alignment = TextAlignmentOptions.Center;
-            _resultTitleText.fontSize = 38f;
-            _resultTitleText.raycastTarget = false;
-
-            RectTransform titleRect = titleObject.GetComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0f, 0.70f);
-            titleRect.anchorMax = new Vector2(1f, 0.90f);
-            titleRect.offsetMin = Vector2.zero;
-            titleRect.offsetMax = Vector2.zero;
-
-            GameObject subObject = new GameObject("ResultSubText");
-            subObject.transform.SetParent(_resultPanelObject.transform, false);
-
-            _resultSubText = subObject.AddComponent<TextMeshProUGUI>();
-            _resultSubText.alignment = TextAlignmentOptions.Center;
-            _resultSubText.fontSize = 22f;
-            _resultSubText.raycastTarget = false;
-
-            RectTransform subRect = subObject.GetComponent<RectTransform>();
-            subRect.anchorMin = new Vector2(0f, 0.28f);
-            subRect.anchorMax = new Vector2(1f, 0.68f);
-            subRect.offsetMin = Vector2.zero;
-            subRect.offsetMax = Vector2.zero;
-
-            CreateResultFormationButton();
-            CreateResultReturnButton();
-            ApplyResultPanelLayout();
+            _resultPanelPresenter.Ensure(GetOverlayCanvas(), FindUiGameObjectByName, HandleResultFormationClicked, HandleResultReturnClicked);
         }
 
         private void ApplyResultPanelLayout()
         {
-            if (_resultPanelObject != null)
-            {
-                RectTransform panelRect = _resultPanelObject.GetComponent<RectTransform>();
-                if (panelRect != null)
-                {
-                    panelRect.anchorMin = new Vector2(0.32f, 0.28f);
-                    panelRect.anchorMax = new Vector2(0.68f, 0.72f);
-                    panelRect.offsetMin = Vector2.zero;
-                    panelRect.offsetMax = Vector2.zero;
-                }
-            }
-
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.fontSize = 38f;
-
-                RectTransform titleRect = _resultTitleText.GetComponent<RectTransform>();
-                if (titleRect != null)
-                {
-                    titleRect.anchorMin = new Vector2(0f, 0.70f);
-                    titleRect.anchorMax = new Vector2(1f, 0.90f);
-                    titleRect.offsetMin = Vector2.zero;
-                    titleRect.offsetMax = Vector2.zero;
-                }
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.fontSize = 22f;
-
-                RectTransform subRect = _resultSubText.GetComponent<RectTransform>();
-                if (subRect != null)
-                {
-                    subRect.anchorMin = new Vector2(0f, 0.28f);
-                    subRect.anchorMax = new Vector2(1f, 0.68f);
-                    subRect.offsetMin = Vector2.zero;
-                    subRect.offsetMax = Vector2.zero;
-                }
-            }
-
-            ApplyResultButtonLayout(_resultFormationButton, 0.08f, 0.46f);
-            ApplyResultButtonLayout(_resultReturnButton, 0.54f, 0.92f);
+            EnsureResultPanel();
         }
 
         private static void ApplyResultButtonLayout(Button button, float minX, float maxX)
@@ -3170,14 +3043,12 @@ namespace GameKari.Battle
 
             Debug.Log("[Result] Formation clicked.");
 
-            if (_resultSubText != null)
-            {
-                _resultSubText.text =
-                    "Formation / Preparation\n" +
-                    $"Party: {BuildPartyOverviewText()}\n" +
-                    $"Kakera: {_kakeraStock}/{MaxKakeraStock}\n" +
-                    "Item / Skill / Link check: deferred";
-            }
+            EnsureResultPanel();
+            _resultPanelPresenter.SetBody(
+                "Formation / Preparation\n" +
+                $"Party: {BuildPartyOverviewText()}\n" +
+                $"Kakera: {_kakeraStock}/{MaxKakeraStock}\n" +
+                "Item / Skill / Link check: deferred");
         }
 
         private void HandlePreparationScoutClicked()
@@ -3316,63 +3187,24 @@ namespace GameKari.Battle
             SetCommandUiVisible(false);
             HideActionOverlay();
 
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(true);
-            }
+            _resultPanelPresenter.SetVisible(true);
         }
 
         private void ApplyResultPanelVisualStyle(Color panelColor, TextAlignmentOptions bodyAlignment, float titleFontSize, float bodyFontSize)
         {
-            ApplyResultPanelLayout();
-
-            if (_resultPanelObject != null)
-            {
-                Image panelImage = _resultPanelObject.GetComponent<Image>();
-                if (panelImage != null)
-                {
-                    panelImage.color = panelColor;
-                }
-            }
-
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.fontSize = titleFontSize;
-                _resultTitleText.alignment = TextAlignmentOptions.Center;
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.fontSize = bodyFontSize;
-                _resultSubText.alignment = bodyAlignment;
-            }
+            EnsureResultPanel();
+            _resultPanelPresenter.ApplyVisualStyle(panelColor, bodyAlignment, titleFontSize, bodyFontSize);
         }
         private void SetResultTitleAndBody(string title, string body)
         {
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.text = title;
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.text = body;
-            }
+            EnsureResultPanel();
+            _resultPanelPresenter.SetTitleAndBody(title, body);
         }
 
         private void SetResultReturnButtonHandler(UnityEngine.Events.UnityAction handler)
         {
-            if (_resultReturnButton == null)
-            {
-                return;
-            }
-
-            _resultReturnButton.onClick.RemoveAllListeners();
-
-            if (handler != null)
-            {
-                _resultReturnButton.onClick.AddListener(handler);
-            }
+            EnsureResultPanel();
+            _resultPanelPresenter.SetRightButtonHandler(handler);
         }
 
         private void HandleBattleResultNextClicked()
@@ -3429,26 +3261,8 @@ namespace GameKari.Battle
             bool leftInteractable,
             string rightText)
         {
-            if (_resultFormationButton != null)
-            {
-                _resultFormationButton.gameObject.SetActive(showLeftButton);
-                _resultFormationButton.interactable = leftInteractable;
-            }
-
-            if (_resultFormationButtonText != null)
-            {
-                _resultFormationButtonText.text = leftText;
-            }
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.gameObject.SetActive(true);
-            }
-
-            if (_resultReturnButtonText != null)
-            {
-                _resultReturnButtonText.text = rightText;
-            }
+            EnsureResultPanel();
+            _resultPanelPresenter.SetButtons(showLeftButton, leftText, leftInteractable, rightText);
         }
 
         private void HideResultLeftButton(string rightText)
@@ -3947,41 +3761,15 @@ namespace GameKari.Battle
         {
             EnsureResultPanel();
             HideRouteOverlayPanels();
-
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(true);
-            }
-
-            if (_resultTitleText != null)
-            {
-                _resultTitleText.text = result;
-            }
-
-            if (_resultSubText != null)
-            {
-                _resultSubText.text = "Battle End";
-            }
-
-            if (_resultReturnButton != null)
-            {
-                _resultReturnButton.gameObject.SetActive(true);
-            }
-
-            if (_resultReturnButtonText != null)
-            {
-                _resultReturnButtonText.text = "Next";
-            }
+            _resultPanelPresenter.SetVisible(true);
+            _resultPanelPresenter.SetTitleAndBody(result, "Battle End");
+            _resultPanelPresenter.SetButtons(false, string.Empty, false, "Next");
         }
 
         private void HideResultPanel()
         {
             EnsureResultPanel();
-
-            if (_resultPanelObject != null)
-            {
-                _resultPanelObject.SetActive(false);
-            }
+            _resultPanelPresenter.SetVisible(false);
         }
 
         // Board redraw and status UI
@@ -4603,6 +4391,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
