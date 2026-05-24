@@ -61,9 +61,7 @@ namespace GameKari.Battle
         private TMP_Text _resultFormationButtonText;
         private Button _resultReturnButton;
         private TMP_Text _resultReturnButtonText;
-        private RouteOverlayView _routeMovementPanel;
-        private RouteOverlayView _routeEventPanel;
-        private RouteOverlayView _battlePreparationPanel;
+        private readonly RouteOverlayPresenter _routeOverlayPresenter = new();
         private GameObject _enemyActionPreviewPanelObject;
         private TMP_Text _enemyActionPreviewText;
         private readonly List<GridPos> _pendingActionFlashTargets = new();
@@ -2825,31 +2823,16 @@ namespace GameKari.Battle
 
         private void EnsureRouteOverlayPanels()
         {
-            Canvas canvas = GetOverlayCanvas();
-            if (canvas == null)
-            {
-                return;
-            }
-
-            _routeMovementPanel ??= new RouteOverlayView("RouteMovementPanel");
-            _routeEventPanel ??= new RouteOverlayView("RouteEventPanel");
-            _battlePreparationPanel ??= new RouteOverlayView("BattlePreparationPanel");
-
-            _routeMovementPanel.Ensure(canvas, FindUiGameObjectByName("RouteMovementPanel"));
-            _routeEventPanel.Ensure(canvas, FindUiGameObjectByName("RouteEventPanel"));
-            _battlePreparationPanel.Ensure(canvas, FindUiGameObjectByName("BattlePreparationPanel"));
+            _routeOverlayPresenter.Ensure(GetOverlayCanvas(), FindUiGameObjectByName);
         }
 
         private void HideRouteOverlayPanels()
         {
             EnsureRouteOverlayPanels();
-
-            _routeMovementPanel?.SetVisible(false);
-            _routeEventPanel?.SetVisible(false);
-            _battlePreparationPanel?.SetVisible(false);
+            _routeOverlayPresenter.HideAll();
         }
 
-        private void PrepareRouteOverlayForOverlay(RouteOverlayView panel)
+        private void PrepareRouteOverlayForOverlay()
         {
             EnsureRouteOverlayPanels();
 
@@ -2863,8 +2846,6 @@ namespace GameKari.Battle
             HideActionOverlay();
             HideResultPanel();
             HideRouteOverlayPanels();
-
-            panel?.SetVisible(true);
         }
 
         // Result UI
@@ -3601,9 +3582,8 @@ namespace GameKari.Battle
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
-            PrepareRouteOverlayForOverlay(_routeMovementPanel);
-            _routeMovementPanel?.Show(new Color(0.05f, 0.10f, 0.18f, 0.90f), TextAlignmentOptions.TopLeft, 40f, 23f, "MOVEMENT / ROUTE", BuildRouteMovementText());
-            _routeMovementPanel?.SetButtons(false, string.Empty, false, null, "Move", HandleRouteMovementMoveClicked);
+            PrepareRouteOverlayForOverlay();
+            _routeOverlayPresenter.ShowMovement(BuildRouteMovementText(), HandleRouteMovementMoveClicked);
 
             Debug.Log("[Route] Movement panel shown.");
         }
@@ -3664,14 +3644,13 @@ namespace GameKari.Battle
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
-            PrepareRouteOverlayForOverlay(_routeEventPanel);
+            PrepareRouteOverlayForOverlay();
 
             string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
                 ? "Route Event"
                 : point.DisplayName;
 
-            _routeEventPanel?.Show(new Color(0.18f, 0.08f, 0.20f, 0.90f), TextAlignmentOptions.Center, 40f, 24f, "ROUTE EVENT", BuildRouteEventText(point));
-            _routeEventPanel?.SetButtons(false, string.Empty, false, null, "Next", HandleRouteEventNextClicked);
+            _routeOverlayPresenter.ShowEvent(BuildRouteEventText(point), HandleRouteEventNextClicked);
 
             Debug.Log($"[Route] Event shown: {displayName}");
         }
@@ -3690,14 +3669,13 @@ namespace GameKari.Battle
             _showingQuestResult = false;
             _showingQuestFailed = false;
 
-            PrepareRouteOverlayForOverlay(_battlePreparationPanel);
+            PrepareRouteOverlayForOverlay();
 
             string title = point != null && point.PointType == RoutePointType.Boss
                 ? "BOSS PREPARATION"
                 : "BATTLE PREPARATION";
 
-            _battlePreparationPanel?.Show(new Color(0.20f, 0.12f, 0.05f, 0.90f), TextAlignmentOptions.TopLeft, 40f, 22f, title, BuildBattlePreparationText(point));
-            RefreshBattlePreparationButtons(point);
+            _routeOverlayPresenter.ShowPreparation(title, BuildBattlePreparationText(point), CanScoutRoutePoint(point), HandlePreparationScoutClicked, HandleBattlePreparationStartClicked);
 
             string displayName = point == null || string.IsNullOrEmpty(point.DisplayName)
                 ? "Battle Point"
@@ -3719,23 +3697,22 @@ namespace GameKari.Battle
 
         private void RefreshBattlePreparationPanel(RoutePointData point)
         {
-            if (_battlePreparationPanel != null && _battlePreparationPanel.BodyText != null)
-            {
-                _battlePreparationPanel.BodyText.text = BuildBattlePreparationText(point);
-            }
-
-            RefreshBattlePreparationButtons(point);
+            EnsureRouteOverlayPanels();
+            _routeOverlayPresenter.RefreshPreparation(BuildBattlePreparationText(point), CanScoutRoutePoint(point), HandlePreparationScoutClicked, HandleBattlePreparationStartClicked);
         }
 
         private void RefreshBattlePreparationButtons(RoutePointData point)
         {
-            bool canScout = point != null
+            EnsureRouteOverlayPanels();
+            _routeOverlayPresenter.SetPreparationButtons(CanScoutRoutePoint(point), HandlePreparationScoutClicked, HandleBattlePreparationStartClicked);
+        }
+
+        private bool CanScoutRoutePoint(RoutePointData point)
+        {
+            return point != null
                 && point.HasBattleData
                 && !IsRoutePointScouted(point)
                 && _kakeraStock > 0;
-
-            EnsureRouteOverlayPanels();
-            _battlePreparationPanel?.SetButtons(canScout, "Scout -1", canScout, HandlePreparationScoutClicked, "Start Battle", HandleBattlePreparationStartClicked);
         }
 
         private bool IsRoutePointScouted(RoutePointData point)
@@ -4626,6 +4603,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
