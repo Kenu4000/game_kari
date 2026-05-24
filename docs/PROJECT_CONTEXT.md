@@ -543,3 +543,37 @@ Party詳細は内部集計として残してよいが、常時表示はしない
 - Movement `Next` remains the only route advancement action.
 - This avoids stale Preparation / Quest result flags affecting the shared ResultPanel button behavior.
 
+
+## Battle Result Route Advance
+
+- Battle Result `Next` now advances the route directly.
+- If the next route point is Event, the Event panel is shown.
+- If the next route point is Battle or Boss, the Battle Preparation panel is shown.
+- Movement remains a temporary route overview screen, but it is no longer required between every battle result and route event/preparation check.
+
+
+## Explicit Result Button Handlers
+
+- ResultPanel right-button behavior is now assigned per screen instead of relying only on shared state flags.
+- Battle Result `Next` advances the route directly.
+- Movement `Move` advances the route.
+- Event `Next` returns to Movement.
+- Battle Preparation `Start Battle` starts only from the preparation screen.
+- Quest Result / Failed return to Base through a dedicated handler.
+
+
+## Route End Result Fix
+
+- Route advancement no longer calls `ReturnToBase()` directly when the route ends.
+- Route end now shows `Quest Clear` first.
+- Event and Battle Preparation remain the intermediate screens during route advancement.
+- Returning to base is handled only after the Quest Clear / Quest Failed screen button is clicked.
+
+
+## Continue Route Advance Result Fix
+
+- `ContinueRouteAdvance()` no longer calls `ReturnToBase()` directly.
+- Route end now shows Quest Clear / Quest Result first.
+- Route advancement logs current route index, route count, next availability, and arrived point.
+- Battle Result `Next` should now advance to Event / Battle Preparation, or Quest Clear at route end.
+
