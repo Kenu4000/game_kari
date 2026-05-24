@@ -37,3 +37,6 @@ Recordings/
 # Local patch scripts and backups
 *.ps1
 *.bak_*
+
+unity_compile.log
+unity_compile_stdout.log
