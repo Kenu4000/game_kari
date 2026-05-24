@@ -122,15 +122,6 @@ namespace GameKari.Battle
             public string Text;
         }
 
-        private sealed class BattleClearResult
-        {
-            public BattleClearRank Rank;
-
-            public int PartyHealAmount;
-            public int BattleNumber;
-            public int TotalBattles;
-            public bool HasNextWave;
-        }
 
         private enum BattlePhase
         {
@@ -139,13 +130,6 @@ namespace GameKari.Battle
             BattleEnded
         }
 
-        private enum BattleClearRank
-        {
-            OneTurn,
-            TwoTurn,
-            ThreeTurn,
-            FourPlusTurn
-        }
 
         private class DefeatedEnemyInfo
         {
@@ -4194,6 +4178,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
