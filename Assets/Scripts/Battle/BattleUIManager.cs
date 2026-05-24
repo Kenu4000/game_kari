@@ -4119,7 +4119,3 @@ namespace GameKari.Battle
 }
 
 
-
-
-
-
