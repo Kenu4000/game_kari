@@ -245,7 +245,6 @@ namespace GameKari.Battle
             ClearBattleLists();
 
             BattleSetupData setup = DefaultBattleSetupFactory.CreateDefaultSetup();
-            ApplyWaveProgressSettings(setup);
             ApplyBattleSetup(setup);
             SetupInitialTurnState(setup.FallbackActive);
         }
@@ -267,26 +266,7 @@ namespace GameKari.Battle
             _actedUnits.Clear();
         }
 
-        private void ApplyWaveProgressSettings(BattleSetupData setup)
-        {
-            _questProgress = setup == null
-                ? null
-                : setup.QuestProgress;
 
-            int targetDistance = setup == null
-                ? DefaultTargetDistance
-                : setup.TargetDistance;
-
-            int baseWaveDistance = setup == null
-                ? DefaultBaseWaveDistance
-                : setup.BaseWaveDistance;
-
-            _oneTurnClearPartyHeal = setup == null
-                ? DefaultOneTurnClearPartyHeal
-                : Mathf.Max(0, setup.OneTurnClearPartyHeal);
-
-            _waveProgress = new WaveProgressState();
-        }
 
         private void ApplyBattleSetup(BattleSetupData setup)
         {
@@ -4728,6 +4708,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 

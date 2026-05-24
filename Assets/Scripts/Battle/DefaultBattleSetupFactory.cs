@@ -24,7 +24,6 @@
                 return;
             }
 
-            setup.TargetDistance = quest.TargetDistance;
             setup.OneTurnClearPartyHeal = quest.OneTurnClearPartyHeal;
         }
 
@@ -78,12 +77,14 @@
                 return;
             }
 
-            setup.BaseWaveDistance = wave.BaseDistance;
             setup.EnemyPlacements.AddRange(wave.EnemyPlacements);
             setup.EnemyReserves.AddRange(wave.EnemyReserves);
         }
     }
 }
+
+
+
 
 
 
