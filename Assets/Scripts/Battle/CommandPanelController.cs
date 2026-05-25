@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using GameKari.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -96,6 +97,7 @@ namespace GameKari.Battle
         public void ShowSkills()
         {
             SetPanelStates(true, true, false, false);
+            UpdateRootButtonSelection(CommandPanelMode.Skills);
         }
 
         public void ShowSwap()
@@ -105,6 +107,7 @@ namespace GameKari.Battle
             OnHoverExit?.Invoke();
 
             SetPanelStates(true, false, true, false);
+            UpdateRootButtonSelection(CommandPanelMode.Swap);
         }
 
         public void ShowItems()
@@ -114,6 +117,7 @@ namespace GameKari.Battle
             OnHoverExit?.Invoke();
 
             SetPanelStates(true, false, false, true);
+            UpdateRootButtonSelection(CommandPanelMode.Items);
         }
 
         private void HookRootButtons()
@@ -160,6 +164,7 @@ namespace GameKari.Battle
                 {
                     SetButtonLabel(button, $"Skill {i + 1}");
                     ResetButtonVisualState(button);
+                    SetButtonDisabledVisual(button, true);
                     button.interactable = false;
                     button.gameObject.SetActive(true);
                     continue;
@@ -220,14 +225,57 @@ namespace GameKari.Battle
             bool unavailable = !HasEnoughMP(skill) || !HasEnoughPartnerMP(skill) || (skill != null && skill.SkillKind == SkillKind.Link && !HasRequiredLinkPartner(skill));
             float alpha = unavailable ? 0.45f : 1f;
 
+            SetButtonDisabledVisual(button, unavailable);
             SetButtonAlpha(button, alpha);
         }
 
         private void ResetButtonVisualState(Button button)
         {
+            SetButtonDisabledVisual(button, false);
             SetButtonAlpha(button, 1f);
         }
 
+        private enum CommandPanelMode
+        {
+            Skills,
+            Swap,
+            Items
+        }
+
+        private void UpdateRootButtonSelection(CommandPanelMode mode)
+        {
+            SetButtonSelected(fightButton, mode == CommandPanelMode.Skills);
+            SetButtonSelected(swapButton, mode == CommandPanelMode.Swap);
+            SetButtonSelected(itemButton, mode == CommandPanelMode.Items);
+        }
+
+        private static void SetButtonSelected(Button button, bool selected)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            UISpriteStateVisual visual = button.GetComponent<UISpriteStateVisual>();
+            if (visual != null)
+            {
+                visual.SetSelected(selected);
+            }
+        }
+
+        private static void SetButtonDisabledVisual(Button button, bool disabled)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            UISpriteStateVisual visual = button.GetComponent<UISpriteStateVisual>();
+            if (visual != null)
+            {
+                visual.SetDisabledVisual(disabled);
+            }
+        }
         private void SetButtonAlpha(Button button, float alpha)
         {
             if (button == null)
@@ -968,6 +1016,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
