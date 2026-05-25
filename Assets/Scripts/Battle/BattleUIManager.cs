@@ -676,15 +676,64 @@ namespace GameKari.Battle
                     return;
 
                 case SkillEffectType.ApplyBuff:
-                    List<BattleUnit> effectTargets = GetSkillEffectTargets(skill);
-                    for (int i = 0; i < effectTargets.Count; i++)
+                    List<BattleUnit> buffTargets = GetSkillEffectTargets(skill);
+                    for (int i = 0; i < buffTargets.Count; i++)
                     {
-                        ApplyBuff(effectTargets[i], skill.BuffType, skill.BuffTurns);
+                        ApplyBuff(buffTargets[i], skill.BuffType, skill.BuffTurns);
                     }
+                    return;
+
+                case SkillEffectType.Heal:
+                    ApplySkillHeal(skill);
                     return;
             }
         }
 
+        private void ApplySkillHeal(SkillData skill)
+        {
+            if (skill == null || skill.HealAmount <= 0)
+            {
+                return;
+            }
+
+            List<BattleUnit> healTargets = GetSkillEffectTargets(skill);
+            for (int i = 0; i < healTargets.Count; i++)
+            {
+                HealAllyUnit(healTargets[i], skill.HealAmount);
+            }
+        }
+
+        private void HealAllyUnit(BattleUnit target, int healAmount)
+        {
+            if (target == null || target.IsDead || target.Data == null || healAmount <= 0)
+            {
+                return;
+            }
+
+            int beforeHp = target.CurrentHP;
+            target.CurrentHP = Mathf.Min(target.Data.MaxHP, target.CurrentHP + healAmount);
+            int healed = target.CurrentHP - beforeHp;
+
+            AddPendingActionValuePopup(true, target.GridPos, $"+{healed}");
+            Debug.Log($"[Heal] {target.Name} recovered {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}");
+        }
+
+        private static void AddLivingUnits(List<BattleUnit> source, List<BattleUnit> destination)
+        {
+            if (source == null || destination == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                BattleUnit unit = source[i];
+                if (unit != null && !unit.IsDead && unit.Data != null && !destination.Contains(unit))
+                {
+                    destination.Add(unit);
+                }
+            }
+        }
         private void DamageEnemyAt(GridPos pos, int damage, List<DefeatedEnemyInfo> defeatedEnemies)
         {
             if (_battleEnded)
@@ -1351,15 +1400,19 @@ namespace GameKari.Battle
                     break;
 
                 case SkillEffectTargetType.Target:
-                    // Reserved for future ally/enemy effect targeting.
+                    BattleUnit forwardAlly = TryGetForwardAlly(_active);
+                    if (forwardAlly != null)
+                    {
+                        targets.Add(forwardAlly);
+                    }
                     break;
 
                 case SkillEffectTargetType.AllAllies:
-                    // Reserved for future party-wide effects.
+                    AddLivingUnits(_allies, targets);
                     break;
 
                 case SkillEffectTargetType.AllEnemies:
-                    // Reserved for future enemy-wide effects.
+                    AddLivingUnits(_enemies, targets);
                     break;
             }
 
@@ -3873,6 +3926,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 

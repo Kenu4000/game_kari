@@ -41,6 +41,9 @@ namespace GameKari.Battle
         [Header("Fixed Swap Buttons")]
         [SerializeField] private Button[] swapButtons = new Button[4];
 
+        [Header("Swap Slot Views")]
+        [SerializeField] private SwapSlotView[] swapSlotViews = new SwapSlotView[4];
+
         [Header("Fixed Item Buttons")]
         [SerializeField] private Button[] itemButtons = new Button[2];
 
@@ -290,48 +293,6 @@ namespace GameKari.Battle
                 visual.SetDisabledVisual(disabled);
             }
         }
-        private enum CommandPanelMode
-        {
-            Skills,
-            Swap,
-            Items
-        }
-
-        private void UpdateRootButtonSelection(CommandPanelMode mode)
-        {
-            SetButtonSelected(fightButton, mode == CommandPanelMode.Skills);
-            SetButtonSelected(swapButton, mode == CommandPanelMode.Swap);
-            SetButtonSelected(itemButton, mode == CommandPanelMode.Items);
-        }
-
-        private static void SetButtonSelected(Button button, bool selected)
-        {
-            if (button == null)
-            {
-                return;
-            }
-
-            UISpriteStateVisual visual = button.GetComponent<UISpriteStateVisual>();
-            if (visual != null)
-            {
-                visual.SetSelected(selected);
-            }
-        }
-
-        private static void SetButtonDisabledVisual(Button button, bool disabled)
-        {
-            if (button == null)
-            {
-                return;
-            }
-
-            UISpriteStateVisual visual = button.GetComponent<UISpriteStateVisual>();
-            if (visual != null)
-            {
-                visual.SetDisabledVisual(disabled);
-            }
-        }
-
         private void ApplySkillCategorySprites(Button button, SkillData skill)
         {
             if (button == null || skill == null)
@@ -469,6 +430,9 @@ namespace GameKari.Battle
             {
                 case SkillEffectType.ApplyBuff:
                     return $"Effect: {skill.BuffType} {skill.BuffTurns} turns";
+
+                case SkillEffectType.Heal:
+                    return $"Heal: {Mathf.Max(0, skill.HealAmount)}";
 
                 default:
                     return string.Empty;
@@ -715,6 +679,49 @@ namespace GameKari.Battle
 
         private void BindSwapButtons()
         {
+            if (HasSwapSlotViews())
+            {
+                BindSwapSlotViews();
+                return;
+            }
+
+            BindLegacySwapButtons();
+        }
+
+        private bool HasSwapSlotViews()
+        {
+            if (swapSlotViews == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < swapSlotViews.Length; i++)
+            {
+                if (swapSlotViews[i] != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void BindSwapSlotViews()
+        {
+            for (int i = 0; i < swapSlotViews.Length; i++)
+            {
+                SwapSlotView slotView = swapSlotViews[i];
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                slotView.SetUnit(GetReserveAt(i), OnReserveClicked);
+            }
+        }
+
+        private void BindLegacySwapButtons()
+        {
             if (swapButtons == null)
             {
                 return;
@@ -745,9 +752,7 @@ namespace GameKari.Battle
 
                 button.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
             }
-        }
-
-        private void BindFixedItemButtons()
+        }        private void BindFixedItemButtons()
         {
             EnsureItemButtonCapacity();
 
@@ -1116,32 +1121,6 @@ namespace GameKari.Battle
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

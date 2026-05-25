@@ -22,7 +22,8 @@ namespace GameKari.Battle
     public enum SkillEffectType
     {
         None,
-        ApplyBuff
+        ApplyBuff,
+        Heal
     }
 
     public enum SkillEffectTargetType
@@ -54,12 +55,13 @@ namespace GameKari.Battle
         public string LinkPartnerCharacterId;
 
         public int Damage;
-        public SkillEffectType EffectType;
+        public int HealAmount;        public SkillEffectType EffectType;
         public SkillEffectTargetType EffectTarget;
         public BuffType BuffType;
         public int BuffTurns;
     }
 }
+
 
 
 
