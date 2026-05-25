@@ -290,6 +290,92 @@ namespace GameKari.Battle
                 visual.SetDisabledVisual(disabled);
             }
         }
+        private enum CommandPanelMode
+        {
+            Skills,
+            Swap,
+            Items
+        }
+
+        private void UpdateRootButtonSelection(CommandPanelMode mode)
+        {
+            SetButtonSelected(fightButton, mode == CommandPanelMode.Skills);
+            SetButtonSelected(swapButton, mode == CommandPanelMode.Swap);
+            SetButtonSelected(itemButton, mode == CommandPanelMode.Items);
+        }
+
+        private static void SetButtonSelected(Button button, bool selected)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            UISpriteStateVisual visual = button.GetComponent<UISpriteStateVisual>();
+            if (visual != null)
+            {
+                visual.SetSelected(selected);
+            }
+        }
+
+        private static void SetButtonDisabledVisual(Button button, bool disabled)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            UISpriteStateVisual visual = button.GetComponent<UISpriteStateVisual>();
+            if (visual != null)
+            {
+                visual.SetDisabledVisual(disabled);
+            }
+        }
+
+        private void ApplySkillCategorySprites(Button button, SkillData skill)
+        {
+            if (button == null || skill == null)
+            {
+                return;
+            }
+
+            UISpriteStateVisual visual = button.GetComponent<UISpriteStateVisual>();
+            if (visual == null)
+            {
+                return;
+            }
+
+            SkillCategorySpriteSet spriteSet = FindSkillCategorySpriteSet(skill.Category);
+            if (spriteSet == null)
+            {
+                return;
+            }
+
+            visual.SetSprites(
+                spriteSet.NormalSprite,
+                spriteSet.HoverSprite,
+                spriteSet.SelectedSprite,
+                spriteSet.DisabledSprite);
+        }
+
+        private SkillCategorySpriteSet FindSkillCategorySpriteSet(SkillCategory category)
+        {
+            if (skillCategorySprites == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < skillCategorySprites.Length; i++)
+            {
+                SkillCategorySpriteSet spriteSet = skillCategorySprites[i];
+                if (spriteSet != null && spriteSet.Category == category)
+                {
+                    return spriteSet;
+                }
+            }
+
+            return null;
+        }
         private void SetButtonAlpha(Button button, float alpha)
         {
             if (button == null)
@@ -1030,6 +1116,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
