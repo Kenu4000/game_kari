@@ -11,6 +11,16 @@ namespace GameKari.Battle
 
     public class CommandPanelController : MonoBehaviour
     {
+        [Serializable]
+        private sealed class SkillCategorySpriteSet
+        {
+            public SkillCategory Category;
+            public Sprite NormalSprite;
+            public Sprite HoverSprite;
+            public Sprite SelectedSprite;
+            public Sprite DisabledSprite;
+        }
+
         [Header("Root Buttons")]
         [SerializeField] private Button fightButton;
         [SerializeField] private Button swapButton;
@@ -24,6 +34,9 @@ namespace GameKari.Battle
 
         [Header("Fixed Skill Buttons")]
         [SerializeField] private Button[] skillButtons = new Button[4];
+
+        [Header("Skill Button Sprites By Category")]
+        [SerializeField] private SkillCategorySpriteSet[] skillCategorySprites = new SkillCategorySpriteSet[4];
 
         [Header("Fixed Swap Buttons")]
         [SerializeField] private Button[] swapButtons = new Button[4];
@@ -178,6 +191,7 @@ namespace GameKari.Battle
 
                 string label = BuildSkillButtonLabel(skill);
                 SetButtonLabel(button, label);
+                ApplySkillCategorySprites(button, skill);
                 ApplySkillButtonVisualState(button, skill);
 
                 button.onClick.AddListener(() => OnSkillClicked?.Invoke(skill));
@@ -1016,6 +1030,7 @@ namespace GameKari.Battle
         }
     }
 }
+
 
 
 
