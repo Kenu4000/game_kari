@@ -2,6 +2,13 @@
 
 namespace GameKari.Battle
 {
+    public enum SkillCategory
+    {
+        Attack,
+        Heal,
+        Change,
+        Defense
+    }
     public enum SkillTargetPattern
     {
         SameGridPosOpponent,
@@ -40,6 +47,7 @@ namespace GameKari.Battle
         public string SkillId;
         public string SkillName;
         [TextArea] public string Description;
+        public SkillCategory Category = SkillCategory.Attack;
         public SkillTargetPattern TargetPattern;
         public SkillKind SkillKind;
         public int MpCost;
@@ -52,4 +60,7 @@ namespace GameKari.Battle
         public int BuffTurns;
     }
 }
+
+
+
 

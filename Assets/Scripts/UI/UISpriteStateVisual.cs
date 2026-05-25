@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -64,6 +64,14 @@ namespace GameKari.UI
             ApplyCurrentSprite();
         }
 
+        public void SetSprites(Sprite normal, Sprite hover, Sprite selected, Sprite disabled)
+        {
+            normalSprite = normal != null ? normal : normalSprite;
+            hoverSprite = hover;
+            selectedSprite = selected;
+            disabledSprite = disabled;
+            ApplyCurrentSprite();
+        }
         public void SetSelected(bool selected)
         {
             _selected = selected;
@@ -125,3 +133,6 @@ namespace GameKari.UI
         }
     }
 }
+
+
+
