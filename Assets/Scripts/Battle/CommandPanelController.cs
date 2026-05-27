@@ -44,9 +44,6 @@ namespace GameKari.Battle
         [Header("Swap Slot Views")]
         [SerializeField] private SwapSlotView[] swapSlotViews = new SwapSlotView[4];
 
-        [Header("Swap Slot Views")]
-        [SerializeField] private SwapSlotView[] swapSlotViews = new SwapSlotView[4];
-
         [Header("Fixed Item Buttons")]
         [SerializeField] private Button[] itemButtons = new Button[2];
 
@@ -755,70 +752,6 @@ namespace GameKari.Battle
 
                 button.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
             }
-        }        private bool HasSwapSlotViews()
-        {
-            if (swapSlotViews == null)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < swapSlotViews.Length; i++)
-            {
-                if (swapSlotViews[i] != null)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private void BindSwapSlotViews()
-        {
-            for (int i = 0; i < swapSlotViews.Length; i++)
-            {
-                SwapSlotView slotView = swapSlotViews[i];
-                if (slotView == null)
-                {
-                    continue;
-                }
-
-                slotView.SetUnit(GetReserveAt(i), OnReserveClicked);
-            }
-        }
-
-        private void BindLegacySwapButtons()
-        {
-            if (swapButtons == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < swapButtons.Length; i++)
-            {
-                Button button = swapButtons[i];
-                if (button == null)
-                {
-                    continue;
-                }
-
-                button.onClick.RemoveAllListeners();
-
-                BattleUnit reserve = GetReserveAt(i);
-                if (reserve == null)
-                {
-                    SetButtonLabel(button, "-");
-                    button.interactable = false;
-                    button.gameObject.SetActive(true);
-                    continue;
-                }
-
-                button.gameObject.SetActive(true);
-                button.interactable = true;
-                SetButtonLabel(button, $"{reserve.Name} HP:{reserve.CurrentHP}");
-
-                button.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
-            }
         }        private void BindFixedItemButtons()
         {
             EnsureItemButtonCapacity();
@@ -1188,6 +1121,8 @@ namespace GameKari.Battle
         }
     }
 }
+
+
 
 
 

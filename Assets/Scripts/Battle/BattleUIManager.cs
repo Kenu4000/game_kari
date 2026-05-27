@@ -1049,26 +1049,10 @@ namespace GameKari.Battle
         // Enemy action preview
         private void RedrawEnemyActionPreviewHighlights()
         {
-            ResetEnemyActionPreviewHighlights();
-
-            if (_battleEnded || _phase != BattlePhase.CommandSelect)
-            {
-                return;
-            }
-
-            BattleUnit nextEnemy = FindNextUnactedEnemy();
-            if (nextEnemy == null)
-            {
-                return;
-            }
-
-            EnemyActionState action = GetPreviewEnemyActionState(nextEnemy);
-            if (action == null || action.Skill == null)
-            {
-                return;
-            }
-
-            HighlightEnemyActionTargets(nextEnemy, action);
+            // Enemy grid/action preview is intentionally disabled.
+            // Keep active/target highlights independent from enemy forecast visuals.
+            ResetAllyBoardHighlights();
+            RedrawActiveHighlights();
         }
 
         private BattleUnit FindNextUnactedEnemy()
@@ -1105,42 +1089,7 @@ namespace GameKari.Battle
 
         private void HighlightEnemyActionTargets(BattleUnit enemy, EnemyActionState action)
         {
-            if (enemy == null || action == null || action.Skill == null)
-            {
-                return;
-            }
-
-            switch (action.Skill.TargetPattern)
-            {
-                case SkillTargetPattern.SameGridPosOpponent:
-                    SetAllyBoardCellColor(enemy.GridPos, EnemyActionPreviewCellColor);
-                    break;
-
-                case SkillTargetPattern.FrontTopOpponent:
-                    SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
-                    break;
-
-                case SkillTargetPattern.FrontBottomOpponent:
-                    SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
-                    break;
-
-                case SkillTargetPattern.BothFrontOpponents:
-                    SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
-                    SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
-                    break;
-
-                case SkillTargetPattern.AllOpponents:
-                    SetAllyBoardCellColor(GridPos.FrontTop, EnemyActionPreviewCellColor);
-                    SetAllyBoardCellColor(GridPos.BackTop, EnemyActionPreviewCellColor);
-                    SetAllyBoardCellColor(GridPos.FrontBottom, EnemyActionPreviewCellColor);
-                    SetAllyBoardCellColor(GridPos.BackBottom, EnemyActionPreviewCellColor);
-                    break;
-            }
-
-            if (_active != null)
-            {
-                SetAllyBoardCellColor(_active.GridPos, ActiveCellColor);
-            }
+            // Enemy grid/action preview is intentionally disabled.
         }
 
         // Player preview
@@ -3926,6 +3875,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
