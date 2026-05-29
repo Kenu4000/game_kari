@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -19,6 +19,8 @@ namespace GameKari.Battle
         [SerializeField] private GameObject filledRoot;
         [SerializeField] private UISpriteStateVisual spriteStateVisual;
 
+        [Header("Display Text")]
+        [SerializeField] private string countFormat = "謇謖∵焚: {0}";
         private InventoryItem _inventoryItem;
         private Action<InventoryItem> _onClicked;
         private Action<InventoryItem> _onHovered;
@@ -30,6 +32,10 @@ namespace GameKari.Battle
             HookButton();
         }
 
+        public void SetVisible(bool visible)
+        {
+            gameObject.SetActive(visible);
+        }
         public void SetItem(
             InventoryItem inventoryItem,
             Action<InventoryItem> onClicked,
@@ -81,12 +87,15 @@ namespace GameKari.Battle
         {
             if (_inventoryItem != null && _inventoryItem.Item != null)
             {
-                _onHovered?.Invoke(_inventoryItem);
+                SetText(effectText, BuildSlotEffectText(_inventoryItem));
+                SetEffectTextVisible(true);
             }
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            SetText(effectText, string.Empty);
+            SetEffectTextVisible(false);
             _onHoverExit?.Invoke();
         }
 
@@ -155,6 +164,7 @@ namespace GameKari.Battle
             SetText(nameText, "-");
             SetText(countText, string.Empty);
             SetText(effectText, string.Empty);
+            SetEffectTextVisible(false);
         }
 
         private void SetFilledDisplay(InventoryItem inventoryItem)
@@ -168,10 +178,49 @@ namespace GameKari.Battle
             }
 
             SetText(nameText, item.ItemName);
-            SetText(countText, $"x{Mathf.Max(0, inventoryItem.Count)}");
-            SetText(effectText, BuildEffectText(item));
+            SetText(countText, string.Empty);
+            SetText(effectText, string.Empty);
+            SetEffectTextVisible(false);
         }
 
+        private void SetEffectTextVisible(bool visible)
+        {
+            if (effectText != null)
+            {
+                effectText.gameObject.SetActive(visible);
+            }
+        }
+        private string BuildSlotEffectText(InventoryItem inventoryItem)
+        {
+            if (inventoryItem == null || inventoryItem.Item == null)
+            {
+                return string.Empty;
+            }
+
+            ItemData item = inventoryItem.Item;
+            string description = !string.IsNullOrWhiteSpace(item.DisplayDescription)
+                ? item.DisplayDescription
+                : !string.IsNullOrWhiteSpace(item.Description)
+                    ? item.Description
+                    : BuildEffectText(item);
+
+            return $"{BuildCountText(inventoryItem.Count)}\n{description}";
+        }
+        private string BuildCountText(int count)
+        {
+            string format = string.IsNullOrWhiteSpace(countFormat)
+                ? "謇謖∵焚: {0}"
+                : countFormat;
+
+            try
+            {
+                return string.Format(format, Mathf.Max(0, count));
+            }
+            catch (FormatException)
+            {
+                return $"謇謖∵焚: {Mathf.Max(0, count)}";
+            }
+        }
         private static string BuildEffectText(ItemData item)
         {
             if (item == null)
@@ -211,3 +260,11 @@ namespace GameKari.Battle
         }
     }
 }
+
+
+
+
+
+
+
+

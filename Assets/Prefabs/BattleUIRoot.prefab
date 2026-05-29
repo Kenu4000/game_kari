@@ -3803,8 +3803,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4404772896091113623}
-  - {fileID: 1166149776523517811}
   - {fileID: 7526546041598538319}
+  - {fileID: 1166149776523517811}
   - {fileID: 4743470368575018149}
   - {fileID: 1205387902405649493}
   m_Father: {fileID: 6984191865272738228}
@@ -3876,11 +3876,37 @@ MonoBehaviour:
   - {fileID: 4796320703965235156}
   - {fileID: 254831267128249590}
   - {fileID: 6400829321650634479}
+  skillCategorySprites:
+  - Category: 0
+    NormalSprite: {fileID: 0}
+    HoverSprite: {fileID: 0}
+    SelectedSprite: {fileID: 0}
+    DisabledSprite: {fileID: 0}
+  - Category: 0
+    NormalSprite: {fileID: 0}
+    HoverSprite: {fileID: 0}
+    SelectedSprite: {fileID: 0}
+    DisabledSprite: {fileID: 0}
+  - Category: 0
+    NormalSprite: {fileID: 0}
+    HoverSprite: {fileID: 0}
+    SelectedSprite: {fileID: 0}
+    DisabledSprite: {fileID: 0}
+  - Category: 0
+    NormalSprite: {fileID: 0}
+    HoverSprite: {fileID: 0}
+    SelectedSprite: {fileID: 0}
+    DisabledSprite: {fileID: 0}
   swapButtons:
   - {fileID: 6001995482407664130}
   - {fileID: 3739921026043704428}
   - {fileID: 8578257498899895855}
   - {fileID: 8990703410834311545}
+  swapSlotViews:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   itemButtons:
   - {fileID: 871892210813940442}
   descriptionText: {fileID: 1131005324489391478}

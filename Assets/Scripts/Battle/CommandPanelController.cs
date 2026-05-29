@@ -47,6 +47,9 @@ namespace GameKari.Battle
         [Header("Fixed Item Buttons")]
         [SerializeField] private Button[] itemButtons = new Button[2];
 
+        [Header("Item Slot Views")]
+        [SerializeField] private ItemSlotView[] itemSlotViews = new ItemSlotView[4];
+
         [Header("Description")]
         [SerializeField] private TMP_Text descriptionText;
 
@@ -84,7 +87,7 @@ namespace GameKari.Battle
 
             BindSkillButtons();
             BindSwapButtons();
-            BindFixedItemButtons();
+            BindItemUi();
 
             ShowSkills();
             if (_hoveredSkillIndex >= 0)
@@ -752,7 +755,93 @@ namespace GameKari.Battle
 
                 button.onClick.AddListener(() => OnReserveClicked?.Invoke(reserve));
             }
-        }        private void BindFixedItemButtons()
+        }        private void BindItemUi()
+        {
+            if (HasItemSlotViews())
+            {
+                BindItemSlotViews();
+                return;
+            }
+
+            BindFixedItemButtons();
+        }
+
+        private bool HasItemSlotViews()
+        {
+            if (itemSlotViews == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < itemSlotViews.Length; i++)
+            {
+                if (itemSlotViews[i] != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void BindItemSlotViews()
+        {
+            if (itemSlotViews == null)
+            {
+                return;
+            }
+
+            List<InventoryItem> visibleItems = GetVisibleInventoryItems();
+
+            for (int i = 0; i < itemSlotViews.Length; i++)
+            {
+                ItemSlotView slotView = itemSlotViews[i];
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                InventoryItem inventoryItem = i < visibleItems.Count ? visibleItems[i] : null;
+                bool visible = inventoryItem != null;
+
+                slotView.SetVisible(visible);
+                if (visible)
+                {
+                    slotView.SetItem(inventoryItem, OnItemClicked, HandleItemHovered, ClearDescription);
+                }
+            }
+        }
+
+        private List<InventoryItem> GetVisibleInventoryItems()
+        {
+            var visibleItems = new List<InventoryItem>();
+
+            if (_inventoryItems == null)
+            {
+                return visibleItems;
+            }
+
+            for (int i = 0; i < _inventoryItems.Count; i++)
+            {
+                InventoryItem inventoryItem = _inventoryItems[i];
+                if (inventoryItem == null || inventoryItem.Item == null || inventoryItem.Count <= 0)
+                {
+                    continue;
+                }
+
+                visibleItems.Add(inventoryItem);
+            }
+
+            return visibleItems;
+        }
+        private void HandleItemHovered(InventoryItem inventoryItem)
+        {
+            if (descriptionText != null)
+            {
+                descriptionText.text = BuildItemDescription(inventoryItem);
+            }
+        }
+        private void BindFixedItemButtons()
         {
             EnsureItemButtonCapacity();
 
@@ -1121,6 +1210,8 @@ namespace GameKari.Battle
         }
     }
 }
+
+
 
 
 

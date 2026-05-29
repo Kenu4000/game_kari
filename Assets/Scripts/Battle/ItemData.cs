@@ -16,10 +16,14 @@ namespace GameKari.Battle
         public string ItemId;
         public string ItemName;
         [TextArea] public string Description;
+        [TextArea] public string DisplayDescription;
+        public Sprite Icon;
         public ItemKind Kind;
         public int HealAmount;
     }
 }
+
+
 
 
 
