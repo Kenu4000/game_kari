@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +14,14 @@ namespace GameKari.Battle
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text hpText;
         [SerializeField] private TMP_Text mpText;
+
+        [Header("MP Badge")]
+        [SerializeField] private Image mpBadgeImage;
+        [SerializeField] private TMP_Text mpBadgeText;
+        [SerializeField] private Sprite mpBadgeNormalSprite;
+        [SerializeField] private Sprite mpBadgeZeroSprite;
+        [SerializeField] private Sprite mpBadgeEmptySprite;
+
         [SerializeField] private GameObject emptyRoot;
         [SerializeField] private GameObject filledRoot;
         [SerializeField] private UISpriteStateVisual spriteStateVisual;
@@ -98,6 +106,16 @@ namespace GameKari.Battle
             {
                 mpText = FindChildText("MPText");
             }
+
+            if (mpBadgeImage == null)
+            {
+                mpBadgeImage = FindChildImage("MpBadge");
+            }
+
+            if (mpBadgeText == null)
+            {
+                mpBadgeText = FindChildText("MpBadgeText");
+            }
         }
 
         private void HookButton()
@@ -132,6 +150,8 @@ namespace GameKari.Battle
             SetText(nameText, "-");
             SetText(hpText, string.Empty);
             SetText(mpText, string.Empty);
+            SetText(mpBadgeText, "-");
+            ApplyMpBadgeSprite(null);
         }
 
         private void SetFilledDisplay(BattleUnit unit)
@@ -146,8 +166,36 @@ namespace GameKari.Battle
             SetText(nameText, unit.Name);
             SetText(hpText, $"HP {unit.CurrentHP}/{unit.Data.MaxHP}");
             SetText(mpText, $"MP {unit.CurrentMP}/{unit.Data.MaxMP}");
+            SetText(mpBadgeText, Mathf.Max(0, unit.CurrentMP).ToString());
+            ApplyMpBadgeSprite(unit);
         }
 
+        private void ApplyMpBadgeSprite(BattleUnit unit)
+        {
+            if (mpBadgeImage == null)
+            {
+                return;
+            }
+
+            Sprite sprite = null;
+            if (unit == null || unit.IsDead || unit.Data == null)
+            {
+                sprite = mpBadgeEmptySprite;
+            }
+            else if (unit.CurrentMP <= 0)
+            {
+                sprite = mpBadgeZeroSprite != null ? mpBadgeZeroSprite : mpBadgeNormalSprite;
+            }
+            else
+            {
+                sprite = mpBadgeNormalSprite;
+            }
+
+            if (sprite != null)
+            {
+                mpBadgeImage.sprite = sprite;
+            }
+        }
         private TMP_Text FindChildText(string childName)
         {
             Transform found = transform.Find(childName);
@@ -169,3 +217,4 @@ namespace GameKari.Battle
         }
     }
 }
+
