@@ -411,13 +411,28 @@ namespace GameKari.Battle
 
         private void BindUI()
         {
-            commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
-            commandPanel.OnSkillClicked += HandleSkillClicked;
-            commandPanel.OnSkillHovered += HandleSkillHover;
-            commandPanel.OnHoverExit += ClearTargetPreview;
-            commandPanel.OnReserveClicked += HandleSwap;
-            commandPanel.OnItemClicked += HandleItemClicked;
-            rotateButton.onClick.AddListener(HandleRotateClicked);
+            if (commandPanel != null)
+            {
+                commandPanel.OnSkillClicked -= HandleSkillClicked;
+                commandPanel.OnSkillHovered -= HandleSkillHover;
+                commandPanel.OnHoverExit -= ClearTargetPreview;
+                commandPanel.OnReserveClicked -= HandleSwap;
+                commandPanel.OnItemClicked -= HandleItemClicked;
+
+                commandPanel.OnSkillClicked += HandleSkillClicked;
+                commandPanel.OnSkillHovered += HandleSkillHover;
+                commandPanel.OnHoverExit += ClearTargetPreview;
+                commandPanel.OnReserveClicked += HandleSwap;
+                commandPanel.OnItemClicked += HandleItemClicked;
+
+                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
+            }
+
+            if (rotateButton != null)
+            {
+                rotateButton.onClick.RemoveListener(HandleRotateClicked);
+                rotateButton.onClick.AddListener(HandleRotateClicked);
+            }
         }
 
         // Skill availability helpers
@@ -4127,6 +4142,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
