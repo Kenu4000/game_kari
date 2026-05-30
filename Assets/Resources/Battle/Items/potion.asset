@@ -15,5 +15,7 @@ MonoBehaviour:
   ItemId: potion
   ItemName: Potion
   Description: Heal the ally in front of the active unit.
+  DisplayDescription: awawa
+  Icon: {fileID: 0}
   Kind: 0
   HealAmount: 20
