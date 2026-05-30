@@ -40,6 +40,8 @@ namespace GameKari.Battle
         public Transform allyStatusPanel;
 
         [Header("Turn Order Bar")]
+        public Transform turnOrderSlotContainer;
+        public Transform[] turnOrderSlotPositions = new Transform[8];        public TurnOrderSlotView turnOrderSlotTemplate;
         public TMP_Text turnOrderBarText;
         [Header("Generated Roots")]
         public GameObject bossNamePlate;
@@ -51,4 +53,6 @@ namespace GameKari.Battle
         public GameObject allyStatusPanelRoot;
     }
 }
+
+
 

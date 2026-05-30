@@ -36,6 +36,9 @@ namespace GameKari.Battle
         [SerializeField] private Image enemyFBHighlight;
 
         [Header("Turn Order Bar")]
+        [SerializeField] private Transform turnOrderSlotContainer;
+        [SerializeField] private Transform[] turnOrderSlotPositions = new Transform[8];        [SerializeField] private TurnOrderSlotView turnOrderSlotTemplate;
+        [SerializeField] private bool hideTurnOrderSlotTemplateOnPlay = true;
         [SerializeField] private TMP_Text turnOrderBarText;
         [SerializeField] private string turnOrderSeparator = "  >  ";
         [SerializeField] private string turnOrderAllyPrefix = "A";
@@ -74,6 +77,7 @@ namespace GameKari.Battle
         private readonly List<GridPos> _pendingActionSourceFlashTargets = new();
         private bool _pendingActionSourceFlashIsAllyBoard;
         private readonly List<ActionValuePopup> _pendingActionValuePopups = new();
+        private readonly List<TurnOrderSlotView> _generatedTurnOrderSlotViews = new();
         private readonly List<TMP_Text> _activeActionValuePopupLabels = new();
         private readonly HashSet<int> _scoutedWaveIndices = new();
 
@@ -190,6 +194,12 @@ namespace GameKari.Battle
             enemyStatusPanel = refs.enemyStatusPanel != null ? refs.enemyStatusPanel : enemyStatusPanel;
             allyStatusPanel = refs.allyStatusPanel != null ? refs.allyStatusPanel : allyStatusPanel;
             turnOrderBarText = refs.turnOrderBarText != null ? refs.turnOrderBarText : turnOrderBarText;
+            turnOrderSlotContainer = refs.turnOrderSlotContainer != null ? refs.turnOrderSlotContainer : turnOrderSlotContainer;
+            turnOrderSlotTemplate = refs.turnOrderSlotTemplate != null ? refs.turnOrderSlotTemplate : turnOrderSlotTemplate;
+            if (refs.turnOrderSlotPositions != null && refs.turnOrderSlotPositions.Length > 0)
+            {
+                turnOrderSlotPositions = refs.turnOrderSlotPositions;
+            }
         }
         // Battle setup
         private void Start()
@@ -3316,12 +3326,180 @@ namespace GameKari.Battle
 
         private void RedrawTurnOrderBar()
         {
+            if (CanGenerateTurnOrderSlots())
+            {
+                RedrawGeneratedTurnOrderSlots();
+
+                if (turnOrderBarText != null)
+                {
+                    turnOrderBarText.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
             if (turnOrderBarText == null)
             {
                 return;
             }
 
+            turnOrderBarText.gameObject.SetActive(true);
             turnOrderBarText.text = BuildTurnOrderBarText();
+        }
+
+        private bool CanGenerateTurnOrderSlots()
+        {
+            return turnOrderSlotTemplate != null
+                && ((turnOrderSlotPositions != null && turnOrderSlotPositions.Length > 0)
+                    || turnOrderSlotContainer != null);
+        }
+
+        private void RedrawGeneratedTurnOrderSlots()
+        {
+            List<BattleUnit> visibleOrder = GetVisibleTurnOrderUnits();
+            int slotCount = GetTurnOrderSlotCapacity();
+            EnsureGeneratedTurnOrderSlotCapacity(slotCount);
+
+            if (turnOrderSlotTemplate != null && hideTurnOrderSlotTemplateOnPlay)
+            {
+                turnOrderSlotTemplate.SetVisible(false);
+            }
+
+            for (int i = 0; i < _generatedTurnOrderSlotViews.Count; i++)
+            {
+                TurnOrderSlotView slotView = _generatedTurnOrderSlotViews[i];
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                bool visible = i < visibleOrder.Count && IsUsableTurnOrderSlotIndex(i);
+                slotView.SetVisible(visible);
+                if (!visible)
+                {
+                    continue;
+                }
+
+                BattleUnit unit = visibleOrder[i];
+                bool isAlly = _allies.Contains(unit);
+                bool isCurrent = unit == _active && _phase == BattlePhase.CommandSelect && !_actedUnits.Contains(unit);
+                bool isActed = _actedUnits.Contains(unit);
+                slotView.SetUnit(unit, isAlly, isCurrent, isActed);
+            }
+        }
+
+        private int GetTurnOrderSlotCapacity()
+        {
+            int positionCount = 0;
+            if (turnOrderSlotPositions != null)
+            {
+                for (int i = 0; i < turnOrderSlotPositions.Length; i++)
+                {
+                    if (turnOrderSlotPositions[i] != null)
+                    {
+                        positionCount++;
+                    }
+                }
+            }
+
+            if (positionCount > 0)
+            {
+                return positionCount;
+            }
+
+            if (_turnOrder == null || _turnOrder.TurnOrder == null)
+            {
+                return 0;
+            }
+
+            return _turnOrder.TurnOrder.Count;
+        }
+
+        private bool IsUsableTurnOrderSlotIndex(int index)
+        {
+            if (turnOrderSlotPositions == null || turnOrderSlotPositions.Length == 0)
+            {
+                return true;
+            }
+
+            return index >= 0 && index < turnOrderSlotPositions.Length && turnOrderSlotPositions[index] != null;
+        }
+
+        private List<BattleUnit> GetVisibleTurnOrderUnits()
+        {
+            var units = new List<BattleUnit>();
+
+            if (_turnOrder == null || _turnOrder.TurnOrder == null)
+            {
+                return units;
+            }
+
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+            int maxCount = GetTurnOrderSlotCapacity();
+
+            for (int i = 0; i < order.Count; i++)
+            {
+                BattleUnit unit = order[i];
+                if (unit == null || unit.IsDead)
+                {
+                    continue;
+                }
+
+                if (maxCount > 0 && units.Count >= maxCount)
+                {
+                    break;
+                }
+
+                units.Add(unit);
+            }
+
+            return units;
+        }
+
+        private void EnsureGeneratedTurnOrderSlotCapacity(int requiredCount)
+        {
+            if (turnOrderSlotTemplate == null)
+            {
+                return;
+            }
+
+            for (int i = _generatedTurnOrderSlotViews.Count; i < requiredCount; i++)
+            {
+                Transform parent = GetTurnOrderSlotParent(i);
+                if (parent == null)
+                {
+                    continue;
+                }
+
+                TurnOrderSlotView slotView = Instantiate(turnOrderSlotTemplate, parent);
+                slotView.name = $"TurnOrderSlot_{i + 1}";
+                slotView.SetVisible(true);
+
+                RectTransform rect = slotView.transform as RectTransform;
+                if (rect != null)
+                {
+                    rect.anchorMin = Vector2.zero;
+                    rect.anchorMax = Vector2.one;
+                    rect.offsetMin = Vector2.zero;
+                    rect.offsetMax = Vector2.zero;
+                    rect.localScale = Vector3.one;
+                }
+
+                _generatedTurnOrderSlotViews.Add(slotView);
+            }
+        }
+
+        private Transform GetTurnOrderSlotParent(int index)
+        {
+            if (turnOrderSlotPositions != null
+                && index >= 0
+                && index < turnOrderSlotPositions.Length
+                && turnOrderSlotPositions[index] != null)
+            {
+                return turnOrderSlotPositions[index];
+            }
+
+            return turnOrderSlotContainer;
         }
 
         private string BuildTurnOrderBarText()
@@ -3949,6 +4127,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
