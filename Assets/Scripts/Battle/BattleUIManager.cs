@@ -78,6 +78,8 @@ namespace GameKari.Battle
         private bool _pendingActionSourceFlashIsAllyBoard;
         private readonly List<ActionValuePopup> _pendingActionValuePopups = new();
         private readonly List<TurnOrderSlotView> _generatedTurnOrderSlotViews = new();
+        private bool _deferHpBarFillUntilActionHit;
+        private readonly Dictionary<Transform, float> _pendingHpBarFillRates = new();
         private readonly List<TMP_Text> _activeActionValuePopupLabels = new();
         private readonly HashSet<int> _scoutedWaveIndices = new();
 
@@ -100,6 +102,7 @@ namespace GameKari.Battle
         [SerializeField] private float targetHitShakeDistance = 10f;
         [SerializeField] private float targetHitShakeSeconds = 0.16f;
         [SerializeField] private float defeatFadeSeconds = 0.22f;
+        [SerializeField] private float hpBarAnimationSeconds = 0.35f;
         [SerializeField] private float defeatSinkDistance = 18f;
         [SerializeField] private int targetHitShakeCount = 3;
         [SerializeField] private float actionSpriteLungeSeconds = 0.12f;
@@ -613,6 +616,7 @@ namespace GameKari.Battle
             }
 
             _phase = BattlePhase.ResolvingAction;
+            BeginDeferredHpBarFill();
             ClearTargetPreview();
             ResetEnemyActionPreviewHighlights();
             SetEnemyActionPreviewVisible(false);
@@ -1752,6 +1756,7 @@ namespace GameKari.Battle
             List<GridPos> sourcePositions = new(_pendingActionSourceFlashTargets);
 
             yield return PlayActionSourceLunge(isSourceAllyBoard, sourcePositions);
+            ApplyDeferredHpBarFillUpdates();
 
             ClearPendingActionFlashTargets();
 
@@ -1778,6 +1783,7 @@ namespace GameKari.Battle
 
             yield return PlayPendingDamageHitReactions();
             yield return PlayPendingDefeatFadeOuts();
+            ApplyDeferredHpBarFillUpdates();
 
             HideActiveActionValuePopups();
             ClearPendingActionValuePopups();
@@ -4376,7 +4382,7 @@ namespace GameKari.Battle
             label.text = text ?? "";
         }
 
-        private static void SetBarFill(Transform root, string barName, int current, int max)
+        private void SetBarFill(Transform root, string barName, int current, int max)
         {
             Transform fill = root.Find($"{barName}/Fill");
             if (fill == null)
@@ -4385,7 +4391,53 @@ namespace GameKari.Battle
             }
 
             float rate = max <= 0 ? 0f : Mathf.Clamp01((float)current / max);
-            fill.localScale = new Vector3(rate, 1f, 1f);
+            if (Application.isPlaying && _deferHpBarFillUntilActionHit && barName == "HPBar")
+            {
+                _pendingHpBarFillRates[fill] = rate;
+                return;
+            }
+
+            SetBarFillRate(fill, rate);
+        }
+
+        private void SetBarFillRate(Transform fill, float rate)
+        {
+            if (fill == null)
+            {
+                return;
+            }
+
+            HPBarFillAnimator animator = fill.GetComponent<HPBarFillAnimator>();
+            if (animator == null)
+            {
+                animator = fill.gameObject.AddComponent<HPBarFillAnimator>();
+            }
+
+            animator.SetAnimationSeconds(hpBarAnimationSeconds);
+            animator.SetFill(rate);
+        }
+
+        private void BeginDeferredHpBarFill()
+        {
+            _deferHpBarFillUntilActionHit = true;
+            _pendingHpBarFillRates.Clear();
+        }
+
+        private void ApplyDeferredHpBarFillUpdates()
+        {
+            if (!_deferHpBarFillUntilActionHit && _pendingHpBarFillRates.Count == 0)
+            {
+                return;
+            }
+
+            _deferHpBarFillUntilActionHit = false;
+
+            foreach (KeyValuePair<Transform, float> pair in _pendingHpBarFillRates)
+            {
+                SetBarFillRate(pair.Key, pair.Value);
+            }
+
+            _pendingHpBarFillRates.Clear();
         }
 
         private void RebuildTurnOrder()
@@ -4423,6 +4475,11 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
+
+
 
 
 
