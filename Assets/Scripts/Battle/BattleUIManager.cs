@@ -96,6 +96,8 @@ namespace GameKari.Battle
         private int _totalKakeraEarned;
         private int _totalExpEarned;
         [SerializeField] private float rotationSettleSeconds = 0.5f;
+        [SerializeField] private float actionSpriteLungeDistance = 24f;
+        [SerializeField] private float actionSpriteLungeSeconds = 0.12f;
         [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
         [SerializeField] private Color damagePopupColor = new Color(1f, 0.35f, 0.35f, 1f);
@@ -1745,6 +1747,8 @@ namespace GameKari.Battle
             List<GridPos> targetPositions = new(_pendingActionFlashTargets);
             List<GridPos> sourcePositions = new(_pendingActionSourceFlashTargets);
 
+            yield return PlayActionSourceLunge(isSourceAllyBoard, sourcePositions);
+
             ClearPendingActionFlashTargets();
 
             if (duration <= 0f)
@@ -1772,6 +1776,94 @@ namespace GameKari.Battle
             ClearPendingActionValuePopups();
         }
 
+        private IEnumerator PlayActionSourceLunge(bool isAllyBoard, List<GridPos> sourcePositions)
+        {
+            if (sourcePositions == null || sourcePositions.Count == 0)
+            {
+                yield break;
+            }
+
+            float duration = Mathf.Max(0f, actionSpriteLungeSeconds);
+            float distance = Mathf.Max(0f, actionSpriteLungeDistance);
+            if (duration <= 0f || distance <= 0f)
+            {
+                yield break;
+            }
+
+            var sprites = new List<RectTransform>();
+            var startPositions = new List<Vector2>();
+
+            for (int i = 0; i < sourcePositions.Count; i++)
+            {
+                RectTransform spriteRect = GetBoardSpriteRect(isAllyBoard, sourcePositions[i]);
+                if (spriteRect == null)
+                {
+                    continue;
+                }
+
+                sprites.Add(spriteRect);
+                startPositions.Add(spriteRect.anchoredPosition);
+            }
+
+            if (sprites.Count == 0)
+            {
+                yield break;
+            }
+
+            Vector2 offset = new Vector2(isAllyBoard ? distance : -distance, 0f);
+            yield return MoveActionSprites(sprites, startPositions, offset, duration);
+            yield return MoveActionSprites(sprites, startPositions, Vector2.zero, duration);
+        }
+
+        private IEnumerator MoveActionSprites(List<RectTransform> sprites, List<Vector2> startPositions, Vector2 offset, float duration)
+        {
+            if (sprites == null || startPositions == null || duration <= 0f)
+            {
+                yield break;
+            }
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float eased = 1f - Mathf.Pow(1f - t, 2f);
+
+                for (int i = 0; i < sprites.Count && i < startPositions.Count; i++)
+                {
+                    RectTransform sprite = sprites[i];
+                    if (sprite == null)
+                    {
+                        continue;
+                    }
+
+                    sprite.anchoredPosition = Vector2.Lerp(startPositions[i], startPositions[i] + offset, eased);
+                }
+
+                yield return null;
+            }
+
+            for (int i = 0; i < sprites.Count && i < startPositions.Count; i++)
+            {
+                RectTransform sprite = sprites[i];
+                if (sprite != null)
+                {
+                    sprite.anchoredPosition = startPositions[i] + offset;
+                }
+            }
+        }
+
+        private RectTransform GetBoardSpriteRect(bool isAllyBoard, GridPos position)
+        {
+            TMP_Text cellLabel = GetBoardCellLabel(isAllyBoard, position);
+            if (cellLabel == null || cellLabel.transform.parent == null)
+            {
+                return null;
+            }
+
+            Transform spriteTransform = cellLabel.transform.parent.Find("BattleSpriteImage");
+            return spriteTransform == null ? null : spriteTransform as RectTransform;
+        }
         private void SetActionSourceFlashTargetsVisible(bool isAllyBoard, List<GridPos> targets, bool visible)
         {
             SetActionFlashTargetsVisible(isAllyBoard, targets, visible, ActionSourceFlashCellColor);
@@ -4142,6 +4234,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
