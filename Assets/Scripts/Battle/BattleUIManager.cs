@@ -35,6 +35,13 @@ namespace GameKari.Battle
         [SerializeField] private Image enemyFTHighlight;
         [SerializeField] private Image enemyFBHighlight;
 
+        [Header("Turn Order Bar")]
+        [SerializeField] private TMP_Text turnOrderBarText;
+        [SerializeField] private string turnOrderSeparator = "  >  ";
+        [SerializeField] private string turnOrderAllyPrefix = "A";
+        [SerializeField] private string turnOrderEnemyPrefix = "E";
+        [SerializeField] private string currentTurnPrefix = ">";
+        [SerializeField] private string actedTurnPrefix = "x";
         [Header("Status Panels")]
         [SerializeField] private Transform enemyStatusPanel;
         [SerializeField] private Transform allyStatusPanel;
@@ -148,6 +155,16 @@ namespace GameKari.Battle
 
             if (refs == null)
             {
+                BattleUIReferences[] sceneRefs = FindObjectsOfType<BattleUIReferences>(true);
+                if (sceneRefs != null && sceneRefs.Length > 0)
+                {
+                    refs = sceneRefs[0];
+                }
+            }
+
+            if (refs == null)
+            {
+                Debug.LogWarning("[BattleUI] BattleUIReferences was not found. Some Inspector-bound UI references may not update.");
                 return;
             }
 
@@ -172,6 +189,7 @@ namespace GameKari.Battle
 
             enemyStatusPanel = refs.enemyStatusPanel != null ? refs.enemyStatusPanel : enemyStatusPanel;
             allyStatusPanel = refs.allyStatusPanel != null ? refs.allyStatusPanel : allyStatusPanel;
+            turnOrderBarText = refs.turnOrderBarText != null ? refs.turnOrderBarText : turnOrderBarText;
         }
         // Battle setup
         private void Start()
@@ -3272,6 +3290,7 @@ namespace GameKari.Battle
             SetBoardCellUnit(allyBackBottom, _grid.GetUnit(true, GridPos.BackBottom));
 
             RedrawStatusPanels();
+            RedrawTurnOrderBar();
             RedrawActiveHighlights();
             RedrawTargetPreview();
 
@@ -3295,6 +3314,61 @@ namespace GameKari.Battle
             LayoutEnemyStatusSlots(aliveEnemies.Count);
         }
 
+        private void RedrawTurnOrderBar()
+        {
+            if (turnOrderBarText == null)
+            {
+                return;
+            }
+
+            turnOrderBarText.text = BuildTurnOrderBarText();
+        }
+
+        private string BuildTurnOrderBarText()
+        {
+            if (_turnOrder == null || _turnOrder.TurnOrder == null)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>();
+            IReadOnlyList<BattleUnit> order = _turnOrder.TurnOrder;
+
+            for (int i = 0; i < order.Count; i++)
+            {
+                BattleUnit unit = order[i];
+                if (unit == null || unit.IsDead)
+                {
+                    continue;
+                }
+
+                string sidePrefix = _allies.Contains(unit) ? turnOrderAllyPrefix : turnOrderEnemyPrefix;
+                string statePrefix = string.Empty;
+
+                if (unit == _active && _phase == BattlePhase.CommandSelect && !_actedUnits.Contains(unit))
+                {
+                    statePrefix = currentTurnPrefix;
+                }
+                else if (_actedUnits.Contains(unit))
+                {
+                    statePrefix = actedTurnPrefix;
+                }
+
+                parts.Add($"{statePrefix}{sidePrefix}:{unit.Name}");
+            }
+
+            return string.Join(turnOrderSeparator, parts);
+        }
+
+        private static string BuildBoardMpBadgeText(BattleUnit unit)
+        {
+            if (unit == null || unit.IsDead || unit.Data == null)
+            {
+                return string.Empty;
+            }
+
+            return Mathf.Max(0, unit.CurrentMP).ToString();
+        }
         private void RedrawActiveHighlights()
         {
             ResetAllyBoardHighlights();
@@ -3611,7 +3685,7 @@ namespace GameKari.Battle
             }
 
             SetLabel(slot, "Name", unit.Name);
-            SetLabel(slot, "TurnNumber", GetTurnOrderText(unit));
+            SetLabel(slot, "TurnNumber", BuildBoardMpBadgeText(unit));
 
             int currentHp = unit.CurrentHP;
             int maxHp = unit.Data.MaxHP;
@@ -3642,7 +3716,7 @@ namespace GameKari.Battle
                 : unit.Name;
 
             SetLabel(slot, "Name", displayName);
-            SetLabel(slot, "TurnNumber", GetTurnOrderText(unit));
+            SetLabel(slot, "TurnNumber", BuildBoardMpBadgeText(unit));
 
             int currentHp = unit.IsDead ? 0 : unit.CurrentHP;
             int maxHp = unit.Data.MaxHP;
@@ -3875,6 +3949,9 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
 
 
 

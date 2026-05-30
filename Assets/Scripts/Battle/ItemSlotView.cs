@@ -19,11 +19,13 @@ namespace GameKari.Battle
         [SerializeField] private GameObject filledRoot;
         [SerializeField] private UISpriteStateVisual spriteStateVisual;
 
+        [Header("Local Effect Text")]
+        [SerializeField] private bool useLocalEffectText = false;
         [Header("Display Text")]
         [SerializeField] private string countFormat = "謇謖∵焚: {0}";
         private InventoryItem _inventoryItem;
         private Action<InventoryItem> _onClicked;
-        private Action<InventoryItem> _onHovered;
+        private Action<string> _onHovered;
         private Action _onHoverExit;
 
         private void Awake()
@@ -39,7 +41,7 @@ namespace GameKari.Battle
         public void SetItem(
             InventoryItem inventoryItem,
             Action<InventoryItem> onClicked,
-            Action<InventoryItem> onHovered,
+            Action<string> onHovered,
             Action onHoverExit)
         {
             AutoBindMissingReferences();
@@ -87,15 +89,25 @@ namespace GameKari.Battle
         {
             if (_inventoryItem != null && _inventoryItem.Item != null)
             {
-                SetText(effectText, BuildSlotEffectText(_inventoryItem));
-                SetEffectTextVisible(true);
+                string description = BuildSlotEffectText(_inventoryItem);
+                _onHovered?.Invoke(description);
+
+                if (useLocalEffectText)
+                {
+                    SetText(effectText, description);
+                    SetEffectTextVisible(true);
+                }
             }
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            SetText(effectText, string.Empty);
-            SetEffectTextVisible(false);
+            if (useLocalEffectText)
+            {
+                SetText(effectText, string.Empty);
+                SetEffectTextVisible(false);
+            }
+
             _onHoverExit?.Invoke();
         }
 
@@ -260,6 +272,8 @@ namespace GameKari.Battle
         }
     }
 }
+
+
 
 
 

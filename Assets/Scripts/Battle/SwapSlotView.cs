@@ -35,6 +35,10 @@ namespace GameKari.Battle
             HookButton();
         }
 
+        public void SetVisible(bool visible)
+        {
+            gameObject.SetActive(visible);
+        }
         public void SetUnit(BattleUnit unit, Action<BattleUnit> onClicked)
         {
             AutoBindMissingReferences();
@@ -217,4 +221,5 @@ namespace GameKari.Battle
         }
     }
 }
+
 

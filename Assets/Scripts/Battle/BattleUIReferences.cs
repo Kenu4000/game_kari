@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -39,6 +39,8 @@ namespace GameKari.Battle
         public Transform enemyStatusPanel;
         public Transform allyStatusPanel;
 
+        [Header("Turn Order Bar")]
+        public TMP_Text turnOrderBarText;
         [Header("Generated Roots")]
         public GameObject bossNamePlate;
         public GameObject topActionPanel;
@@ -49,3 +51,4 @@ namespace GameKari.Battle
         public GameObject allyStatusPanelRoot;
     }
 }
+

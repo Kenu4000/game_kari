@@ -50,6 +50,13 @@ namespace GameKari.Battle
         [Header("Item Slot Views")]
         [SerializeField] private ItemSlotView[] itemSlotViews = new ItemSlotView[4];
 
+        [Header("Generated Item Slots")]
+        [SerializeField] private Transform itemSlotContainer;
+        [SerializeField] private ItemSlotView itemSlotTemplate;
+        [SerializeField] private bool hideItemSlotTemplateOnPlay = true;
+
+        [Header("Item Description")]
+        [SerializeField] private TMP_Text itemDescriptionText;
         [Header("Description")]
         [SerializeField] private TMP_Text descriptionText;
 
@@ -65,6 +72,7 @@ namespace GameKari.Battle
 
         private int _hoveredSkillIndex = -1;
 
+        private readonly List<ItemSlotView> _generatedItemSlotViews = new();
         private List<InventoryItem> _inventoryItems = new();
 
         private void Awake()
@@ -719,7 +727,14 @@ namespace GameKari.Battle
                     continue;
                 }
 
-                slotView.SetUnit(GetReserveAt(i), OnReserveClicked);
+                BattleUnit reserve = GetReserveAt(i);
+                bool visible = reserve != null && !reserve.IsDead && reserve.Data != null;
+                slotView.SetVisible(visible);
+
+                if (visible)
+                {
+                    slotView.SetUnit(reserve, OnReserveClicked);
+                }
             }
         }
 
@@ -757,6 +772,12 @@ namespace GameKari.Battle
             }
         }        private void BindItemUi()
         {
+            if (CanGenerateItemSlots())
+            {
+                BindGeneratedItemSlotViews();
+                return;
+            }
+
             if (HasItemSlotViews())
             {
                 BindItemSlotViews();
@@ -766,6 +787,53 @@ namespace GameKari.Battle
             BindFixedItemButtons();
         }
 
+        private bool CanGenerateItemSlots()
+        {
+            return itemSlotContainer != null && itemSlotTemplate != null;
+        }
+
+        private void BindGeneratedItemSlotViews()
+        {
+            List<InventoryItem> visibleItems = GetVisibleInventoryItems();
+            EnsureGeneratedItemSlotCapacity(visibleItems.Count);
+
+            if (itemSlotTemplate != null && hideItemSlotTemplateOnPlay)
+            {
+                itemSlotTemplate.SetVisible(false);
+            }
+
+            for (int i = 0; i < _generatedItemSlotViews.Count; i++)
+            {
+                ItemSlotView slotView = _generatedItemSlotViews[i];
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                bool visible = i < visibleItems.Count;
+                slotView.SetVisible(visible);
+                if (visible)
+                {
+                    slotView.SetItem(visibleItems[i], OnItemClicked, HandleItemHovered, ClearItemDescription);
+                }
+            }
+        }
+
+        private void EnsureGeneratedItemSlotCapacity(int requiredCount)
+        {
+            if (itemSlotContainer == null || itemSlotTemplate == null)
+            {
+                return;
+            }
+
+            for (int i = _generatedItemSlotViews.Count; i < requiredCount; i++)
+            {
+                ItemSlotView slotView = Instantiate(itemSlotTemplate, itemSlotContainer);
+                slotView.name = $"ItemSlot_{i + 1}";
+                slotView.SetVisible(true);
+                _generatedItemSlotViews.Add(slotView);
+            }
+        }
         private bool HasItemSlotViews()
         {
             if (itemSlotViews == null)
@@ -834,11 +902,21 @@ namespace GameKari.Battle
 
             return visibleItems;
         }
-        private void HandleItemHovered(InventoryItem inventoryItem)
+        private void HandleItemHovered(string description)
         {
-            if (descriptionText != null)
+            TMP_Text targetText = itemDescriptionText != null ? itemDescriptionText : descriptionText;
+            if (targetText != null)
             {
-                descriptionText.text = BuildItemDescription(inventoryItem);
+                targetText.text = description ?? string.Empty;
+            }
+        }
+
+        private void ClearItemDescription()
+        {
+            TMP_Text targetText = itemDescriptionText != null ? itemDescriptionText : descriptionText;
+            if (targetText != null)
+            {
+                targetText.text = string.Empty;
             }
         }
         private void BindFixedItemButtons()
@@ -1210,6 +1288,10 @@ namespace GameKari.Battle
         }
     }
 }
+
+
+
+
 
 
 
