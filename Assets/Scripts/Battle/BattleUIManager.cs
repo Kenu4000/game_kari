@@ -1322,7 +1322,9 @@ namespace GameKari.Battle
 
             float resolvedAlpha = Mathf.Clamp01(alpha);
             image.color = new Color(0.5f, 0.5f, 0.5f, resolvedAlpha);
-            SetSkillHoverSilhouetteOutlineVisible(image, true, resolvedAlpha);
+
+            bool showOutline = resolvedAlpha >= 0.99f;
+            SetSkillHoverSilhouetteOutlineVisible(image, showOutline, resolvedAlpha);
         }
         private void SetSkillHoverSilhouetteOutlineVisible(Image sourceImage, bool visible, float alpha)
         {
@@ -1446,7 +1448,7 @@ namespace GameKari.Battle
         }
         private void ApplySkillHoverSilhouetteOverlapAlpha(HashSet<BattleUnit> focusedUnits)
         {
-            if (_active == null || _active.IsDead)
+            if (_active == null || _active.IsDead || _grid == null)
             {
                 return;
             }
@@ -1463,11 +1465,10 @@ namespace GameKari.Battle
                     break;
 
                 default:
-                    // Overlap transparency is only for an active ally in a Top cell.
                     return;
             }
 
-            BattleUnit bottomUnit = _grid == null ? null : _grid.GetUnit(true, bottomPosition);
+            BattleUnit bottomUnit = _grid.GetUnit(true, bottomPosition);
             if (bottomUnit == null || bottomUnit.IsDead)
             {
                 return;
@@ -1480,7 +1481,12 @@ namespace GameKari.Battle
 
             RectTransform activeRect = GetBoardSpriteRect(true, _active.GridPos);
             RectTransform bottomRect = GetBoardSpriteRect(true, bottomPosition);
-            if (activeRect == null || bottomRect == null || !RectTransformsOverlap(activeRect, bottomRect))
+            if (activeRect == null || bottomRect == null)
+            {
+                return;
+            }
+
+            if (!RectTransformsOverlap(activeRect, bottomRect))
             {
                 return;
             }
@@ -1493,7 +1499,6 @@ namespace GameKari.Battle
 
             ApplySkillHoverSilhouette(bottomImage, skillHoverSilhouetteOverlapAlpha);
         }
-
         private void AddFocusedSpriteRects(bool isAllyBoard, HashSet<BattleUnit> focusedUnits, List<RectTransform> focusedRects)
         {
             AddFocusedSpriteRectAt(isAllyBoard, GridPos.FrontTop, focusedUnits, focusedRects);
@@ -5511,6 +5516,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
