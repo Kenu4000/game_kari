@@ -37,6 +37,7 @@ namespace GameKari.Battle
 
         [Header("Skill Hover Sprite Preview")]
         [SerializeField] private Color skillHoverInactiveSpriteColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+        [SerializeField] private float skillHoverSilhouetteOutlinePixelOffset = 2f;
         [SerializeField] private Color skillHoverSilhouetteOutlineColor = new Color(0.25f, 0.25f, 0.25f, 1f);
         [SerializeField] private float skillHoverSilhouetteOutlineSize = 1f;
         [SerializeField] private float skillHoverSilhouetteOverlapAlpha = 0.45f;
@@ -1316,31 +1317,101 @@ namespace GameKari.Battle
             Material material = GetSkillHoverSilhouetteMaterial();
             if (material != null)
             {
-                ApplySkillHoverSilhouetteMaterialSettings(material);
                 image.material = material;
             }
 
-            Color color = skillHoverInactiveSpriteColor;
-            color.a = Mathf.Clamp01(alpha);
-            image.color = color;
+            float resolvedAlpha = Mathf.Clamp01(alpha);
+            image.color = new Color(0.5f, 0.5f, 0.5f, resolvedAlpha);
+            SetSkillHoverSilhouetteOutlineVisible(image, true, resolvedAlpha);
         }
-
-        private void ApplySkillHoverSilhouetteMaterialSettings(Material material)
+        private void SetSkillHoverSilhouetteOutlineVisible(Image sourceImage, bool visible, float alpha)
         {
-            if (material == null)
+            if (sourceImage == null || sourceImage.transform == null || sourceImage.transform.parent == null)
             {
                 return;
             }
 
-            if (material.HasProperty("_OutlineColor"))
+            Transform parent = sourceImage.transform.parent;
+            float offset = Mathf.Max(0f, skillHoverSilhouetteOutlinePixelOffset);
+            Vector2[] offsets = new Vector2[]
             {
-                material.SetColor("_OutlineColor", skillHoverSilhouetteOutlineColor);
+                new Vector2(-offset, 0f),
+                new Vector2(offset, 0f),
+                new Vector2(0f, -offset),
+                new Vector2(0f, offset),
+                new Vector2(-offset, -offset),
+                new Vector2(-offset, offset),
+                new Vector2(offset, -offset),
+                new Vector2(offset, offset)
+            };
+
+            for (int i = 0; i < offsets.Length; i++)
+            {
+                Image outline = GetOrCreateSkillHoverSilhouetteOutlineImage(sourceImage, parent, i);
+                if (outline == null)
+                {
+                    continue;
+                }
+
+                outline.gameObject.SetActive(visible && sourceImage.enabled && sourceImage.sprite != null);
+                if (!visible)
+                {
+                    continue;
+                }
+
+                CopyRectTransform(sourceImage.rectTransform, outline.rectTransform, offsets[i]);
+                outline.sprite = sourceImage.sprite;
+                outline.type = sourceImage.type;
+                outline.preserveAspect = sourceImage.preserveAspect;
+                outline.raycastTarget = false;
+                outline.material = GetSkillHoverSilhouetteMaterial();
+
+                Color outlineColor = skillHoverSilhouetteOutlineColor;
+                outlineColor.a *= Mathf.Clamp01(alpha);
+                outline.color = outlineColor;
+
+                int sourceIndex = sourceImage.transform.GetSiblingIndex();
+                outline.transform.SetSiblingIndex(Mathf.Max(0, sourceIndex));
             }
 
-            if (material.HasProperty("_OutlineSize"))
+            sourceImage.transform.SetAsLastSibling();
+        }
+
+        private Image GetOrCreateSkillHoverSilhouetteOutlineImage(Image sourceImage, Transform parent, int index)
+        {
+            string name = $"SkillHoverSilhouetteOutline_{index}";
+            Transform existing = parent.Find(name);
+            Image image = existing == null ? null : existing.GetComponent<Image>();
+            if (image != null)
             {
-                material.SetFloat("_OutlineSize", Mathf.Max(0f, skillHoverSilhouetteOutlineSize));
+                return image;
             }
+
+            GameObject obj = new GameObject(name);
+            obj.transform.SetParent(parent, false);
+            image = obj.AddComponent<Image>();
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            image.gameObject.SetActive(false);
+            return image;
+        }
+
+        private static void CopyRectTransform(RectTransform source, RectTransform target, Vector2 anchoredOffset)
+        {
+            if (source == null || target == null)
+            {
+                return;
+            }
+
+            target.anchorMin = source.anchorMin;
+            target.anchorMax = source.anchorMax;
+            target.pivot = source.pivot;
+            target.sizeDelta = source.sizeDelta;
+            target.offsetMin = source.offsetMin;
+            target.offsetMax = source.offsetMax;
+            target.localScale = source.localScale;
+            target.localRotation = source.localRotation;
+            target.anchoredPosition = source.anchoredPosition + anchoredOffset;
         }
         private Material GetSkillHoverSilhouetteMaterial()
         {
@@ -1360,11 +1431,10 @@ namespace GameKari.Battle
             {
                 name = "SkillHoverSilhouetteMaterial_Runtime"
             };
-            ApplySkillHoverSilhouetteMaterialSettings(_skillHoverSilhouetteMaterial);
             return _skillHoverSilhouetteMaterial;
         }
 
-        private static void ApplyNormalBoardSpriteMaterial(Image image)
+        private void ApplyNormalBoardSpriteMaterial(Image image)
         {
             if (image == null)
             {
@@ -1372,8 +1442,8 @@ namespace GameKari.Battle
             }
 
             image.material = null;
+            SetSkillHoverSilhouetteOutlineVisible(image, false, 1f);
         }
-
         private void ApplySkillHoverSilhouetteOverlapAlpha(HashSet<BattleUnit> focusedUnits)
         {
             if (_active == null || _active.IsDead)
@@ -5441,6 +5511,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
