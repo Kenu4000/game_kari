@@ -37,6 +37,8 @@ namespace GameKari.Battle
 
         [Header("Skill Hover Sprite Preview")]
         [SerializeField] private Color skillHoverInactiveSpriteColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+        [SerializeField] private Color skillHoverSilhouetteOutlineColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+        [SerializeField] private float skillHoverSilhouetteOutlineSize = 1f;
         [SerializeField] private float skillHoverSilhouetteOverlapAlpha = 0.45f;
         [SerializeField] private float skillHoverOverlapTargetAlpha = 0.55f;
         [Header("Turn Order Bar")]
@@ -1314,6 +1316,7 @@ namespace GameKari.Battle
             Material material = GetSkillHoverSilhouetteMaterial();
             if (material != null)
             {
+                ApplySkillHoverSilhouetteMaterialSettings(material);
                 image.material = material;
             }
 
@@ -1322,6 +1325,23 @@ namespace GameKari.Battle
             image.color = color;
         }
 
+        private void ApplySkillHoverSilhouetteMaterialSettings(Material material)
+        {
+            if (material == null)
+            {
+                return;
+            }
+
+            if (material.HasProperty("_OutlineColor"))
+            {
+                material.SetColor("_OutlineColor", skillHoverSilhouetteOutlineColor);
+            }
+
+            if (material.HasProperty("_OutlineSize"))
+            {
+                material.SetFloat("_OutlineSize", Mathf.Max(0f, skillHoverSilhouetteOutlineSize));
+            }
+        }
         private Material GetSkillHoverSilhouetteMaterial()
         {
             if (_skillHoverSilhouetteMaterial != null)
@@ -1340,6 +1360,7 @@ namespace GameKari.Battle
             {
                 name = "SkillHoverSilhouetteMaterial_Runtime"
             };
+            ApplySkillHoverSilhouetteMaterialSettings(_skillHoverSilhouetteMaterial);
             return _skillHoverSilhouetteMaterial;
         }
 
@@ -1360,22 +1381,47 @@ namespace GameKari.Battle
                 return;
             }
 
-            RectTransform activeRect = GetBoardSpriteRect(true, _active.GridPos);
-            if (activeRect == null)
+            GridPos bottomPosition;
+            switch (_active.GridPos)
+            {
+                case GridPos.FrontTop:
+                    bottomPosition = GridPos.FrontBottom;
+                    break;
+
+                case GridPos.BackTop:
+                    bottomPosition = GridPos.BackBottom;
+                    break;
+
+                default:
+                    // Overlap transparency is only for an active ally in a Top cell.
+                    return;
+            }
+
+            BattleUnit bottomUnit = _grid == null ? null : _grid.GetUnit(true, bottomPosition);
+            if (bottomUnit == null || bottomUnit.IsDead)
             {
                 return;
             }
 
-            var activeOnlyRects = new List<RectTransform> { activeRect };
+            if (focusedUnits != null && focusedUnits.Contains(bottomUnit))
+            {
+                return;
+            }
 
-            ApplySilhouetteOverlapAlphaAt(true, GridPos.FrontTop, focusedUnits, activeOnlyRects);
-            ApplySilhouetteOverlapAlphaAt(true, GridPos.BackTop, focusedUnits, activeOnlyRects);
-            ApplySilhouetteOverlapAlphaAt(true, GridPos.FrontBottom, focusedUnits, activeOnlyRects);
-            ApplySilhouetteOverlapAlphaAt(true, GridPos.BackBottom, focusedUnits, activeOnlyRects);
-            ApplySilhouetteOverlapAlphaAt(false, GridPos.FrontTop, focusedUnits, activeOnlyRects);
-            ApplySilhouetteOverlapAlphaAt(false, GridPos.BackTop, focusedUnits, activeOnlyRects);
-            ApplySilhouetteOverlapAlphaAt(false, GridPos.FrontBottom, focusedUnits, activeOnlyRects);
-            ApplySilhouetteOverlapAlphaAt(false, GridPos.BackBottom, focusedUnits, activeOnlyRects);
+            RectTransform activeRect = GetBoardSpriteRect(true, _active.GridPos);
+            RectTransform bottomRect = GetBoardSpriteRect(true, bottomPosition);
+            if (activeRect == null || bottomRect == null || !RectTransformsOverlap(activeRect, bottomRect))
+            {
+                return;
+            }
+
+            Image bottomImage = GetBoardSpriteImage(true, bottomPosition);
+            if (bottomImage == null)
+            {
+                return;
+            }
+
+            ApplySkillHoverSilhouette(bottomImage, skillHoverSilhouetteOverlapAlpha);
         }
 
         private void AddFocusedSpriteRects(bool isAllyBoard, HashSet<BattleUnit> focusedUnits, List<RectTransform> focusedRects)
@@ -5395,6 +5441,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 

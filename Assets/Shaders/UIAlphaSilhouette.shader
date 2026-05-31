@@ -3,7 +3,9 @@
     Properties
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
-        _Color ("Tint", Color) = (0.55, 0.68, 0.72, 1)
+        _Color ("Tint", Color) = (0.5, 0.5, 0.5, 1)
+        _OutlineColor ("Outline Color", Color) = (0.25, 0.25, 0.25, 1)
+        _OutlineSize ("Outline Size", Float) = 1
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
         _StencilOp ("Stencil Operation", Float) = 0
@@ -64,7 +66,10 @@
 
             sampler2D _MainTex;
             fixed4 _Color;
+            fixed4 _OutlineColor;
+            float _OutlineSize;
             float4 _MainTex_ST;
+            float4 _MainTex_TexelSize;
             float4 _ClipRect;
 
             v2f vert(appdata_t v)
@@ -80,8 +85,25 @@
             fixed4 frag(v2f IN) : SV_Target
             {
                 fixed4 tex = tex2D(_MainTex, IN.texcoord);
-                fixed4 color = IN.color;
-                color.a *= tex.a;
+                float alpha = tex.a;
+
+                float2 offset = _MainTex_TexelSize.xy * max(0.0, _OutlineSize);
+                float outlineAlpha = alpha;
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x, 0)).a);
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x, 0)).a);
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(0,  offset.y)).a);
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(0, -offset.y)).a);
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x,  offset.y)).a);
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x,  offset.y)).a);
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x, -offset.y)).a);
+                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x, -offset.y)).a);
+
+                fixed4 fillColor = IN.color;
+                fixed4 outlineColor = _OutlineColor;
+                outlineColor.a *= IN.color.a;
+
+                fixed4 color = alpha > 0.001 ? fillColor : outlineColor;
+                color.a *= alpha > 0.001 ? alpha : outlineAlpha;
                 color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
                 return color;
             }
@@ -89,3 +111,4 @@
         }
     }
 }
+
