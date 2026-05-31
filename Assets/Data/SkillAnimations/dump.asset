@@ -12,6 +12,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54c31e9c082ca804985ef9834e273c3f, type: 3}
   m_Name: dump
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.SkillAnimationData
-  Steps: []
+  Steps:
+  - StepType: 0
+    Sprite: {fileID: 21300000, guid: 98fa25e2164b9e941828284939d965ed, type: 3}
+    ProjectileSprite: {fileID: 0}
+    Duration: 0.5
+    FromAnchor: 0
+    ToAnchor: 0
+    FromOffset: {x: 0, y: 0}
+    ToOffset: {x: 0, y: 0}
+    JumpHeight: 0
+    Scale: 2.2
+    RotationZ: 0
+    ProjectileScale: 1
+    ProjectileRotationZ: 0
+    ShakeDistance: 0
+    ShakeCount: 0
+  - StepType: 0
+    Sprite: {fileID: 21300000, guid: 89cec9f3ad4bddb47999efd99e88462c, type: 3}
+    ProjectileSprite: {fileID: 0}
+    Duration: 0.5
+    FromAnchor: 0
+    ToAnchor: 0
+    FromOffset: {x: 0, y: 0}
+    ToOffset: {x: 0, y: 0}
+    JumpHeight: 0
+    Scale: 2.2
+    RotationZ: 0
+    ProjectileScale: 1
+    ProjectileRotationZ: 0
+    ShakeDistance: 0
+    ShakeCount: 0
+  - StepType: 0
+    Sprite: {fileID: 21300000, guid: 86ca1cd721bff6945ae4562566937a6b, type: 3}
+    ProjectileSprite: {fileID: 0}
+    Duration: 1
+    FromAnchor: 2
+    ToAnchor: 3
+    FromOffset: {x: -40, y: 200}
+    ToOffset: {x: 0, y: 500}
+    JumpHeight: 200
+    Scale: 2
+    RotationZ: 0
+    ProjectileScale: 1
+    ProjectileRotationZ: 0
+    ShakeDistance: 0
+    ShakeCount: 0
+  - StepType: 0
+    Sprite: {fileID: 21300000, guid: 8347ff8fe10170a47a5e0ca60376ae19, type: 3}
+    ProjectileSprite: {fileID: 0}
+    Duration: 2
+    FromAnchor: 2
+    ToAnchor: 3
+    FromOffset: {x: -80, y: 500}
+    ToOffset: {x: 0, y: 500}
+    JumpHeight: 500
+    Scale: 2.2
+    RotationZ: 0
+    ProjectileScale: 1
+    ProjectileRotationZ: 0
+    ShakeDistance: 0
+    ShakeCount: 0
   RestoreSpriteAtEnd: 1
   RestoreTransformAtEnd: 1
+  HideProjectileAtEnd: 1

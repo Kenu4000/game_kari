@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: s7_dump
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.SkillData
   SkillId: s1
-  SkillName: Slash
+  SkillName: dump
   Description: Attack opponent front top.
   Category: 0
   TargetPattern: 1
@@ -22,6 +22,7 @@ MonoBehaviour:
   LinkPartnerCharacterId: 
   Damage: 50
   HealAmount: 0
+  Animation: {fileID: 11400000, guid: b46c2f680809d9845b4cdceb601e0b2b, type: 2}
   EffectType: 0
   EffectTarget: 0
   BuffType: 0
