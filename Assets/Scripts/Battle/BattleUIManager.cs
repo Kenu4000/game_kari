@@ -52,6 +52,10 @@ namespace GameKari.Battle
         [SerializeField] private string turnOrderEnemyPrefix = "E";
         [SerializeField] private string currentTurnPrefix = ">";
         [SerializeField] private string actedTurnPrefix = "x";
+        [Header("Mouse Wheel Rotate")]
+        [SerializeField] private bool enableMouseWheelRotate = true;
+        [SerializeField] private bool invertMouseWheelRotate = false;
+        [SerializeField] private float mouseWheelRotateThreshold = 0.01f;
         [Header("Status Panels")]
         [SerializeField] private Transform enemyStatusPanel;
         [SerializeField] private Transform allyStatusPanel;
@@ -252,6 +256,7 @@ namespace GameKari.Battle
         private void Update()
         {
             HandleDebugBuffHotkeys();
+            HandleMouseWheelRotateInput();
 
             if (!_formationSettling)
             {
@@ -266,6 +271,29 @@ namespace GameKari.Battle
             ConfirmFormation();
         }
 
+        private void HandleMouseWheelRotateInput()
+        {
+            if (!enableMouseWheelRotate || !CanAcceptRotateCommand())
+            {
+                return;
+            }
+
+            float scroll = Input.mouseScrollDelta.y;
+            if (Mathf.Abs(scroll) < Mathf.Max(0.0001f, mouseWheelRotateThreshold))
+            {
+                return;
+            }
+
+            // Current rotation supports the same direction as the existing Rotate button.
+            // Wheel up rotates once. Wheel down rotates the same rotate operation three times,
+            // which is equivalent to reverse rotation in a four-cell formation.
+            bool reverse = invertMouseWheelRotate ? scroll > 0f : scroll < 0f;
+            int rotateCount = reverse ? 3 : 1;
+            for (int i = 0; i < rotateCount; i++)
+            {
+                HandleRotateClicked();
+            }
+        }
         private void HandleDebugBuffHotkeys()
         {
 #if UNITY_EDITOR
@@ -5516,6 +5544,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
