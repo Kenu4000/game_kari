@@ -2365,11 +2365,25 @@ namespace GameKari.Battle
         }
         private IEnumerator PlayPendingAutoReplacementAnimations()
         {
+            if (_pendingEnemyKoReplacementPhase)
+            {
+                _pendingEnemyKoReplacementPhase = false;
+
+                CompactEnemyFrontlineIfEmpty();
+                bool replacementOccurred = FillEmptyEnemyCellsFromReserves();
+                _statusSlotUnits.Clear();
+                RedrawBoard();
+                ResetEnemyStatusCanvasGroupAlphas();
+
+                if (replacementOccurred)
+                {
+                    _pendingEnemyAutoReplacementEnterAnimation = true;
+                }
+            }
+
             if (_pendingEnemyAutoReplacementEnterAnimation)
             {
                 _pendingEnemyAutoReplacementEnterAnimation = false;
-            _pendingEnemyKoReplacementPhase = false;
-            _statusSlotUnits.Clear();
                 yield return PlayAutoReplacementEnterAnimation(false);
             }
         }
@@ -5064,6 +5078,7 @@ namespace GameKari.Battle
 
     }
 }
+
 
 
 
