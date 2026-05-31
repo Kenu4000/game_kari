@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,6 +22,11 @@ namespace GameKari.Battle
 
         public void Show(int current, int max, float hpAnimationSeconds, float visibleSeconds, float fadeOutSeconds)
         {
+            ShowTransition(current, current, max, hpAnimationSeconds, visibleSeconds, fadeOutSeconds);
+        }
+
+        public void ShowTransition(int previous, int current, int max, float hpAnimationSeconds, float visibleSeconds, float fadeOutSeconds)
+        {
             AutoBindMissingReferences();
 
             showSeconds = Mathf.Max(0f, visibleSeconds);
@@ -39,10 +44,27 @@ namespace GameKari.Battle
                 canvasGroup.alpha = 1f;
             }
 
+            SetFillImmediate(previous, max);
             SetFill(current, max, hpAnimationSeconds);
             _hideRoutine = StartCoroutine(HideAfterDelay());
         }
 
+        private void SetFillImmediate(int current, int max)
+        {
+            if (fill == null)
+            {
+                return;
+            }
+
+            float rate = max <= 0 ? 0f : Mathf.Clamp01((float)Mathf.Max(0, current) / max);
+            HPBarFillAnimator animator = fill.GetComponent<HPBarFillAnimator>();
+            if (animator == null)
+            {
+                animator = fill.gameObject.AddComponent<HPBarFillAnimator>();
+            }
+
+            animator.SetFillImmediate(rate);
+        }
         private void SetFill(int current, int max, float hpAnimationSeconds)
         {
             if (fill == null)
@@ -118,3 +140,4 @@ namespace GameKari.Battle
         }
     }
 }
+

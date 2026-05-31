@@ -46,6 +46,12 @@ namespace GameKari.Battle
 
         // 味方キャラがコマンドとして持つ技一覧。
         // 敵は原則ここを空にして、EnemyActionSlotsを使う。
+        public bool OverrideFloatingHPBarOffset;
+        public Vector2 FloatingHPBarOffset = new Vector2(0f, 52f);
+
+        public bool OverrideDamagePopupOffset;
+        public Vector2 DamagePopupOffset = new Vector2(0f, 64f);
+
         public List<SkillData> DefaultSkills = new();
 
         // 敵AI専用の行動候補一覧。
@@ -53,6 +59,10 @@ namespace GameKari.Battle
         public List<EnemyActionSlot> EnemyActionSlots = new();
     }
 }
+
+
+
+
 
 
 

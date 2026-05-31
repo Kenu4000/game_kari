@@ -19,6 +19,13 @@ MonoBehaviour:
   Speed: 13
   FaceIcon: {fileID: 0}
   StandingSprite: {fileID: 0}
+  BattleSprite: {fileID: 21300000, guid: 11cb2f7e5aa4d0d40a16f767cb7b6fdc, type: 3}
+  BattleSpriteScale: 1.2
+  BattleSpriteOffset: {x: 0, y: 160}
+  OverrideFloatingHPBarOffset: 0
+  FloatingHPBarOffset: {x: 0, y: 52}
+  OverrideDamagePopupOffset: 0
+  DamagePopupOffset: {x: 0, y: 64}
   DefaultSkills: []
   EnemyActionSlots:
   - Skill: {fileID: 11400000, guid: 5e2c1959c3d4c5a4aa42841dac7520e4, type: 2}

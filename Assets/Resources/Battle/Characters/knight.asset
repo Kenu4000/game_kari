@@ -13,15 +13,19 @@ MonoBehaviour:
   m_Name: knight
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.CharacterData
   Id: knight
-  DisplayName: Knight
+  DisplayName: syuzinkou
   MaxHP: 130
   MaxMP: 4
   Speed: 12
   FaceIcon: {fileID: 0}
   StandingSprite: {fileID: 0}
-  BattleSprite: {fileID: 21300000, guid: 187f06db9a8cdc247a8ba8d73b0427d3, type: 3}
+  BattleSprite: {fileID: 21300000, guid: da1e1cd0c51cd6042a9adc9914aa3ab0, type: 3}
   BattleSpriteScale: 2
-  BattleSpriteOffset: {x: 10, y: 170}
+  BattleSpriteOffset: {x: -10, y: 100}
+  OverrideFloatingHPBarOffset: 0
+  FloatingHPBarOffset: {x: 0, y: 52}
+  OverrideDamagePopupOffset: 0
+  DamagePopupOffset: {x: 0, y: 64}
   DefaultSkills:
   - {fileID: 11400000, guid: 6008f55b533831c4d8016323e2eb5f12, type: 2}
   - {fileID: 11400000, guid: 59ee788ad5b9da74fa9fcc3054bb5b8e, type: 2}

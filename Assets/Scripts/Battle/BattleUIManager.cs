@@ -76,9 +76,13 @@ namespace GameKari.Battle
         private bool _pendingActionFlashIsAllyBoard;
         private readonly List<GridPos> _pendingActionSourceFlashTargets = new();
         private bool _pendingActionSourceFlashIsAllyBoard;
+        private bool _pendingEnemyKoReplacementPhase;
+        private bool _pendingEnemyAutoReplacementEnterAnimation;
+        private readonly List<BattleUnit> _enemyStatusKoVisibleUnits = new();
         private readonly List<ActionValuePopup> _pendingActionValuePopups = new();
         private readonly List<TurnOrderSlotView> _generatedTurnOrderSlotViews = new();
         private bool _deferHpBarFillUntilActionHit;
+        private readonly Dictionary<Transform, BattleUnit> _statusSlotUnits = new();
         private readonly Dictionary<Transform, float> _pendingHpBarFillRates = new();
         private readonly List<TMP_Text> _activeActionValuePopupLabels = new();
         private readonly HashSet<int> _scoutedWaveIndices = new();
@@ -101,12 +105,19 @@ namespace GameKari.Battle
         [SerializeField] private float actionSpriteLungeDistance = 24f;
         [SerializeField] private float targetHitShakeDistance = 10f;
         [SerializeField] private float targetHitShakeSeconds = 0.16f;
+        [SerializeField] private float autoReplacementEnterSeconds = 0.18f;
+        [SerializeField] private float autoReplacementEnterDistance = 32f;
+        [SerializeField] private float enemyStatusKoFadeDelaySeconds = 0.0f;
         [SerializeField] private float defeatFadeSeconds = 0.22f;
+        [SerializeField] private float floatingHpBarVisibleSeconds = 0.9f;
+        [SerializeField] private float floatingHpBarFadeSeconds = 0.18f;
+        [SerializeField] private Vector2 floatingHpBarOffset = new Vector2(0f, 52f);
+        [SerializeField] private Vector2 floatingHpBarSize = new Vector2(64f, 10f);
         [SerializeField] private float hpBarAnimationSeconds = 0.35f;
         [SerializeField] private float defeatSinkDistance = 18f;
         [SerializeField] private int targetHitShakeCount = 3;
         [SerializeField] private float actionSpriteLungeSeconds = 0.12f;
-        [SerializeField] private float actionResolveDelaySeconds = 0.35f;
+        [SerializeField] private float actionIntroDelaySeconds = 0.5f;        [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
         [SerializeField] private Color damagePopupColor = new Color(1f, 0.35f, 0.35f, 1f);
         [SerializeField] private Color healPopupColor = new Color(0.45f, 1f, 0.45f, 1f);
@@ -143,7 +154,10 @@ namespace GameKari.Battle
         {
             public bool IsAllyBoard;
             public GridPos Position;
-            public string Text;
+            public bool HasHpSnapshot;
+            public int PreviousHP;
+            public int CurrentHP;
+            public int MaxHP;            public string Text;
         }
 
         private enum BattlePhase
@@ -169,7 +183,7 @@ namespace GameKari.Battle
 
             if (refs == null)
             {
-                BattleUIReferences[] sceneRefs = FindObjectsOfType<BattleUIReferences>(true);
+                BattleUIReferences[] sceneRefs = FindObjectsByType<BattleUIReferences>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                 if (sceneRefs != null && sceneRefs.Length > 0)
                 {
                     refs = sceneRefs[0];
@@ -318,6 +332,10 @@ namespace GameKari.Battle
             _previewEnemyActionStates.Clear();
             _turnNumbers.Clear();
             _actedUnits.Clear();
+            _enemyStatusKoVisibleUnits.Clear();
+            _pendingEnemyAutoReplacementEnterAnimation = false;
+            _pendingEnemyKoReplacementPhase = false;
+            _statusSlotUnits.Clear();
         }
 
         private void ApplyBattleSetup(BattleSetupData setup)
@@ -616,7 +634,7 @@ namespace GameKari.Battle
             }
 
             _phase = BattlePhase.ResolvingAction;
-            BeginDeferredHpBarFill();
+            // HP bar deferral starts immediately before the actual HP-changing resolution.
             ClearTargetPreview();
             ResetEnemyActionPreviewHighlights();
             SetEnemyActionPreviewVisible(false);
@@ -675,24 +693,46 @@ namespace GameKari.Battle
                 return;
             }
 
-            BattleUnit linkPartner = GetLinkPartnerForSkill(_active, skill);
+            BattleUnit actor = _active;
+            BattleUnit linkPartner = GetLinkPartnerForSkill(actor, skill);
+            string userDisplayName = BuildSkillUserDisplayName(actor, linkPartner);
 
             EnterResolvingAction();
-            ConsumeSkillMP(_active, skill, linkPartner);
+            ShowActionOverlay(skill.SkillName, userDisplayName);
 
-            ShowActionOverlay(skill.SkillName, BuildSkillUserDisplayName(_active, linkPartner));
+            StartCoroutine(ResolvePlayerSkillAfterIntroDelay(skill, actor, linkPartner, userDisplayName));
+        }
+
+        private IEnumerator ResolvePlayerSkillAfterIntroDelay(SkillData skill, BattleUnit actor, BattleUnit linkPartner, string userDisplayName)
+        {
+            float delay = Mathf.Max(0f, actionIntroDelaySeconds);
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
+            if (_battleEnded || actor == null || actor.IsDead || skill == null)
+            {
+                yield break;
+            }
+
+            _active = actor;
+            BeginDeferredHpBarFill();
+            ConsumeSkillMP(actor, skill, linkPartner);
+
             PrepareSkillActionFlashTargets(skill);
             BattleUnit flashableLinkPartner = IsActiveAllyUnit(linkPartner) ? linkPartner : null;
-            SetPendingActionSourceFlashTargets(true, BuildSkillSourceFlashTargets(_active, flashableLinkPartner));
-            Debug.Log($"[Action] Skill used: {skill.SkillName} by {BuildSkillUserDisplayName(_active, linkPartner)}.");
+            SetPendingActionSourceFlashTargets(true, BuildSkillSourceFlashTargets(actor, flashableLinkPartner));
+            Debug.Log($"[Action] Skill used: {skill.SkillName} by {userDisplayName}.");
 
             ApplySkillDamage(skill);
             ApplySkillEffect(skill);
+            RedrawBoard();
 
             if (_battleEnded)
             {
                 RedrawBoard();
-                return;
+                yield break;
             }
 
             StartCoroutine(FinishPlayerActionAfterDelay());
@@ -768,7 +808,7 @@ namespace GameKari.Battle
             target.CurrentHP = Mathf.Min(target.Data.MaxHP, target.CurrentHP + healAmount);
             int healed = target.CurrentHP - beforeHp;
 
-            AddPendingActionValuePopup(true, target.GridPos, $"+{healed}");
+            AddPendingActionValuePopup(true, target.GridPos, $"+{healed}", beforeHp, target.CurrentHP, target.Data.MaxHP);
             Debug.Log($"[Heal] {target.Name} recovered {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}");
         }
 
@@ -804,8 +844,9 @@ namespace GameKari.Battle
 
             int finalDamage = CalculateDamage(_active, target, damage);
 
+            int beforeHp = target.CurrentHP;
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - finalDamage);
-            AddPendingActionValuePopup(false, pos, $"-{finalDamage}");
+            AddPendingActionValuePopup(false, pos, $"-{finalDamage}", beforeHp, target.CurrentHP, target.Data.MaxHP);
 
             Debug.Log($"[Damage] {target.Name} took {finalDamage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
@@ -1014,14 +1055,16 @@ namespace GameKari.Battle
                 }
 
                 defeated.Unit.IsDead = true;
+                if (!_enemyStatusKoVisibleUnits.Contains(defeated.Unit))
+                {
+                    _enemyStatusKoVisibleUnits.Add(defeated.Unit);
+                }
                 RemoveTurnState(defeated.Unit);
 
                 Debug.Log($"[KO] {defeated.Unit.Name} is defeated. Grid removal is deferred until fadeout completes.");
             }
 
-            CompactEnemyFrontlineIfEmpty();
-            FillEmptyEnemyCellsFromReserves();
-
+            // Enemy grid movement and reserve entry are deferred until the KO fadeout finishes.
             CheckBattleEnd();
         }
 
@@ -1064,26 +1107,28 @@ namespace GameKari.Battle
             Debug.Log("[Formation] Compacted enemy frontline.");
         }
 
-        private void FillEmptyEnemyCellsFromReserves()
+        private bool FillEmptyEnemyCellsFromReserves()
         {
-            TryFillEnemyCellFromReserve(GridPos.FrontTop);
-            TryFillEnemyCellFromReserve(GridPos.FrontBottom);
-            TryFillEnemyCellFromReserve(GridPos.BackTop);
-            TryFillEnemyCellFromReserve(GridPos.BackBottom);
+            bool changed = false;
+            changed |= TryFillEnemyCellFromReserve(GridPos.FrontTop);
+            changed |= TryFillEnemyCellFromReserve(GridPos.FrontBottom);
+            changed |= TryFillEnemyCellFromReserve(GridPos.BackTop);
+            changed |= TryFillEnemyCellFromReserve(GridPos.BackBottom);
+            return changed;
         }
 
-        private void TryFillEnemyCellFromReserve(GridPos position)
+        private bool TryFillEnemyCellFromReserve(GridPos position)
         {
             BattleUnit current = _grid.GetUnit(false, position);
             if (current != null && !current.IsDead)
             {
-                return;
+                return false;
             }
 
             BattleUnit replacement = GetNextEnemyReserve();
             if (replacement == null)
             {
-                return;
+                return false;
             }
 
             _grid.SetUnit(false, position, replacement);
@@ -1097,6 +1142,7 @@ namespace GameKari.Battle
             _actedUnits.Add(replacement);
 
             Debug.Log($"[KO] {replacement.Name} entered enemy grid at {position}. Replacement cannot act this turn.");
+            return true;
         }
 
         // Enemy action preview
@@ -1328,6 +1374,7 @@ namespace GameKari.Battle
             }
 
             EnterResolvingAction();
+            BeginDeferredHpBarFill();
 
             int beforeHp = target.CurrentHP;
             target.CurrentHP = Mathf.Min(target.CurrentHP + item.HealAmount, target.Data.MaxHP);
@@ -1343,8 +1390,9 @@ namespace GameKari.Battle
             ShowActionOverlay(item.ItemName, _active.Name);
             SetPendingActionFlashTargets(true, new List<GridPos> { target.GridPos });
             SetPendingActionSourceFlashTargets(true, new List<GridPos> { _active.GridPos });
-            AddPendingActionValuePopup(true, target.GridPos, $"+{healed}");
+            AddPendingActionValuePopup(true, target.GridPos, $"+{healed}", beforeHp, target.CurrentHP, target.Data.MaxHP);
             Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {inventoryItem.Count}");
+            RedrawBoard();
 
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
@@ -1605,18 +1653,24 @@ namespace GameKari.Battle
             ClearPendingActionSourceFlashTargets();
         }
 
-        private void AddPendingActionValuePopup(bool isAllyBoard, GridPos position, string text)
+        private void AddPendingActionValuePopup(bool isAllyBoard, GridPos position, string text, int previousHp = -1, int currentHp = -1, int maxHp = -1)
         {
             if (string.IsNullOrEmpty(text))
             {
                 return;
             }
 
+            bool hasHpSnapshot = maxHp > 0 && previousHp >= 0 && currentHp >= 0;
+
             _pendingActionValuePopups.Add(new ActionValuePopup
             {
                 IsAllyBoard = isAllyBoard,
                 Position = position,
-                Text = text
+                Text = text,
+                HasHpSnapshot = hasHpSnapshot,
+                PreviousHP = hasHpSnapshot ? previousHp : 0,
+                CurrentHP = hasHpSnapshot ? currentHp : 0,
+                MaxHP = hasHpSnapshot ? maxHp : 0
             });
         }
 
@@ -1652,24 +1706,54 @@ namespace GameKari.Battle
                 popupObject.transform.SetParent(cellLabel.transform.parent, false);
 
                 RectTransform rect = popupObject.AddComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0f, 0.55f);
-                rect.anchorMax = new Vector2(1f, 1f);
-                rect.offsetMin = Vector2.zero;
-                rect.offsetMax = Vector2.zero;
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.sizeDelta = new Vector2(120f, 48f);
+
+                BattleUnit popupUnit = _grid.GetUnit(popup.IsAllyBoard, popup.Position);
+                rect.anchoredPosition = GetDamagePopupOffset(popupUnit);
 
                 TMP_Text label = popupObject.AddComponent<TextMeshProUGUI>();
                 label.alignment = TextAlignmentOptions.Center;
                 label.fontSize = 28f;
                 label.raycastTarget = false;
                 label.text = popup.Text;
-                label.color = popup.Text.StartsWith("+")
-                    ? healPopupColor
-                    : damagePopupColor;
+                ApplyActionValuePopupColor(label, popup.Text);
 
                 _activeActionValuePopupLabels.Add(label);
             }
         }
 
+        private void ApplyActionValuePopupColor(TMP_Text label, string text)
+        {
+            if (label == null)
+            {
+                return;
+            }
+
+            Color color = !string.IsNullOrEmpty(text) && text.StartsWith("+")
+                ? healPopupColor
+                : damagePopupColor;
+
+            label.enableVertexGradient = false;
+            label.color = color;
+            label.faceColor = color;
+
+            if (label.fontSharedMaterial != null)
+            {
+                Material material = new Material(label.fontSharedMaterial);
+                material.name = "ActionValuePopup_TMP_Material_Instance";
+                if (material.HasProperty("_FaceColor"))
+                {
+                    material.SetColor("_FaceColor", color);
+                }
+
+                label.fontMaterial = material;
+            }
+
+            label.SetAllDirty();
+        }
         private void HideActiveActionValuePopups()
         {
             for (int i = 0; i < _activeActionValuePopupLabels.Count; i++)
@@ -1746,6 +1830,7 @@ namespace GameKari.Battle
 
                 HideActiveActionValuePopups();
                 ClearPendingActionValuePopups();
+                yield return PlayPendingAutoReplacementAnimations();
                 yield break;
             }
 
@@ -1757,6 +1842,7 @@ namespace GameKari.Battle
 
             yield return PlayActionSourceLunge(isSourceAllyBoard, sourcePositions);
             ApplyDeferredHpBarFillUpdates();
+            ShowPendingFloatingHpBars();
 
             ClearPendingActionFlashTargets();
 
@@ -1787,6 +1873,7 @@ namespace GameKari.Battle
 
             HideActiveActionValuePopups();
             ClearPendingActionValuePopups();
+            yield return PlayPendingAutoReplacementAnimations();
         }
 
         private IEnumerator PlayActionSourceLunge(bool isAllyBoard, List<GridPos> sourcePositions)
@@ -1985,6 +2072,9 @@ namespace GameKari.Battle
             var startColors = new List<Color>();
             var startPositions = new List<Vector2>();
             var positions = new List<GridPos>();
+            var koStatusUnits = new List<BattleUnit>();
+            var statusCanvasGroups = new List<CanvasGroup>();
+            var statusStartAlphas = new List<float>();
 
             for (int i = 0; i < damagePopups.Count; i++)
             {
@@ -2017,6 +2107,17 @@ namespace GameKari.Battle
                 startColors.Add(image.color);
                 startPositions.Add(rect.anchoredPosition);
                 positions.Add(popup.Position);
+                if (!koStatusUnits.Contains(unit))
+                {
+                    koStatusUnits.Add(unit);
+                }
+
+                CanvasGroup statusGroup = GetOrAddEnemyStatusCanvasGroup(unit);
+                if (statusGroup != null && !statusCanvasGroups.Contains(statusGroup))
+                {
+                    statusCanvasGroups.Add(statusGroup);
+                    statusStartAlphas.Add(statusGroup.alpha);
+                }
             }
 
             if (sprites.Count == 0)
@@ -2047,6 +2148,17 @@ namespace GameKari.Battle
                     rects[i].anchoredPosition = startPositions[i] + new Vector2(0f, -sink * eased);
                 }
 
+                for (int i = 0; i < statusCanvasGroups.Count && i < statusStartAlphas.Count; i++)
+                {
+                    CanvasGroup group = statusCanvasGroups[i];
+                    if (group == null)
+                    {
+                        continue;
+                    }
+
+                    ApplyEnemyStatusKoFadeAlpha(group, statusStartAlphas[i], elapsed, duration);
+                }
+
                 yield return null;
             }
 
@@ -2055,9 +2167,287 @@ namespace GameKari.Battle
                 _grid.SetUnit(false, positions[i], null);
             }
 
-            CompactEnemyFrontlineIfEmpty();
-            FillEmptyEnemyCellsFromReserves();
-            RedrawBoard();
+            for (int i = 0; i < koStatusUnits.Count; i++)
+            {
+                _enemyStatusKoVisibleUnits.Remove(koStatusUnits[i]);
+            }
+
+            _pendingEnemyKoReplacementPhase = true;
+        }
+        private void ShowPendingFloatingHpBars()
+        {
+            if (_pendingActionValuePopups == null || _pendingActionValuePopups.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _pendingActionValuePopups.Count; i++)
+            {
+                ActionValuePopup popup = _pendingActionValuePopups[i];
+                if (popup == null || string.IsNullOrEmpty(popup.Text))
+                {
+                    continue;
+                }
+
+                if (!popup.Text.StartsWith("-") && !popup.Text.StartsWith("+"))
+                {
+                    continue;
+                }
+
+                BattleUnit unit = _grid.GetUnit(popup.IsAllyBoard, popup.Position);
+                if (unit == null || unit.Data == null)
+                {
+                    continue;
+                }
+
+                FloatingHPBarView floatingBar = GetOrCreateFloatingHpBar(popup.IsAllyBoard, popup.Position, unit);
+                if (floatingBar == null)
+                {
+                    continue;
+                }
+
+                if (popup.HasHpSnapshot)
+                {
+                    floatingBar.ShowTransition(
+                        popup.PreviousHP,
+                        popup.CurrentHP,
+                        popup.MaxHP,
+                        hpBarAnimationSeconds,
+                        floatingHpBarVisibleSeconds,
+                        floatingHpBarFadeSeconds);
+                }
+                else
+                {
+                    floatingBar.Show(
+                        unit.CurrentHP,
+                        unit.Data.MaxHP,
+                        hpBarAnimationSeconds,
+                        floatingHpBarVisibleSeconds,
+                        floatingHpBarFadeSeconds);
+                }
+            }
+        }
+
+        private Vector2 GetFloatingHpBarOffset(BattleUnit unit)
+        {
+            if (unit != null && unit.Data != null && unit.Data.OverrideFloatingHPBarOffset)
+            {
+                return unit.Data.FloatingHPBarOffset;
+            }
+
+            return floatingHpBarOffset;
+        }
+
+        private FloatingHPBarView GetOrCreateFloatingHpBar(bool isAllyBoard, GridPos position, BattleUnit unit)
+        {
+            TMP_Text cellLabel = GetBoardCellLabel(isAllyBoard, position);
+            if (cellLabel == null || cellLabel.transform.parent == null)
+            {
+                return null;
+            }
+
+            Transform cellRoot = cellLabel.transform.parent;
+            Transform existing = cellRoot.Find("FloatingHPBarRoot");
+            if (existing != null)
+            {
+                return existing.GetComponent<FloatingHPBarView>();
+            }
+
+            GameObject rootObject = new GameObject("FloatingHPBarRoot", typeof(RectTransform));
+            rootObject.transform.SetParent(cellRoot, false);
+
+            RectTransform rootRect = rootObject.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rootRect.pivot = new Vector2(0.5f, 0.5f);
+            rootRect.sizeDelta = floatingHpBarSize;
+            rootRect.anchoredPosition = GetFloatingHpBarOffset(unit);
+
+            Image bg = rootObject.AddComponent<Image>();
+            bg.color = new Color(0f, 0f, 0f, 0.65f);
+            bg.raycastTarget = false;
+
+            GameObject fillObject = new GameObject("Fill", typeof(RectTransform));
+            fillObject.transform.SetParent(rootObject.transform, false);
+
+            RectTransform fillRect = fillObject.GetComponent<RectTransform>();
+            fillRect.anchorMin = new Vector2(0f, 0f);
+            fillRect.anchorMax = new Vector2(1f, 1f);
+            fillRect.pivot = new Vector2(0f, 0.5f);
+            fillRect.offsetMin = new Vector2(2f, 2f);
+            fillRect.offsetMax = new Vector2(-2f, -2f);
+
+            Image fillImage = fillObject.AddComponent<Image>();
+            fillImage.color = new Color(0.2f, 1f, 0.35f, 0.95f);
+            fillImage.raycastTarget = false;
+
+            FloatingHPBarView view = rootObject.AddComponent<FloatingHPBarView>();
+            rootObject.SetActive(false);
+            return view;
+        }
+        private void ApplyEnemyStatusKoFadeAlpha(CanvasGroup group, float startAlpha, float elapsed, float duration)
+        {
+            if (group == null)
+            {
+                return;
+            }
+
+            float delay = Mathf.Max(0f, enemyStatusKoFadeDelaySeconds);
+            if (elapsed < delay)
+            {
+                group.alpha = startAlpha;
+                return;
+            }
+
+            float remaining = Mathf.Max(0.0001f, duration - delay);
+            float t = duration <= 0f ? 1f : Mathf.Clamp01((elapsed - delay) / remaining);
+            float eased = 1f - Mathf.Pow(1f - t, 2f);
+            group.alpha = Mathf.Lerp(startAlpha, 0f, eased);
+        }
+        private CanvasGroup GetOrAddEnemyStatusCanvasGroup(BattleUnit unit)
+        {
+            Transform slot = GetEnemyStatusSlotForUnit(unit);
+            if (slot == null)
+            {
+                return null;
+            }
+
+            CanvasGroup group = slot.GetComponent<CanvasGroup>();
+            if (group == null)
+            {
+                group = slot.gameObject.AddComponent<CanvasGroup>();
+            }
+
+            return group;
+        }
+
+        private Transform GetEnemyStatusSlotForUnit(BattleUnit unit)
+        {
+            if (enemyStatusPanel == null || unit == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < _enemies.Count; i++)
+            {
+                if (_enemies[i] != unit)
+                {
+                    continue;
+                }
+
+                return enemyStatusPanel.Find($"EnemyStatus_{i + 1}");
+            }
+
+            return null;
+        }
+
+        private void ResetEnemyStatusCanvasGroupAlphas()
+        {
+            if (enemyStatusPanel == null)
+            {
+                return;
+            }
+
+            for (int i = 1; i <= 4; i++)
+            {
+                Transform slot = enemyStatusPanel.Find($"EnemyStatus_{i}");
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                CanvasGroup group = slot.GetComponent<CanvasGroup>();
+                if (group != null)
+                {
+                    group.alpha = 1f;
+                }
+            }
+        }
+        private IEnumerator PlayPendingAutoReplacementAnimations()
+        {
+            if (_pendingEnemyAutoReplacementEnterAnimation)
+            {
+                _pendingEnemyAutoReplacementEnterAnimation = false;
+            _pendingEnemyKoReplacementPhase = false;
+            _statusSlotUnits.Clear();
+                yield return PlayAutoReplacementEnterAnimation(false);
+            }
+        }
+        private IEnumerator PlayAutoReplacementEnterAnimation(bool isAllyBoard)
+        {
+            float duration = Mathf.Max(0f, autoReplacementEnterSeconds);
+            float distance = Mathf.Max(0f, autoReplacementEnterDistance);
+            if (duration <= 0f || distance <= 0f)
+            {
+                yield break;
+            }
+
+            var sprites = new List<RectTransform>();
+            var endPositions = new List<Vector2>();
+            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.FrontTop, sprites, endPositions);
+            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.FrontBottom, sprites, endPositions);
+            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.BackTop, sprites, endPositions);
+            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.BackBottom, sprites, endPositions);
+
+            if (sprites.Count == 0)
+            {
+                yield break;
+            }
+
+            Vector2 enterOffset = new Vector2(isAllyBoard ? -distance : distance, 0f);
+            for (int i = 0; i < sprites.Count && i < endPositions.Count; i++)
+            {
+                if (sprites[i] != null)
+                {
+                    sprites[i].anchoredPosition = endPositions[i] + enterOffset;
+                }
+            }
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float eased = 1f - Mathf.Pow(1f - t, 2f);
+
+                for (int i = 0; i < sprites.Count && i < endPositions.Count; i++)
+                {
+                    RectTransform sprite = sprites[i];
+                    if (sprite == null)
+                    {
+                        continue;
+                    }
+
+                    sprite.anchoredPosition = Vector2.Lerp(endPositions[i] + enterOffset, endPositions[i], eased);
+                }
+
+                yield return null;
+            }
+
+            for (int i = 0; i < sprites.Count && i < endPositions.Count; i++)
+            {
+                if (sprites[i] != null)
+                {
+                    sprites[i].anchoredPosition = endPositions[i];
+                }
+            }
+        }
+
+        private void AddBoardSpriteRectIfPresent(bool isAllyBoard, GridPos position, List<RectTransform> sprites, List<Vector2> endPositions)
+        {
+            if (sprites == null || endPositions == null)
+            {
+                return;
+            }
+
+            RectTransform rect = GetBoardSpriteRect(isAllyBoard, position);
+            if (rect == null || sprites.Contains(rect))
+            {
+                return;
+            }
+
+            sprites.Add(rect);
+            endPositions.Add(rect.anchoredPosition);
         }
         private void SetActionSourceFlashTargetsVisible(bool isAllyBoard, List<GridPos> targets, bool visible)
         {
@@ -2141,7 +2531,27 @@ namespace GameKari.Battle
             EnterResolvingAction();
 
             EnemyActionState action = GetPreviewEnemyActionState(enemy);
+            if (action == null || action.Skill == null)
+            {
+                ClearPreviewEnemyActionState(enemy);
+                AdvanceToNextActor();
+                yield break;
+            }
 
+            ShowActionOverlay(action.Skill.SkillName, enemy.Name);
+
+            float delay = Mathf.Max(0f, actionIntroDelaySeconds);
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
+            if (enemy == null || enemy.IsDead || _battleEnded)
+            {
+                yield break;
+            }
+
+            BeginDeferredHpBarFill();
             _actedUnits.Add(enemy);
             ExecuteEnemyAction(enemy, action);
             ClearPreviewEnemyActionState(enemy);
@@ -2248,7 +2658,6 @@ namespace GameKari.Battle
                 return;
             }
 
-            ShowActionOverlay(action.Skill.SkillName, enemy.Name);
             PrepareEnemyActionFlashTargets(enemy, action);
             SetPendingActionSourceFlashTargets(false, new List<GridPos> { enemy.GridPos });
 
@@ -2277,8 +2686,9 @@ namespace GameKari.Battle
 
             int finalDamage = CalculateDamage(enemy, target, damage);
 
+            int beforeHp = target.CurrentHP;
             target.CurrentHP = Mathf.Max(0, target.CurrentHP - finalDamage);
-            AddPendingActionValuePopup(true, targetPosition, $"-{finalDamage}");
+            AddPendingActionValuePopup(true, targetPosition, $"-{finalDamage}", beforeHp, target.CurrentHP, target.Data.MaxHP);
 
             Debug.Log($"[Enemy] {enemy.Name} used {actionName}: {target.Name} took {finalDamage} damage. HP: {target.CurrentHP}/{target.Data.MaxHP}");
 
@@ -3435,6 +3845,10 @@ namespace GameKari.Battle
             _hoveredSkill = null;
 
             _actedUnits.Clear();
+            _enemyStatusKoVisibleUnits.Clear();
+            _pendingEnemyAutoReplacementEnterAnimation = false;
+            _pendingEnemyKoReplacementPhase = false;
+            _statusSlotUnits.Clear();
             _turnNumbers.Clear();
             _previewEnemyActionStates.Clear();
         }
@@ -3614,18 +4028,38 @@ namespace GameKari.Battle
 
         private void RedrawStatusPanels()
         {
-            List<BattleUnit> aliveEnemies = GetAliveEnemies();
+            List<BattleUnit> enemyStatusUnits = GetEnemyStatusDisplayUnits();
 
             for (int i = 0; i < 4; i++)
             {
-                RedrawEnemyStatusSlot(i + 1, GetUnitAt(aliveEnemies, i));
+                RedrawEnemyStatusSlot(i + 1, GetUnitAt(enemyStatusUnits, i));
                 RedrawAllyStatusSlot(i + 1, GetUnitAt(_allies, i));
             }
 
-            ResizeEnemyStatusPanel(aliveEnemies.Count);
-            LayoutEnemyStatusSlots(aliveEnemies.Count);
+            ResizeEnemyStatusPanel(enemyStatusUnits.Count);
+            LayoutEnemyStatusSlots(enemyStatusUnits.Count);
         }
 
+        private List<BattleUnit> GetEnemyStatusDisplayUnits()
+        {
+            var result = new List<BattleUnit>();
+
+            for (int i = 0; i < _enemies.Count; i++)
+            {
+                BattleUnit unit = _enemies[i];
+                if (unit == null)
+                {
+                    continue;
+                }
+
+                if (!unit.IsDead || _enemyStatusKoVisibleUnits.Contains(unit))
+                {
+                    result.Add(unit);
+                }
+            }
+
+            return result;
+        }
         private void RedrawTurnOrderBar()
         {
             if (CanGenerateTurnOrderSlots())
@@ -4087,6 +4521,19 @@ namespace GameKari.Battle
             }
         }
 
+        private int CountStatusVisibleEnemyUnits()
+        {
+            int count = 0;
+            for (int i = 0; i < _enemies.Count; i++)
+            {
+                if (_enemies[i] != null)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
         private void ResizeEnemyStatusPanel(int visibleEnemyCount)
         {
             if (enemyStatusPanel == null)
@@ -4161,18 +4608,100 @@ namespace GameKari.Battle
 
             if (unit == null)
             {
+                ClearStatusSlotUnit(slot);
                 return;
             }
 
             SetLabel(slot, "Name", unit.Name);
             SetLabel(slot, "TurnNumber", BuildBoardMpBadgeText(unit));
+            SetStatusFaceIcon(slot, unit);
 
+            bool unitChanged = UpdateStatusSlotUnit(slot, unit);
             int currentHp = unit.CurrentHP;
             int maxHp = unit.Data.MaxHP;
-            SetBarFill(slot, "HPBar", currentHp, maxHp);
+            SetBarFill(slot, "HPBar", currentHp, maxHp, unitChanged);
             SetOrCreateLabel(slot, "Buffs", BuildBuffText(unit));
         }
 
+        private static Transform FindChildRecursive(Transform root, string childName)
+        {
+            if (root == null || string.IsNullOrEmpty(childName))
+            {
+                return null;
+            }
+
+            Transform direct = root.Find(childName);
+            if (direct != null)
+            {
+                return direct;
+            }
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindChildRecursive(root.GetChild(i), childName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+        private static Sprite GetStatusFaceIconSprite(BattleUnit unit)
+        {
+            CharacterData data = unit == null ? null : unit.Data;
+            return data == null ? null : data.FaceIcon;
+        }
+        private static Transform FindStatusIconTransform(Transform slot)
+        {
+            if (slot == null)
+            {
+                return null;
+            }
+
+            Transform icon = FindChildRecursive(slot, "FaceIcon");
+            if (icon != null)
+            {
+                return icon;
+            }
+
+            icon = FindChildRecursive(slot, "Icon");
+            if (icon != null)
+            {
+                return icon;
+            }
+
+            return FindChildRecursive(slot, "IconImage");
+        }
+        private static void SetStatusFaceIcon(Transform slot, BattleUnit unit)
+        {
+            if (slot == null)
+            {
+                return;
+            }
+
+            Transform iconTransform = FindStatusIconTransform(slot);
+            if (iconTransform == null)
+            {
+                return;
+            }
+
+            Image image = iconTransform.GetComponent<Image>();
+            if (image == null)
+            {
+                image = iconTransform.gameObject.AddComponent<Image>();
+            }
+
+            Sprite sprite = GetStatusFaceIconSprite(unit);
+            image.sprite = sprite;
+            image.enabled = sprite != null;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+
+            Color color = image.color;
+            color.a = unit != null && unit.IsDead ? 0.45f : 1f;
+            image.color = color;
+        }
         private void RedrawAllyStatusSlot(int slotNumber, BattleUnit unit)
         {
             Transform slot = allyStatusPanel == null
@@ -4188,6 +4717,7 @@ namespace GameKari.Battle
 
             if (unit == null)
             {
+                ClearStatusSlotUnit(slot);
                 return;
             }
 
@@ -4197,10 +4727,12 @@ namespace GameKari.Battle
 
             SetLabel(slot, "Name", displayName);
             SetLabel(slot, "TurnNumber", BuildBoardMpBadgeText(unit));
+            SetStatusFaceIcon(slot, unit);
 
+            bool unitChanged = UpdateStatusSlotUnit(slot, unit);
             int currentHp = unit.IsDead ? 0 : unit.CurrentHP;
             int maxHp = unit.Data.MaxHP;
-            SetBarFill(slot, "HPBar", currentHp, maxHp);
+            SetBarFill(slot, "HPBar", currentHp, maxHp, unitChanged);
             SetOrCreateLabel(slot, "Buffs", BuildBuffText(unit));
         }
 
@@ -4382,7 +4914,30 @@ namespace GameKari.Battle
             label.text = text ?? "";
         }
 
-        private void SetBarFill(Transform root, string barName, int current, int max)
+        private bool UpdateStatusSlotUnit(Transform slot, BattleUnit unit)
+        {
+            if (slot == null)
+            {
+                return false;
+            }
+
+            if (!_statusSlotUnits.TryGetValue(slot, out BattleUnit previous) || previous != unit)
+            {
+                _statusSlotUnits[slot] = unit;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ClearStatusSlotUnit(Transform slot)
+        {
+            if (slot != null)
+            {
+                _statusSlotUnits.Remove(slot);
+            }
+        }
+        private void SetBarFill(Transform root, string barName, int current, int max, bool immediate = false)
         {
             Transform fill = root.Find($"{barName}/Fill");
             if (fill == null)
@@ -4391,6 +4946,12 @@ namespace GameKari.Battle
             }
 
             float rate = max <= 0 ? 0f : Mathf.Clamp01((float)current / max);
+            if (immediate)
+            {
+                SetBarFillRateImmediate(fill, rate);
+                return;
+            }
+
             if (Application.isPlaying && _deferHpBarFillUntilActionHit && barName == "HPBar")
             {
                 _pendingHpBarFillRates[fill] = rate;
@@ -4400,6 +4961,21 @@ namespace GameKari.Battle
             SetBarFillRate(fill, rate);
         }
 
+        private void SetBarFillRateImmediate(Transform fill, float rate)
+        {
+            if (fill == null)
+            {
+                return;
+            }
+
+            HPBarFillAnimator animator = fill.GetComponent<HPBarFillAnimator>();
+            if (animator == null)
+            {
+                animator = fill.gameObject.AddComponent<HPBarFillAnimator>();
+            }
+
+            animator.SetFillImmediate(rate);
+        }
         private void SetBarFillRate(Transform fill, float rate)
         {
             if (fill == null)
@@ -4443,6 +5019,10 @@ namespace GameKari.Battle
         private void RebuildTurnOrder()
         {
             _actedUnits.Clear();
+            _enemyStatusKoVisibleUnits.Clear();
+            _pendingEnemyAutoReplacementEnterAnimation = false;
+            _pendingEnemyKoReplacementPhase = false;
+            _statusSlotUnits.Clear();
 
             var all = new List<BattleUnit>();
             all.AddRange(_grid.AllyGrid.Values);
@@ -4462,6 +5042,15 @@ namespace GameKari.Battle
             }
         }
 
+        private Vector2 GetDamagePopupOffset(BattleUnit unit)
+        {
+            if (unit != null && unit.Data != null && unit.Data.OverrideDamagePopupOffset)
+            {
+                return unit.Data.DamagePopupOffset;
+            }
+
+            return Vector2.zero;
+        }
         private static string SafeName(BattleUnit unit)
         {
             if (unit == null)
@@ -4475,6 +5064,38 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

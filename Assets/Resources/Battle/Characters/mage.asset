@@ -13,15 +13,19 @@ MonoBehaviour:
   m_Name: mage
   m_EditorClassIdentifier: Assembly-CSharp::GameKari.Battle.CharacterData
   Id: mage
-  DisplayName: Mage
+  DisplayName: mecanic
   MaxHP: 80
   MaxMP: 4
   Speed: 15
   FaceIcon: {fileID: 0}
   StandingSprite: {fileID: 0}
-  BattleSprite: {fileID: 21300000, guid: db140e3073b83104ca4612d93229e9b6, type: 3}
+  BattleSprite: {fileID: 21300000, guid: aa0ea3d187023694c9626d017e4ab7f3, type: 3}
   BattleSpriteScale: 2
-  BattleSpriteOffset: {x: 0, y: 150}
+  BattleSpriteOffset: {x: 0, y: 100}
+  OverrideFloatingHPBarOffset: 0
+  FloatingHPBarOffset: {x: 0, y: 52}
+  OverrideDamagePopupOffset: 0
+  DamagePopupOffset: {x: 0, y: 64}
   DefaultSkills:
   - {fileID: 11400000, guid: 6008f55b533831c4d8016323e2eb5f12, type: 2}
   - {fileID: 11400000, guid: 59ee788ad5b9da74fa9fcc3054bb5b8e, type: 2}

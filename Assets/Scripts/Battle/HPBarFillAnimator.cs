@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 namespace GameKari.Battle
@@ -36,6 +36,19 @@ namespace GameKari.Battle
             _animation = StartCoroutine(AnimateFill(targetRate));
         }
 
+        public void SetFillImmediate(float targetRate)
+        {
+            targetRate = Mathf.Clamp01(targetRate);
+
+            if (_animation != null)
+            {
+                StopCoroutine(_animation);
+                _animation = null;
+            }
+
+            _initialized = true;
+            ApplyFill(targetRate);
+        }
         public void SetAnimationSeconds(float seconds)
         {
             animationSeconds = Mathf.Max(0f, seconds);
@@ -75,3 +88,4 @@ namespace GameKari.Battle
         }
     }
 }
+
