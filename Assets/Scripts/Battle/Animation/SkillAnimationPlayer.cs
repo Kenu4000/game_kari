@@ -8,15 +8,27 @@ namespace GameKari.Battle
     {
         public static IEnumerator Play(SkillAnimationData data, RectTransform casterRect, RectTransform targetRect, Image casterImage)
         {
-            if (data == null || casterRect == null || data.Steps == null || data.Steps.Count == 0)
+            if (data == null || casterRect == null || casterImage == null || data.Steps == null || data.Steps.Count == 0)
             {
                 yield break;
             }
 
-            Sprite originalSprite = casterImage == null ? null : casterImage.sprite;
-            Vector3 originalLocalPosition = casterRect.localPosition;
-            Vector3 originalScale = casterRect.localScale;
-            Quaternion originalRotation = casterRect.localRotation;
+            Image actorImage = GetOrCreateActorProxyImage(casterRect, casterImage);
+            RectTransform actorRect = actorImage == null ? null : actorImage.rectTransform;
+            if (actorImage == null || actorRect == null)
+            {
+                yield break;
+            }
+
+            Sprite originalSprite = casterImage.sprite;
+            bool originalCasterEnabled = casterImage.enabled;
+            Color originalCasterColor = casterImage.color;
+            Vector2 originalActorAnchoredPosition = actorRect.anchoredPosition;
+            Vector3 originalActorScale = actorRect.localScale;
+            Quaternion originalActorRotation = actorRect.localRotation;
+
+            SetupProxyFromSource(actorImage, actorRect, casterImage, casterRect);
+            casterImage.enabled = false;
 
             Image projectileImage = GetOrCreateProjectileImage(casterRect);
             RectTransform projectileRect = projectileImage == null ? null : projectileImage.rectTransform;
@@ -34,24 +46,24 @@ namespace GameKari.Battle
                 {
                     case SkillAnimationStepType.Pose:
                     case SkillAnimationStepType.Wait:
-                        ApplyCasterSprite(casterImage, step.Sprite);
-                        ApplyCasterTransformStep(casterRect, step);
+                        ApplyImageSprite(actorImage, step.Sprite);
+                        ApplyActorTransformStep(actorRect, step);
                         yield return Wait(step.Duration);
                         break;
 
                     case SkillAnimationStepType.Move:
-                        ApplyCasterSprite(casterImage, step.Sprite);
-                        yield return MoveRect(step, casterRect, casterRect, targetRect, originalLocalPosition, false, false);
+                        ApplyImageSprite(actorImage, step.Sprite);
+                        yield return MoveRect(step, actorRect, casterRect, targetRect, originalActorAnchoredPosition, false, false);
                         break;
 
                     case SkillAnimationStepType.JumpMove:
-                        ApplyCasterSprite(casterImage, step.Sprite);
-                        yield return MoveRect(step, casterRect, casterRect, targetRect, originalLocalPosition, true, false);
+                        ApplyImageSprite(actorImage, step.Sprite);
+                        yield return MoveRect(step, actorRect, casterRect, targetRect, originalActorAnchoredPosition, true, false);
                         break;
 
                     case SkillAnimationStepType.Return:
-                        ApplyCasterSprite(casterImage, step.Sprite);
-                        yield return ReturnCaster(step, casterRect, originalLocalPosition, originalScale, originalRotation);
+                        ApplyImageSprite(actorImage, step.Sprite);
+                        yield return ReturnRect(step, actorRect, originalActorAnchoredPosition, originalActorScale, originalActorRotation);
                         break;
 
                     case SkillAnimationStepType.ShakeTarget:
@@ -59,18 +71,18 @@ namespace GameKari.Battle
                         break;
 
                     case SkillAnimationStepType.SpawnProjectile:
-                        SpawnProjectile(step, projectileImage, projectileRect, casterRect, targetRect, originalLocalPosition);
+                        SpawnProjectile(step, projectileImage, projectileRect, casterRect, targetRect, originalActorAnchoredPosition);
                         yield return Wait(step.Duration);
                         break;
 
                     case SkillAnimationStepType.MoveProjectile:
-                        SpawnProjectile(step, projectileImage, projectileRect, casterRect, targetRect, originalLocalPosition);
-                        yield return MoveRect(step, projectileRect, casterRect, targetRect, originalLocalPosition, false, true);
+                        SpawnProjectile(step, projectileImage, projectileRect, casterRect, targetRect, originalActorAnchoredPosition);
+                        yield return MoveRect(step, projectileRect, casterRect, targetRect, originalActorAnchoredPosition, false, true);
                         break;
 
                     case SkillAnimationStepType.JumpProjectile:
-                        SpawnProjectile(step, projectileImage, projectileRect, casterRect, targetRect, originalLocalPosition);
-                        yield return MoveRect(step, projectileRect, casterRect, targetRect, originalLocalPosition, true, true);
+                        SpawnProjectile(step, projectileImage, projectileRect, casterRect, targetRect, originalActorAnchoredPosition);
+                        yield return MoveRect(step, projectileRect, casterRect, targetRect, originalActorAnchoredPosition, true, true);
                         break;
 
                     case SkillAnimationStepType.HideProjectile:
@@ -85,36 +97,40 @@ namespace GameKari.Battle
                 HideProjectile(projectileImage);
             }
 
-            if (data.RestoreSpriteAtEnd && casterImage != null)
+            if (data.RestoreSpriteAtEnd)
             {
                 casterImage.sprite = originalSprite;
             }
 
-            if (data.RestoreTransformAtEnd)
+            casterImage.enabled = originalCasterEnabled;
+            casterImage.color = originalCasterColor;
+
+            actorImage.enabled = false;
+            actorImage.gameObject.SetActive(false);
+            actorRect.anchoredPosition = originalActorAnchoredPosition;
+            actorRect.localScale = originalActorScale;
+            actorRect.localRotation = originalActorRotation;
+        }
+
+        private static void ApplyImageSprite(Image image, Sprite sprite)
+        {
+            if (image != null && sprite != null)
             {
-                casterRect.localPosition = originalLocalPosition;
-                casterRect.localScale = originalScale;
-                casterRect.localRotation = originalRotation;
+                image.sprite = sprite;
+                image.enabled = true;
+                image.gameObject.SetActive(true);
             }
         }
 
-        private static void ApplyCasterSprite(Image casterImage, Sprite sprite)
+        private static void ApplyActorTransformStep(RectTransform actorRect, SkillAnimationStep step)
         {
-            if (casterImage != null && sprite != null)
-            {
-                casterImage.sprite = sprite;
-            }
-        }
-
-        private static void ApplyCasterTransformStep(RectTransform casterRect, SkillAnimationStep step)
-        {
-            if (casterRect == null || step == null)
+            if (actorRect == null || step == null)
             {
                 return;
             }
 
-            casterRect.localScale = Vector3.one * Mathf.Max(0.01f, step.Scale);
-            casterRect.localRotation = Quaternion.Euler(0f, 0f, step.RotationZ);
+            actorRect.localScale = Vector3.one * Mathf.Max(0.01f, step.Scale);
+            actorRect.localRotation = Quaternion.Euler(0f, 0f, step.RotationZ);
         }
 
         private static IEnumerator MoveRect(
@@ -122,19 +138,19 @@ namespace GameKari.Battle
             RectTransform movingRect,
             RectTransform casterRect,
             RectTransform targetRect,
-            Vector3 originalLocalPosition,
+            Vector2 originalAnchoredPosition,
             bool jump,
             bool projectile)
         {
-            if (movingRect == null)
+            if (movingRect == null || step == null)
             {
                 yield return Wait(step == null ? 0f : step.Duration);
                 yield break;
             }
 
             float duration = Mathf.Max(0f, step.Duration);
-            Vector3 from = ResolveAnchor(step.FromAnchor, casterRect, targetRect, originalLocalPosition) + (Vector3)step.FromOffset;
-            Vector3 to = ResolveAnchor(step.ToAnchor, casterRect, targetRect, originalLocalPosition) + (Vector3)step.ToOffset;
+            Vector2 from = ResolveAnchor(step.FromAnchor, casterRect, targetRect, originalAnchoredPosition) + step.FromOffset;
+            Vector2 to = ResolveAnchor(step.ToAnchor, casterRect, targetRect, originalAnchoredPosition) + step.ToOffset;
             Vector3 startScale = movingRect.localScale;
             Quaternion startRotation = movingRect.localRotation;
             float targetScaleValue = projectile ? step.ProjectileScale : step.Scale;
@@ -144,7 +160,7 @@ namespace GameKari.Battle
 
             if (duration <= 0f)
             {
-                movingRect.localPosition = to;
+                movingRect.anchoredPosition = to;
                 movingRect.localScale = targetScale;
                 movingRect.localRotation = targetRotation;
                 yield break;
@@ -156,47 +172,47 @@ namespace GameKari.Battle
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 float eased = 1f - Mathf.Pow(1f - t, 2f);
-                Vector3 position = Vector3.Lerp(from, to, eased);
+                Vector2 position = Vector2.Lerp(from, to, eased);
 
                 if (jump)
                 {
                     position.y += Mathf.Sin(t * Mathf.PI) * step.JumpHeight;
                 }
 
-                movingRect.localPosition = position;
+                movingRect.anchoredPosition = position;
                 movingRect.localScale = Vector3.Lerp(startScale, targetScale, eased);
                 movingRect.localRotation = Quaternion.Lerp(startRotation, targetRotation, eased);
                 yield return null;
             }
 
-            movingRect.localPosition = to;
+            movingRect.anchoredPosition = to;
             movingRect.localScale = targetScale;
             movingRect.localRotation = targetRotation;
         }
 
-        private static IEnumerator ReturnCaster(
+        private static IEnumerator ReturnRect(
             SkillAnimationStep step,
-            RectTransform casterRect,
-            Vector3 originalLocalPosition,
+            RectTransform rect,
+            Vector2 originalAnchoredPosition,
             Vector3 originalScale,
             Quaternion originalRotation)
         {
-            if (casterRect == null)
+            if (rect == null)
             {
                 yield return Wait(step == null ? 0f : step.Duration);
                 yield break;
             }
 
             float duration = Mathf.Max(0f, step.Duration);
-            Vector3 from = casterRect.localPosition;
-            Vector3 startScale = casterRect.localScale;
-            Quaternion startRotation = casterRect.localRotation;
+            Vector2 from = rect.anchoredPosition;
+            Vector3 startScale = rect.localScale;
+            Quaternion startRotation = rect.localRotation;
 
             if (duration <= 0f)
             {
-                casterRect.localPosition = originalLocalPosition;
-                casterRect.localScale = originalScale;
-                casterRect.localRotation = originalRotation;
+                rect.anchoredPosition = originalAnchoredPosition;
+                rect.localScale = originalScale;
+                rect.localRotation = originalRotation;
                 yield break;
             }
 
@@ -206,22 +222,22 @@ namespace GameKari.Battle
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 float eased = 1f - Mathf.Pow(1f - t, 2f);
-                casterRect.localPosition = Vector3.Lerp(from, originalLocalPosition, eased);
-                casterRect.localScale = Vector3.Lerp(startScale, originalScale, eased);
-                casterRect.localRotation = Quaternion.Lerp(startRotation, originalRotation, eased);
+                rect.anchoredPosition = Vector2.Lerp(from, originalAnchoredPosition, eased);
+                rect.localScale = Vector3.Lerp(startScale, originalScale, eased);
+                rect.localRotation = Quaternion.Lerp(startRotation, originalRotation, eased);
                 yield return null;
             }
 
-            casterRect.localPosition = originalLocalPosition;
-            casterRect.localScale = originalScale;
-            casterRect.localRotation = originalRotation;
+            rect.anchoredPosition = originalAnchoredPosition;
+            rect.localScale = originalScale;
+            rect.localRotation = originalRotation;
         }
 
         private static IEnumerator ShakeTarget(SkillAnimationStep step, RectTransform targetRect)
         {
-            if (targetRect == null)
+            if (targetRect == null || step == null)
             {
-                yield return Wait(step.Duration);
+                yield return Wait(step == null ? 0f : step.Duration);
                 yield break;
             }
 
@@ -231,7 +247,7 @@ namespace GameKari.Battle
                 yield break;
             }
 
-            Vector3 original = targetRect.localPosition;
+            Vector2 original = targetRect.anchoredPosition;
             int shakeCount = Mathf.Max(1, step.ShakeCount);
             float elapsed = 0f;
             while (elapsed < duration)
@@ -239,11 +255,11 @@ namespace GameKari.Battle
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 float wave = Mathf.Sin(t * Mathf.PI * 2f * shakeCount);
-                targetRect.localPosition = original + new Vector3(wave * step.ShakeDistance, 0f, 0f);
+                targetRect.anchoredPosition = original + new Vector2(wave * step.ShakeDistance, 0f);
                 yield return null;
             }
 
-            targetRect.localPosition = original;
+            targetRect.anchoredPosition = original;
         }
 
         private static void SpawnProjectile(
@@ -252,7 +268,7 @@ namespace GameKari.Battle
             RectTransform projectileRect,
             RectTransform casterRect,
             RectTransform targetRect,
-            Vector3 originalLocalPosition)
+            Vector2 originalAnchoredPosition)
         {
             if (step == null || projectileImage == null || projectileRect == null)
             {
@@ -269,7 +285,7 @@ namespace GameKari.Battle
             projectileImage.raycastTarget = false;
             projectileImage.preserveAspect = true;
 
-            projectileRect.localPosition = ResolveAnchor(step.FromAnchor, casterRect, targetRect, originalLocalPosition) + (Vector3)step.FromOffset;
+            projectileRect.anchoredPosition = ResolveAnchor(step.FromAnchor, casterRect, targetRect, originalAnchoredPosition) + step.FromOffset;
             projectileRect.localScale = Vector3.one * Mathf.Max(0.01f, step.ProjectileScale);
             projectileRect.localRotation = Quaternion.Euler(0f, 0f, step.ProjectileRotationZ);
             projectileRect.SetAsLastSibling();
@@ -286,6 +302,34 @@ namespace GameKari.Battle
             projectileImage.gameObject.SetActive(false);
         }
 
+        private static Image GetOrCreateActorProxyImage(RectTransform sourceRect, Image sourceImage)
+        {
+            if (sourceRect == null || sourceRect.parent == null || sourceImage == null)
+            {
+                return null;
+            }
+
+            Transform parent = sourceRect.parent;
+            Transform existing = parent.Find("SkillAnimationActorImage");
+            if (existing != null)
+            {
+                Image existingImage = existing.GetComponent<Image>();
+                if (existingImage != null)
+                {
+                    SetupProxyFromSource(existingImage, existingImage.rectTransform, sourceImage, sourceRect);
+                    return existingImage;
+                }
+            }
+
+            GameObject obj = new GameObject("SkillAnimationActorImage", typeof(RectTransform));
+            obj.transform.SetParent(parent, false);
+            Image image = obj.AddComponent<Image>();
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            SetupProxyFromSource(image, image.rectTransform, sourceImage, sourceRect);
+            return image;
+        }
+
         private static Image GetOrCreateProjectileImage(RectTransform casterRect)
         {
             if (casterRect == null || casterRect.parent == null)
@@ -300,27 +344,54 @@ namespace GameKari.Battle
                 Image existingImage = existing.GetComponent<Image>();
                 if (existingImage != null)
                 {
+                    SetupAnimationRect(existingImage.rectTransform, casterRect);
                     return existingImage;
                 }
             }
 
             GameObject obj = new GameObject("SkillAnimationProjectileImage", typeof(RectTransform));
             obj.transform.SetParent(parent, false);
-
-            RectTransform rect = obj.GetComponent<RectTransform>();
-            rect.anchorMin = casterRect.anchorMin;
-            rect.anchorMax = casterRect.anchorMax;
-            rect.pivot = casterRect.pivot;
-            rect.sizeDelta = casterRect.sizeDelta;
-            rect.offsetMin = casterRect.offsetMin;
-            rect.offsetMax = casterRect.offsetMax;
-            rect.localScale = Vector3.one;
-
             Image image = obj.AddComponent<Image>();
             image.raycastTarget = false;
             image.preserveAspect = true;
+            SetupAnimationRect(image.rectTransform, casterRect);
             obj.SetActive(false);
             return image;
+        }
+
+        private static void SetupProxyFromSource(Image proxyImage, RectTransform proxyRect, Image sourceImage, RectTransform sourceRect)
+        {
+            if (proxyImage == null || proxyRect == null || sourceImage == null || sourceRect == null)
+            {
+                return;
+            }
+
+            SetupAnimationRect(proxyRect, sourceRect);
+            proxyImage.sprite = sourceImage.sprite;
+            proxyImage.color = sourceImage.color;
+            proxyImage.material = sourceImage.material;
+            proxyImage.type = sourceImage.type;
+            proxyImage.preserveAspect = sourceImage.preserveAspect;
+            proxyImage.raycastTarget = false;
+            proxyImage.enabled = sourceImage.enabled && sourceImage.sprite != null;
+            proxyImage.gameObject.SetActive(proxyImage.enabled);
+            proxyRect.SetAsLastSibling();
+        }
+
+        private static void SetupAnimationRect(RectTransform rect, RectTransform sourceRect)
+        {
+            if (rect == null || sourceRect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = sourceRect.pivot;
+            rect.sizeDelta = sourceRect.rect.size;
+            rect.anchoredPosition = sourceRect.anchoredPosition;
+            rect.localScale = sourceRect.localScale;
+            rect.localRotation = sourceRect.localRotation;
         }
 
         private static IEnumerator Wait(float duration)
@@ -332,35 +403,37 @@ namespace GameKari.Battle
             }
         }
 
-        private static Vector3 ResolveAnchor(SkillAnimationAnchor anchor, RectTransform casterRect, RectTransform targetRect, Vector3 originalLocalPosition)
+        private static Vector2 ResolveAnchor(SkillAnimationAnchor anchor, RectTransform casterRect, RectTransform targetRect, Vector2 originalAnchoredPosition)
         {
             switch (anchor)
             {
                 case SkillAnimationAnchor.Original:
-                    return originalLocalPosition;
+                    return originalAnchoredPosition;
 
                 case SkillAnimationAnchor.Caster:
+                    return originalAnchoredPosition;
+
                 case SkillAnimationAnchor.Current:
-                    return casterRect == null ? originalLocalPosition : casterRect.localPosition;
+                    return casterRect == null ? originalAnchoredPosition : casterRect.anchoredPosition;
 
                 case SkillAnimationAnchor.Target:
-                    return ConvertRectCenterToCasterParentLocal(casterRect, targetRect, originalLocalPosition);
+                    return ConvertRectCenterToCasterParentAnchored(casterRect, targetRect, originalAnchoredPosition);
 
                 case SkillAnimationAnchor.ScreenCenter:
-                    return ConvertScreenPointToCasterParentLocal(casterRect, new Vector2(0.5f, 0.5f), originalLocalPosition);
+                    return ConvertScreenPointToCasterParentAnchored(casterRect, new Vector2(0.5f, 0.5f), originalAnchoredPosition);
 
                 case SkillAnimationAnchor.ScreenTop:
-                    return ConvertScreenPointToCasterParentLocal(casterRect, new Vector2(0.5f, 0.9f), originalLocalPosition);
+                    return ConvertScreenPointToCasterParentAnchored(casterRect, new Vector2(0.5f, 0.9f), originalAnchoredPosition);
 
                 case SkillAnimationAnchor.ScreenBottom:
-                    return ConvertScreenPointToCasterParentLocal(casterRect, new Vector2(0.5f, 0.1f), originalLocalPosition);
+                    return ConvertScreenPointToCasterParentAnchored(casterRect, new Vector2(0.5f, 0.1f), originalAnchoredPosition);
 
                 default:
-                    return casterRect == null ? originalLocalPosition : casterRect.localPosition;
+                    return originalAnchoredPosition;
             }
         }
 
-        private static Vector3 ConvertRectCenterToCasterParentLocal(RectTransform casterRect, RectTransform targetRect, Vector3 fallback)
+        private static Vector2 ConvertRectCenterToCasterParentAnchored(RectTransform casterRect, RectTransform targetRect, Vector2 fallback)
         {
             if (casterRect == null || targetRect == null || casterRect.parent == null)
             {
@@ -374,10 +447,11 @@ namespace GameKari.Battle
             }
 
             Vector3 world = targetRect.TransformPoint(targetRect.rect.center);
-            return parentRect.InverseTransformPoint(world);
+            Vector3 local = parentRect.InverseTransformPoint(world);
+            return new Vector2(local.x, local.y);
         }
 
-        private static Vector3 ConvertScreenPointToCasterParentLocal(RectTransform casterRect, Vector2 normalizedViewportPoint, Vector3 fallback)
+        private static Vector2 ConvertScreenPointToCasterParentAnchored(RectTransform casterRect, Vector2 normalizedViewportPoint, Vector2 fallback)
         {
             if (casterRect == null || casterRect.parent == null)
             {
@@ -397,7 +471,8 @@ namespace GameKari.Battle
                 Mathf.Lerp(canvasRect.rect.yMin, canvasRect.rect.yMax, normalizedViewportPoint.y),
                 0f));
 
-            return parentRect.InverseTransformPoint(canvasWorld);
+            Vector3 local = parentRect.InverseTransformPoint(canvasWorld);
+            return new Vector2(local.x, local.y);
         }
     }
 }
