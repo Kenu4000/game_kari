@@ -35,6 +35,10 @@ namespace GameKari.Battle
         [SerializeField] private Image enemyFTHighlight;
         [SerializeField] private Image enemyFBHighlight;
 
+        [Header("Skill Hover Sprite Preview")]
+        [SerializeField] private Color skillHoverInactiveSpriteColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+        [SerializeField] private float skillHoverSilhouetteOverlapAlpha = 0.45f;
+        [SerializeField] private float skillHoverOverlapTargetAlpha = 0.55f;
         [Header("Turn Order Bar")]
         [SerializeField] private Transform turnOrderSlotContainer;
         [SerializeField] private Transform[] turnOrderSlotPositions = new Transform[8];        [SerializeField] private TurnOrderSlotView turnOrderSlotTemplate;
@@ -84,6 +88,7 @@ namespace GameKari.Battle
         private bool _deferHpBarFillUntilActionHit;
         private readonly Dictionary<Transform, BattleUnit> _statusSlotUnits = new();
         private readonly Dictionary<Transform, float> _pendingHpBarFillRates = new();
+        private Material _skillHoverSilhouetteMaterial;
         private readonly List<TMP_Text> _activeActionValuePopupLabels = new();
         private readonly HashSet<int> _scoutedWaveIndices = new();
 
@@ -1201,6 +1206,7 @@ namespace GameKari.Battle
 
             _hoveredSkill = skill;
             RedrawTargetPreview();
+            ApplySkillHoverSpritePreview();
         }
 
         private void RedrawTargetPreview()
@@ -1240,8 +1246,319 @@ namespace GameKari.Battle
         {
             _hoveredSkill = null;
             ResetEnemyBoardHighlights();
+            ResetBoardSpritePreviewColors();
         }
 
+        private void ApplySkillHoverSpritePreview()
+        {
+            ResetBoardSpritePreviewColors();
+
+            if (_hoveredSkill == null || _active == null || _active.IsDead)
+            {
+                return;
+            }
+
+            var focusedUnits = new HashSet<BattleUnit>();
+            focusedUnits.Add(_active);
+
+            bool targetIsAllyBoard = _hoveredSkill.TargetPattern == SkillTargetPattern.Self;
+            List<GridPos> targetPositions = GetSkillAnimationTargetPositions(_hoveredSkill);
+            for (int i = 0; i < targetPositions.Count; i++)
+            {
+                BattleUnit targetUnit = _grid.GetUnit(targetIsAllyBoard, targetPositions[i]);
+                if (targetUnit != null && !targetUnit.IsDead)
+                {
+                    focusedUnits.Add(targetUnit);
+                }
+            }
+
+            ApplySpriteFocusColors(true, focusedUnits);
+            ApplySpriteFocusColors(false, focusedUnits);
+            ApplySkillHoverSilhouetteOverlapAlpha(focusedUnits);
+        }
+
+        private void ApplySpriteFocusColors(bool isAllyBoard, HashSet<BattleUnit> focusedUnits)
+        {
+            ApplySpriteFocusColorAt(isAllyBoard, GridPos.FrontTop, focusedUnits);
+            ApplySpriteFocusColorAt(isAllyBoard, GridPos.BackTop, focusedUnits);
+            ApplySpriteFocusColorAt(isAllyBoard, GridPos.FrontBottom, focusedUnits);
+            ApplySpriteFocusColorAt(isAllyBoard, GridPos.BackBottom, focusedUnits);
+        }
+
+        private void ApplySpriteFocusColorAt(bool isAllyBoard, GridPos position, HashSet<BattleUnit> focusedUnits)
+        {
+            BattleUnit unit = _grid.GetUnit(isAllyBoard, position);
+            Image image = GetBoardSpriteImage(isAllyBoard, position);
+            if (image == null)
+            {
+                return;
+            }
+
+            if (unit == null || unit.IsDead || focusedUnits == null || !focusedUnits.Contains(unit))
+            {
+                ApplySkillHoverSilhouette(image, 1f);
+                return;
+            }
+
+            ApplyNormalBoardSpriteMaterial(image);
+            image.color = Color.white;
+        }
+
+        private void ApplySkillHoverSilhouette(Image image, float alpha)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            Material material = GetSkillHoverSilhouetteMaterial();
+            if (material != null)
+            {
+                image.material = material;
+            }
+
+            Color color = skillHoverInactiveSpriteColor;
+            color.a = Mathf.Clamp01(alpha);
+            image.color = color;
+        }
+
+        private Material GetSkillHoverSilhouetteMaterial()
+        {
+            if (_skillHoverSilhouetteMaterial != null)
+            {
+                return _skillHoverSilhouetteMaterial;
+            }
+
+            Shader shader = Shader.Find("GameKari/UIAlphaSilhouette");
+            if (shader == null)
+            {
+                Debug.LogWarning("[Preview] Shader not found: GameKari/UIAlphaSilhouette. Falling back to normal Image tint.");
+                return null;
+            }
+
+            _skillHoverSilhouetteMaterial = new Material(shader)
+            {
+                name = "SkillHoverSilhouetteMaterial_Runtime"
+            };
+            return _skillHoverSilhouetteMaterial;
+        }
+
+        private static void ApplyNormalBoardSpriteMaterial(Image image)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            image.material = null;
+        }
+
+        private void ApplySkillHoverSilhouetteOverlapAlpha(HashSet<BattleUnit> focusedUnits)
+        {
+            if (_active == null || _active.IsDead)
+            {
+                return;
+            }
+
+            RectTransform activeRect = GetBoardSpriteRect(true, _active.GridPos);
+            if (activeRect == null)
+            {
+                return;
+            }
+
+            var activeOnlyRects = new List<RectTransform> { activeRect };
+
+            ApplySilhouetteOverlapAlphaAt(true, GridPos.FrontTop, focusedUnits, activeOnlyRects);
+            ApplySilhouetteOverlapAlphaAt(true, GridPos.BackTop, focusedUnits, activeOnlyRects);
+            ApplySilhouetteOverlapAlphaAt(true, GridPos.FrontBottom, focusedUnits, activeOnlyRects);
+            ApplySilhouetteOverlapAlphaAt(true, GridPos.BackBottom, focusedUnits, activeOnlyRects);
+            ApplySilhouetteOverlapAlphaAt(false, GridPos.FrontTop, focusedUnits, activeOnlyRects);
+            ApplySilhouetteOverlapAlphaAt(false, GridPos.BackTop, focusedUnits, activeOnlyRects);
+            ApplySilhouetteOverlapAlphaAt(false, GridPos.FrontBottom, focusedUnits, activeOnlyRects);
+            ApplySilhouetteOverlapAlphaAt(false, GridPos.BackBottom, focusedUnits, activeOnlyRects);
+        }
+
+        private void AddFocusedSpriteRects(bool isAllyBoard, HashSet<BattleUnit> focusedUnits, List<RectTransform> focusedRects)
+        {
+            AddFocusedSpriteRectAt(isAllyBoard, GridPos.FrontTop, focusedUnits, focusedRects);
+            AddFocusedSpriteRectAt(isAllyBoard, GridPos.BackTop, focusedUnits, focusedRects);
+            AddFocusedSpriteRectAt(isAllyBoard, GridPos.FrontBottom, focusedUnits, focusedRects);
+            AddFocusedSpriteRectAt(isAllyBoard, GridPos.BackBottom, focusedUnits, focusedRects);
+        }
+
+        private void AddFocusedSpriteRectAt(bool isAllyBoard, GridPos position, HashSet<BattleUnit> focusedUnits, List<RectTransform> focusedRects)
+        {
+            BattleUnit unit = _grid == null ? null : _grid.GetUnit(isAllyBoard, position);
+            if (unit == null || unit.IsDead || focusedUnits == null || !focusedUnits.Contains(unit))
+            {
+                return;
+            }
+
+            RectTransform rect = GetBoardSpriteRect(isAllyBoard, position);
+            if (rect != null && focusedRects != null && !focusedRects.Contains(rect))
+            {
+                focusedRects.Add(rect);
+            }
+        }
+
+        private void ApplySilhouetteOverlapAlphaAt(bool isAllyBoard, GridPos position, HashSet<BattleUnit> focusedUnits, List<RectTransform> focusedRects)
+        {
+            BattleUnit unit = _grid == null ? null : _grid.GetUnit(isAllyBoard, position);
+            if (unit == null || unit.IsDead || focusedUnits == null || focusedUnits.Contains(unit))
+            {
+                return;
+            }
+
+            RectTransform rect = GetBoardSpriteRect(isAllyBoard, position);
+            if (rect == null || focusedRects == null)
+            {
+                return;
+            }
+
+            bool overlapsFocused = false;
+            for (int i = 0; i < focusedRects.Count; i++)
+            {
+                RectTransform focusedRect = focusedRects[i];
+                if (focusedRect != null && focusedRect != rect && RectTransformsOverlap(rect, focusedRect))
+                {
+                    overlapsFocused = true;
+                    break;
+                }
+            }
+
+            if (!overlapsFocused)
+            {
+                return;
+            }
+
+            Image image = GetBoardSpriteImage(isAllyBoard, position);
+            if (image == null)
+            {
+                return;
+            }
+
+            ApplySkillHoverSilhouette(image, skillHoverSilhouetteOverlapAlpha);
+        }
+        private void ApplySkillHoverOverlapAlpha(bool targetIsAllyBoard, List<GridPos> targetPositions)
+        {
+            if (_active == null || targetPositions == null || targetPositions.Count == 0)
+            {
+                return;
+            }
+
+            RectTransform activeRect = GetBoardSpriteRect(true, _active.GridPos);
+            if (activeRect == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < targetPositions.Count; i++)
+            {
+                GridPos targetPosition = targetPositions[i];
+                RectTransform targetRect = GetBoardSpriteRect(targetIsAllyBoard, targetPosition);
+                if (targetRect == null || targetRect == activeRect)
+                {
+                    continue;
+                }
+
+                if (!RectTransformsOverlap(activeRect, targetRect))
+                {
+                    continue;
+                }
+
+                Image targetImage = GetBoardSpriteImage(targetIsAllyBoard, targetPosition);
+                if (targetImage == null)
+                {
+                    continue;
+                }
+
+                Color color = targetImage.color;
+                color.a = Mathf.Clamp01(skillHoverOverlapTargetAlpha);
+                targetImage.color = color;
+            }
+        }
+
+        private void ResetBoardSpritePreviewColors()
+        {
+            ResetBoardSpritePreviewColors(true);
+            ResetBoardSpritePreviewColors(false);
+        }
+
+        private void ResetBoardSpritePreviewColors(bool isAllyBoard)
+        {
+            ResetBoardSpritePreviewColorAt(isAllyBoard, GridPos.FrontTop);
+            ResetBoardSpritePreviewColorAt(isAllyBoard, GridPos.BackTop);
+            ResetBoardSpritePreviewColorAt(isAllyBoard, GridPos.FrontBottom);
+            ResetBoardSpritePreviewColorAt(isAllyBoard, GridPos.BackBottom);
+        }
+
+        private void ResetBoardSpritePreviewColorAt(bool isAllyBoard, GridPos position)
+        {
+            BattleUnit unit = _grid == null ? null : _grid.GetUnit(isAllyBoard, position);
+            Image image = GetBoardSpriteImage(isAllyBoard, position);
+            if (image == null)
+            {
+                return;
+            }
+
+            ApplyNormalBoardSpriteMaterial(image);
+            image.color = unit != null && unit.IsDead
+                ? new Color(1f, 1f, 1f, 0.45f)
+                : Color.white;
+        }
+
+        private Image GetBoardSpriteImage(bool isAllyBoard, GridPos position)
+        {
+            TMP_Text cellLabel = GetBoardCellLabel(isAllyBoard, position);
+            if (cellLabel == null || cellLabel.transform.parent == null)
+            {
+                return null;
+            }
+
+            Transform spriteTransform = cellLabel.transform.parent.Find("BattleSpriteImage");
+            return spriteTransform == null ? null : spriteTransform.GetComponent<Image>();
+        }
+
+        private static bool RectTransformsOverlap(RectTransform a, RectTransform b)
+        {
+            if (a == null || b == null)
+            {
+                return false;
+            }
+
+            Vector3[] aCorners = new Vector3[4];
+            Vector3[] bCorners = new Vector3[4];
+            a.GetWorldCorners(aCorners);
+            b.GetWorldCorners(bCorners);
+
+            Rect aRect = CornersToRect(aCorners);
+            Rect bRect = CornersToRect(bCorners);
+            return aRect.Overlaps(bRect);
+        }
+
+        private static Rect CornersToRect(Vector3[] corners)
+        {
+            if (corners == null || corners.Length < 4)
+            {
+                return Rect.zero;
+            }
+
+            float minX = corners[0].x;
+            float maxX = corners[0].x;
+            float minY = corners[0].y;
+            float maxY = corners[0].y;
+
+            for (int i = 1; i < corners.Length; i++)
+            {
+                Vector3 corner = corners[i];
+                minX = Mathf.Min(minX, corner.x);
+                maxX = Mathf.Max(maxX, corner.x);
+                minY = Mathf.Min(minY, corner.y);
+                maxY = Mathf.Max(maxY, corner.y);
+            }
+
+            return Rect.MinMaxRect(minX, minY, maxX, maxY);
+        }
         private void HandleSwap(BattleUnit reserve)
         {
             if (!CanAcceptPlayerCommand())
@@ -5078,6 +5395,11 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
+
+
 
 
 
