@@ -88,27 +88,29 @@
                 float alpha = tex.a;
 
                 float2 offset = _MainTex_TexelSize.xy * max(0.0, _OutlineSize);
-                float outlineAlpha = alpha;
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x, 0)).a);
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x, 0)).a);
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(0,  offset.y)).a);
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(0, -offset.y)).a);
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x,  offset.y)).a);
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x,  offset.y)).a);
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x, -offset.y)).a);
-                outlineAlpha = max(outlineAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x, -offset.y)).a);
+                float neighborAlpha = 0.0;
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x, 0)).a);
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x, 0)).a);
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2(0,  offset.y)).a);
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2(0, -offset.y)).a);
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x,  offset.y)).a);
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x,  offset.y)).a);
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2( offset.x, -offset.y)).a);
+                neighborAlpha = max(neighborAlpha, tex2D(_MainTex, IN.texcoord + float2(-offset.x, -offset.y)).a);
 
-                fixed4 fillColor = IN.color;
-                fixed4 outlineColor = _OutlineColor;
-                outlineColor.a *= IN.color.a;
+                // Body uses fill color. Only the outside area around body uses outline color.
+                float outlineOnlyAlpha = saturate(neighborAlpha - alpha);
+                float visibleAlpha = max(alpha, outlineOnlyAlpha);
 
-                fixed4 color = alpha > 0.001 ? fillColor : outlineColor;
-                color.a *= alpha > 0.001 ? alpha : outlineAlpha;
+                fixed4 color = alpha > 0.001 ? IN.color : _OutlineColor;
+                color.a *= IN.color.a;
+                color.a *= visibleAlpha;
                 color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
                 return color;
-            }
-            ENDCG
+            }            ENDCG
         }
     }
 }
+
+
 
