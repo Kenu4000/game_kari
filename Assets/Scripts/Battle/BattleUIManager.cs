@@ -2837,9 +2837,11 @@ namespace GameKari.Battle
 
                 CompactEnemyFrontlineIfEmpty();
                 bool replacementOccurred = FillEmptyEnemyCellsFromReserves();
+                SyncBoardUnitGridPositions();
                 _statusSlotUnits.Clear();
                 RedrawBoard();
                 ResetEnemyStatusCanvasGroupAlphas();
+                ReapplySkillHoverPreviewIfNeeded();
 
                 if (replacementOccurred)
                 {
@@ -3522,6 +3524,7 @@ namespace GameKari.Battle
             }
 
             _formation.RotateAlliesClockwise();
+            SyncBoardUnitGridPositions();
 
             _formationSettling = true;
             _lastRotateTime = Time.time;
@@ -3537,15 +3540,54 @@ namespace GameKari.Battle
             }
 
             RedrawBoard();
+            ReapplySkillHoverPreviewIfNeeded();
         }
 
+        private void ReapplySkillHoverPreviewIfNeeded()
+        {
+            if (_hoveredSkill == null || _battleEnded || _phase != BattlePhase.CommandSelect)
+            {
+                return;
+            }
+
+            RedrawTargetPreview();
+            ApplySkillHoverSpritePreview();
+        }
+
+        private void SyncBoardUnitGridPositions()
+        {
+            SyncBoardUnitGridPosition(true, GridPos.FrontTop);
+            SyncBoardUnitGridPosition(true, GridPos.BackTop);
+            SyncBoardUnitGridPosition(true, GridPos.FrontBottom);
+            SyncBoardUnitGridPosition(true, GridPos.BackBottom);
+            SyncBoardUnitGridPosition(false, GridPos.FrontTop);
+            SyncBoardUnitGridPosition(false, GridPos.BackTop);
+            SyncBoardUnitGridPosition(false, GridPos.FrontBottom);
+            SyncBoardUnitGridPosition(false, GridPos.BackBottom);
+        }
+
+        private void SyncBoardUnitGridPosition(bool isAllyBoard, GridPos position)
+        {
+            if (_grid == null)
+            {
+                return;
+            }
+
+            BattleUnit unit = _grid.GetUnit(isAllyBoard, position);
+            if (unit != null)
+            {
+                unit.GridPos = position;
+            }
+        }
         private void ConfirmFormation()
         {
             _formationSettling = false;
 
             CompactFrontlineIfEmpty(true);
+            SyncBoardUnitGridPositions();
 
             RedrawBoard();
+            ReapplySkillHoverPreviewIfNeeded();
 
             if (!_battleEnded && _phase == BattlePhase.CommandSelect)
             {
@@ -5544,6 +5586,8 @@ namespace GameKari.Battle
 
     }
 }
+
+
 
 
 
