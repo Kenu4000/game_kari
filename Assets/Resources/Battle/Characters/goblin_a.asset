@@ -17,7 +17,7 @@ MonoBehaviour:
   MaxHP: 70
   MaxMP: 4
   Speed: 10
-  FaceIcon: {fileID: 0}
+  FaceIcon: {fileID: 21300000, guid: 9a84acc04c0d80e42a48d10c5b5defb7, type: 3}
   StandingSprite: {fileID: 0}
   BattleSprite: {fileID: 21300000, guid: bc8590ad2c5cd754d82f0155ff47aa9d, type: 3}
   BattleSpriteScale: 1.2

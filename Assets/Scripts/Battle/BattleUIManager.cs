@@ -83,6 +83,8 @@ namespace GameKari.Battle
         private readonly RouteOverlayPresenter _routeOverlayPresenter = new();
         private GameObject _enemyActionPreviewPanelObject;
         private TMP_Text _enemyActionPreviewText;
+        private bool _enemyActionSilhouettePreviewActive;
+        private readonly List<GridPos> _enemyActionSilhouetteFocusPositions = new();
         private readonly List<GridPos> _pendingActionFlashTargets = new();
         private bool _pendingActionFlashIsAllyBoard;
         private readonly List<GridPos> _pendingActionSourceFlashTargets = new();
@@ -670,8 +672,18 @@ namespace GameKari.Battle
             }
 
             _phase = BattlePhase.ResolvingAction;
-            // HP bar deferral starts immediately before the actual HP-changing resolution.
-            ClearTargetPreview();
+            // Keep skill-hover silhouettes visible during the action animation.
+            if (_hoveredSkill != null)
+            {
+                RedrawTargetPreview();
+                ApplySkillHoverSpritePreview();
+            }
+            else
+            {
+                ResetEnemyBoardHighlights();
+                ResetBoardSpritePreviewColors();
+            }
+
             ResetEnemyActionPreviewHighlights();
             SetEnemyActionPreviewVisible(false);
             SetCommandUiVisible(false);
@@ -695,6 +707,8 @@ namespace GameKari.Battle
                 return;
             }
 
+            ClearEnemyActionSilhouettePreview();
+            ClearTargetPreview();
             _phase = BattlePhase.CommandSelect;
             _active = activeUnit;
             EnsureEnemyActionStatesForPreview();
@@ -761,19 +775,57 @@ namespace GameKari.Battle
             SetPendingActionSourceFlashTargets(true, BuildSkillSourceFlashTargets(actor, flashableLinkPartner));
             Debug.Log($"[Action] Skill used: {skill.SkillName} by {userDisplayName}.");
 
+            yield return PlaySkillAnimationIfAny(skill);
+
             ApplySkillDamage(skill);
             ApplySkillEffect(skill);
             RedrawBoard();
+            ReapplySkillHoverPreviewDuringActionIfNeeded();
 
             if (_battleEnded)
             {
                 RedrawBoard();
+                ReapplySkillHoverPreviewDuringActionIfNeeded();
                 yield break;
             }
 
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
 
+        private IEnumerator PlaySkillAnimationIfAny(SkillData skill)
+        {
+            if (skill == null || skill.Animation == null || _active == null)
+            {
+                yield break;
+            }
+
+            RectTransform casterRect = GetBoardSpriteRect(true, _active.GridPos);
+            Image casterImage = GetBoardSpriteImage(true, _active.GridPos);
+            RectTransform targetRect = GetPrimarySkillAnimationTargetRect(skill);
+
+            yield return SkillAnimationPlayer.Play(skill.Animation, casterRect, targetRect, casterImage);
+        }
+
+        private RectTransform GetPrimarySkillAnimationTargetRect(SkillData skill)
+        {
+            if (skill == null)
+            {
+                return null;
+            }
+
+            bool targetIsAllyBoard = skill.TargetPattern == SkillTargetPattern.Self;
+            List<GridPos> targetPositions = GetSkillAnimationTargetPositions(skill);
+            for (int i = 0; i < targetPositions.Count; i++)
+            {
+                RectTransform targetRect = GetBoardSpriteRect(targetIsAllyBoard, targetPositions[i]);
+                if (targetRect != null)
+                {
+                    return targetRect;
+                }
+            }
+
+            return null;
+        }
         // Skill effects and damage
         private void ApplySkillDamage(SkillData skill)
         {
@@ -1859,6 +1911,7 @@ namespace GameKari.Battle
             AddPendingActionValuePopup(true, target.GridPos, $"+{healed}", beforeHp, target.CurrentHP, target.Data.MaxHP);
             Debug.Log($"[Action] Item used: {item.ItemName} -> {target.Name} healed {healed}. HP: {target.CurrentHP}/{target.Data.MaxHP}. Remaining: {inventoryItem.Count}");
             RedrawBoard();
+            ReapplySkillHoverPreviewDuringActionIfNeeded();
 
             StartCoroutine(FinishPlayerActionAfterDelay());
         }
@@ -2989,6 +3042,7 @@ namespace GameKari.Battle
 
             MarkActiveAsActed();
             RedrawBoard();
+            ClearEnemyActionSilhouettePreview();
             AdvanceToNextActor();
         }
 
@@ -3038,6 +3092,7 @@ namespace GameKari.Battle
             ExecuteEnemyAction(enemy, action);
             ClearPreviewEnemyActionState(enemy);
             RedrawBoard();
+            ReapplyEnemyActionSilhouettePreviewIfNeeded();
 
             yield return PlayPendingActionFlashOrDelay();
 
@@ -3046,6 +3101,7 @@ namespace GameKari.Battle
                 yield break;
             }
 
+            ClearEnemyActionSilhouettePreview();
             AdvanceToNextActor();
         }
 
@@ -3133,6 +3189,89 @@ namespace GameKari.Battle
             return null;
         }
 
+        private void ApplyEnemyActionSilhouettePreview(List<GridPos> targetPositions)
+        {
+            _enemyActionSilhouettePreviewActive = true;
+            _enemyActionSilhouetteFocusPositions.Clear();
+
+            if (targetPositions != null)
+            {
+                for (int i = 0; i < targetPositions.Count; i++)
+                {
+                    GridPos position = targetPositions[i];
+                    if (!_enemyActionSilhouetteFocusPositions.Contains(position))
+                    {
+                        _enemyActionSilhouetteFocusPositions.Add(position);
+                    }
+                }
+            }
+
+            ReapplyEnemyActionSilhouettePreviewIfNeeded();
+        }
+
+        private void ClearEnemyActionSilhouettePreview()
+        {
+            _enemyActionSilhouettePreviewActive = false;
+            _enemyActionSilhouetteFocusPositions.Clear();
+        }
+
+        private void ReapplyEnemyActionSilhouettePreviewIfNeeded()
+        {
+            if (!_enemyActionSilhouettePreviewActive || _battleEnded)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _enemyActionSilhouetteFocusPositions.Count; i++)
+            {
+                ApplyAllyTopBottomOverlapAlphaFromFocusPosition(_enemyActionSilhouetteFocusPositions[i]);
+            }
+        }
+
+        private void ApplyAllyTopBottomOverlapAlphaFromFocusPosition(GridPos focusPosition)
+        {
+            GridPos bottomPosition;
+            switch (focusPosition)
+            {
+                case GridPos.FrontTop:
+                    bottomPosition = GridPos.FrontBottom;
+                    break;
+
+                case GridPos.BackTop:
+                    bottomPosition = GridPos.BackBottom;
+                    break;
+
+                default:
+                    return;
+            }
+
+            if (_grid == null)
+            {
+                return;
+            }
+
+            BattleUnit focusUnit = _grid.GetUnit(true, focusPosition);
+            BattleUnit bottomUnit = _grid.GetUnit(true, bottomPosition);
+            if (focusUnit == null || focusUnit.IsDead || bottomUnit == null || bottomUnit.IsDead)
+            {
+                return;
+            }
+
+            RectTransform focusRect = GetBoardSpriteRect(true, focusPosition);
+            RectTransform bottomRect = GetBoardSpriteRect(true, bottomPosition);
+            if (focusRect == null || bottomRect == null || !RectTransformsOverlap(focusRect, bottomRect))
+            {
+                return;
+            }
+
+            Image bottomImage = GetBoardSpriteImage(true, bottomPosition);
+            if (bottomImage == null)
+            {
+                return;
+            }
+
+            ApplySkillHoverSilhouette(bottomImage, skillHoverSilhouetteOverlapAlpha);
+        }
         private void ExecuteEnemyAction(BattleUnit enemy, EnemyActionState action)
         {
             if (enemy == null || enemy.IsDead || action == null || action.Skill == null || _battleEnded)
@@ -3144,6 +3283,7 @@ namespace GameKari.Battle
             SetPendingActionSourceFlashTargets(false, new List<GridPos> { enemy.GridPos });
 
             List<GridPos> targets = GetEnemyActionTargetPositions(enemy, action);
+            ApplyEnemyActionSilhouettePreview(targets);
             for (int i = 0; i < targets.Count; i++)
             {
                 DamageAllyAt(targets[i], action.Skill.Damage, enemy, action.Skill.SkillName);
@@ -3543,6 +3683,16 @@ namespace GameKari.Battle
             ReapplySkillHoverPreviewIfNeeded();
         }
 
+        private void ReapplySkillHoverPreviewDuringActionIfNeeded()
+        {
+            if (_hoveredSkill == null || _battleEnded)
+            {
+                return;
+            }
+
+            RedrawTargetPreview();
+            ApplySkillHoverSpritePreview();
+        }
         private void ReapplySkillHoverPreviewIfNeeded()
         {
             if (_hoveredSkill == null || _battleEnded || _phase != BattlePhase.CommandSelect)
@@ -5586,6 +5736,10 @@ namespace GameKari.Battle
 
     }
 }
+
+
+
+
 
 
 

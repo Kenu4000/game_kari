@@ -55,12 +55,16 @@ namespace GameKari.Battle
         public string LinkPartnerCharacterId;
 
         public int Damage;
-        public int HealAmount;        public SkillEffectType EffectType;
+        public int HealAmount;
+        public SkillAnimationData Animation;
+        public SkillEffectType EffectType;
         public SkillEffectTargetType EffectTarget;
         public BuffType BuffType;
         public int BuffTurns;
     }
 }
+
+
 
 
 

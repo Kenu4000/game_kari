@@ -17,15 +17,15 @@ MonoBehaviour:
   MaxHP: 95
   MaxMP: 4
   Speed: 18
-  FaceIcon: {fileID: 0}
+  FaceIcon: {fileID: 21300000, guid: 701b0bfe87a79e64ea81a73100e11fc4, type: 3}
   StandingSprite: {fileID: 0}
   BattleSprite: {fileID: 21300000, guid: 755f3ec9b2d15c04da55404d6b43e0c0, type: 3}
   BattleSpriteScale: 2
   BattleSpriteOffset: {x: 0, y: 160}
-  OverrideFloatingHPBarOffset: 0
-  FloatingHPBarOffset: {x: 0, y: 52}
-  OverrideDamagePopupOffset: 0
-  DamagePopupOffset: {x: 0, y: 64}
+  OverrideFloatingHPBarOffset: 1
+  FloatingHPBarOffset: {x: 0, y: 320}
+  OverrideDamagePopupOffset: 1
+  DamagePopupOffset: {x: 0, y: 340}
   DefaultSkills:
   - {fileID: 11400000, guid: 6008f55b533831c4d8016323e2eb5f12, type: 2}
   - {fileID: 11400000, guid: 59ee788ad5b9da74fa9fcc3054bb5b8e, type: 2}
