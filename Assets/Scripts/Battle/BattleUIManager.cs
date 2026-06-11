@@ -325,30 +325,6 @@ namespace GameKari.Battle
 
             ConfirmFormation();
         }
-
-        private void HandleMouseWheelRotateInput()
-        {
-            if (!enableMouseWheelRotate || !CanAcceptRotateCommand())
-            {
-                return;
-            }
-
-            float scroll = Input.mouseScrollDelta.y;
-            if (Mathf.Abs(scroll) < Mathf.Max(0.0001f, mouseWheelRotateThreshold))
-            {
-                return;
-            }
-
-            // Current rotation supports the same direction as the existing Rotate button.
-            // Wheel up rotates once. Wheel down rotates the same rotate operation three times,
-            // which is equivalent to reverse rotation in a four-cell formation.
-            bool reverse = invertMouseWheelRotate ? scroll > 0f : scroll < 0f;
-            int rotateCount = reverse ? 3 : 1;
-            for (int i = 0; i < rotateCount; i++)
-            {
-                HandleRotateClicked();
-            }
-        }
         private void HandleDebugBuffHotkeys()
         {
 #if UNITY_EDITOR
@@ -715,189 +691,6 @@ namespace GameKari.Battle
             return !_battleEnded
                 && _phase == BattlePhase.CommandSelect;
         }
-
-        // Phase transitions
-        private void EnterResolvingAction()
-        {
-            if (_battleEnded)
-            {
-                return;
-            }
-
-            _phase = BattlePhase.ResolvingAction;
-            // Keep skill-hover silhouettes visible during the action animation.
-            if (_hoveredSkill != null)
-            {
-                RedrawTargetPreview();
-                ApplySkillHoverSpritePreview();
-            }
-            else
-            {
-                ResetEnemyBoardHighlights();
-                ResetBoardSpritePreviewColors();
-            }
-
-            ResetEnemyActionPreviewHighlights();
-            SetEnemyActionPreviewVisible(false);
-            SetCommandUiVisible(false);
-            SetActionOverlayVisible(true);
-
-            if (commandPanel != null)
-            {
-                commandPanel.SetInteractable(false);
-            }
-
-            if (rotateButton != null)
-            {
-                rotateButton.interactable = false;
-            }
-        }
-
-        private void EnterCommandSelect(BattleUnit activeUnit)
-        {
-            if (_battleEnded)
-            {
-                return;
-            }
-
-            ClearEnemyActionSilhouettePreview();
-            ClearTargetPreview();
-            _phase = BattlePhase.CommandSelect;
-            _active = activeUnit;
-            EnsureEnemyActionStatesForPreview();
-            UpdateEnemyActionPreview();
-            RedrawEnemyActionPreviewHighlights();
-            SetEnemyActionPreviewVisible(true);
-            HideActionOverlay();
-            SetCommandUiVisible(true);
-
-            if (commandPanel != null)
-            {
-                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
-                commandPanel.SetInteractable(true);
-            }
-
-            if (rotateButton != null)
-            {
-                rotateButton.interactable = true;
-            }
-        }
-
-        // Player actions
-        private void HandleSkillClicked(SkillData skill)
-        {
-            if (!CanAcceptPlayerCommand())
-            {
-                return;
-            }
-
-            if (!CanUseSkill(_active, skill))
-            {
-                return;
-            }
-
-            BattleUnit actor = _active;
-            BattleUnit linkPartner = GetLinkPartnerForSkill(actor, skill);
-            string userDisplayName = BuildSkillUserDisplayName(actor, linkPartner);
-
-            EnterResolvingAction();
-            ShowActionOverlay(skill.SkillName, userDisplayName);
-
-            StartCoroutine(ResolvePlayerSkillAfterIntroDelay(skill, actor, linkPartner, userDisplayName));
-        }
-
-        private IEnumerator ResolvePlayerSkillAfterIntroDelay(SkillData skill, BattleUnit actor, BattleUnit linkPartner, string userDisplayName)
-        {
-            float delay = Mathf.Max(0f, actionIntroDelaySeconds);
-            if (delay > 0f)
-            {
-                yield return new WaitForSeconds(delay);
-            }
-
-            if (_battleEnded || actor == null || actor.IsDead || skill == null)
-            {
-                yield break;
-            }
-
-            _active = actor;
-            BeginDeferredHpBarFill();
-            ConsumeSkillMP(actor, skill, linkPartner);
-
-            PrepareSkillActionFlashTargets(skill);
-            BattleUnit flashableLinkPartner = IsActiveAllyUnit(linkPartner) ? linkPartner : null;
-            SetPendingActionSourceFlashTargets(true, BuildSkillSourceFlashTargets(actor, flashableLinkPartner));
-            Debug.Log($"[Action] Skill used: {skill.SkillName} by {userDisplayName}.");
-
-            yield return PlaySkillAnimationIfAny(skill);
-
-            ApplySkillDamage(skill);
-            ApplySkillEffect(skill);
-            RedrawBoard();
-            ReapplySkillHoverPreviewDuringActionIfNeeded();
-
-            if (_battleEnded)
-            {
-                RedrawBoard();
-                ReapplySkillHoverPreviewDuringActionIfNeeded();
-                yield break;
-            }
-
-            StartCoroutine(FinishPlayerActionAfterDelay());
-        }
-
-        private IEnumerator PlaySkillAnimationIfAny(SkillData skill)
-        {
-            if (skill == null || skill.Animation == null || _active == null)
-            {
-                yield break;
-            }
-
-            RectTransform casterRect = GetBoardSpriteRect(true, _active.GridPos);
-            Image casterImage = GetBoardSpriteImage(true, _active.GridPos);
-            RectTransform targetRect = GetPrimarySkillAnimationTargetRect(skill);
-
-            yield return SkillAnimationPlayer.Play(skill.Animation, casterRect, targetRect, casterImage);
-        }
-
-        private RectTransform GetPrimarySkillAnimationTargetRect(SkillData skill)
-        {
-            if (skill == null)
-            {
-                return null;
-            }
-
-            bool targetIsAllyBoard = skill.TargetPattern == SkillTargetPattern.Self;
-            List<GridPos> targetPositions = GetSkillAnimationTargetPositions(skill);
-            for (int i = 0; i < targetPositions.Count; i++)
-            {
-                RectTransform targetRect = GetBoardSpriteRect(targetIsAllyBoard, targetPositions[i]);
-                if (targetRect != null)
-                {
-                    return targetRect;
-                }
-            }
-
-            return null;
-        }
-        // Skill effects and damage
-        private void ApplySkillDamage(SkillData skill)
-        {
-            if (skill == null)
-            {
-                return;
-            }
-
-            List<DefeatedEnemyInfo> defeatedEnemies = new();
-            List<GridPos> targets = GetSkillDamageTargetPositions(skill);
-
-            for (int i = 0; i < targets.Count; i++)
-            {
-                DamageEnemyAt(targets[i], skill.Damage, defeatedEnemies);
-            }
-
-            ResolveDefeatedEnemies(defeatedEnemies);
-        }
-
         private void ApplySkillEffect(SkillData skill)
         {
             if (skill == null)
@@ -923,21 +716,6 @@ namespace GameKari.Battle
                     return;
             }
         }
-
-        private void ApplySkillHeal(SkillData skill)
-        {
-            if (skill == null || skill.HealAmount <= 0)
-            {
-                return;
-            }
-
-            List<BattleUnit> healTargets = GetSkillEffectTargets(skill);
-            for (int i = 0; i < healTargets.Count; i++)
-            {
-                HealAllyUnit(healTargets[i], skill.HealAmount);
-            }
-        }
-
         private void HealAllyUnit(BattleUnit target, int healAmount)
         {
             if (target == null || target.IsDead || target.Data == null || healAmount <= 0)
@@ -1178,86 +956,6 @@ namespace GameKari.Battle
 
             return false;
         }
-
-        // KO and replacement handling
-        private void ResolveDefeatedEnemies(List<DefeatedEnemyInfo> defeatedEnemies)
-        {
-            if (defeatedEnemies == null || defeatedEnemies.Count == 0)
-            {
-                return;
-            }
-
-            for (int i = 0; i < defeatedEnemies.Count; i++)
-            {
-                DefeatedEnemyInfo defeated = defeatedEnemies[i];
-                if (defeated == null || defeated.Unit == null || defeated.Unit.IsDead)
-                {
-                    continue;
-                }
-
-                defeated.Unit.IsDead = true;
-                if (!_enemyStatusKoVisibleUnits.Contains(defeated.Unit))
-                {
-                    _enemyStatusKoVisibleUnits.Add(defeated.Unit);
-                }
-                RemoveTurnState(defeated.Unit);
-
-                Debug.Log($"[KO] {defeated.Unit.Name} is defeated. Grid removal is deferred until fadeout completes.");
-            }
-
-            // Enemy grid movement and reserve entry are deferred until the KO fadeout finishes.
-            CheckBattleEnd();
-        }
-
-        private void CompactEnemyFrontlineIfEmpty()
-        {
-            BattleUnit frontTop = _grid.GetUnit(false, GridPos.FrontTop);
-            BattleUnit frontBottom = _grid.GetUnit(false, GridPos.FrontBottom);
-
-            bool hasFrontTop = frontTop != null && !frontTop.IsDead;
-            bool hasFrontBottom = frontBottom != null && !frontBottom.IsDead;
-
-            if (hasFrontTop || hasFrontBottom)
-            {
-                return;
-            }
-
-            BattleUnit backTop = _grid.GetUnit(false, GridPos.BackTop);
-            BattleUnit backBottom = _grid.GetUnit(false, GridPos.BackBottom);
-
-            bool hasBackTop = backTop != null && !backTop.IsDead;
-            bool hasBackBottom = backBottom != null && !backBottom.IsDead;
-
-            if (!hasBackTop && !hasBackBottom)
-            {
-                return;
-            }
-
-            if (hasBackTop)
-            {
-                _grid.SetUnit(false, GridPos.BackTop, null);
-                _grid.SetUnit(false, GridPos.FrontTop, backTop);
-            }
-
-            if (hasBackBottom)
-            {
-                _grid.SetUnit(false, GridPos.BackBottom, null);
-                _grid.SetUnit(false, GridPos.FrontBottom, backBottom);
-            }
-
-            Debug.Log("[Formation] Compacted enemy frontline.");
-        }
-
-        private bool FillEmptyEnemyCellsFromReserves()
-        {
-            bool changed = false;
-            changed |= TryFillEnemyCellFromReserve(GridPos.FrontTop);
-            changed |= TryFillEnemyCellFromReserve(GridPos.FrontBottom);
-            changed |= TryFillEnemyCellFromReserve(GridPos.BackTop);
-            changed |= TryFillEnemyCellFromReserve(GridPos.BackBottom);
-            return changed;
-        }
-
         private bool TryFillEnemyCellFromReserve(GridPos position)
         {
             BattleUnit current = _grid.GetUnit(false, position);
@@ -1344,75 +1042,6 @@ namespace GameKari.Battle
             RedrawTargetPreview();
             ApplySkillHoverSpritePreview();
         }
-
-        private void RedrawTargetPreview()
-        {
-            ResetEnemyBoardHighlights();
-
-            if (_hoveredSkill == null)
-            {
-                return;
-            }
-
-            switch (_hoveredSkill.TargetPattern)
-            {
-                case SkillTargetPattern.FrontTopOpponent:
-                    SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
-                    break;
-
-                case SkillTargetPattern.FrontBottomOpponent:
-                    SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
-                    break;
-
-                case SkillTargetPattern.BothFrontOpponents:
-                    SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
-                    SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
-                    break;
-
-                case SkillTargetPattern.AllOpponents:
-                    SetEnemyBoardCellColor(GridPos.FrontTop, TargetPreviewCellColor);
-                    SetEnemyBoardCellColor(GridPos.BackTop, TargetPreviewCellColor);
-                    SetEnemyBoardCellColor(GridPos.FrontBottom, TargetPreviewCellColor);
-                    SetEnemyBoardCellColor(GridPos.BackBottom, TargetPreviewCellColor);
-                    break;
-            }
-        }
-
-        private void ClearTargetPreview()
-        {
-            _hoveredSkill = null;
-            ResetEnemyBoardHighlights();
-            ResetBoardSpritePreviewColors();
-        }
-
-        private void ApplySkillHoverSpritePreview()
-        {
-            ResetBoardSpritePreviewColors();
-
-            if (_hoveredSkill == null || _active == null || _active.IsDead)
-            {
-                return;
-            }
-
-            var focusedUnits = new HashSet<BattleUnit>();
-            focusedUnits.Add(_active);
-
-            bool targetIsAllyBoard = _hoveredSkill.TargetPattern == SkillTargetPattern.Self;
-            List<GridPos> targetPositions = GetSkillAnimationTargetPositions(_hoveredSkill);
-            for (int i = 0; i < targetPositions.Count; i++)
-            {
-                BattleUnit targetUnit = _grid.GetUnit(targetIsAllyBoard, targetPositions[i]);
-                if (targetUnit != null && !targetUnit.IsDead)
-                {
-                    focusedUnits.Add(targetUnit);
-                }
-            }
-
-            ApplySpriteFocusColors(true, focusedUnits);
-            ApplySpriteFocusColors(false, focusedUnits);
-            ApplySkillHoverSilhouetteOverlapAlpha(focusedUnits);
-        }
-
         private void ApplySpriteFocusColors(bool isAllyBoard, HashSet<BattleUnit> focusedUnits)
         {
             ApplySpriteFocusColorAt(isAllyBoard, GridPos.FrontTop, focusedUnits);
@@ -1438,26 +1067,6 @@ namespace GameKari.Battle
 
             ApplyNormalBoardSpriteMaterial(image);
             image.color = Color.white;
-        }
-
-        private void ApplySkillHoverSilhouette(Image image, float alpha)
-        {
-            if (image == null)
-            {
-                return;
-            }
-
-            Material material = GetSkillHoverSilhouetteMaterial();
-            if (material != null)
-            {
-                image.material = material;
-            }
-
-            float resolvedAlpha = Mathf.Clamp01(alpha);
-            image.color = new Color(0.5f, 0.5f, 0.5f, resolvedAlpha);
-
-            bool showOutline = resolvedAlpha >= 0.99f;
-            SetSkillHoverSilhouetteOutlineVisible(image, showOutline, resolvedAlpha);
         }
         private void SetSkillHoverSilhouetteOutlineVisible(Image sourceImage, bool visible, float alpha)
         {
@@ -1578,59 +1187,6 @@ namespace GameKari.Battle
 
             image.material = null;
             SetSkillHoverSilhouetteOutlineVisible(image, false, 1f);
-        }
-        private void ApplySkillHoverSilhouetteOverlapAlpha(HashSet<BattleUnit> focusedUnits)
-        {
-            if (_active == null || _active.IsDead || _grid == null)
-            {
-                return;
-            }
-
-            GridPos bottomPosition;
-            switch (_active.GridPos)
-            {
-                case GridPos.FrontTop:
-                    bottomPosition = GridPos.FrontBottom;
-                    break;
-
-                case GridPos.BackTop:
-                    bottomPosition = GridPos.BackBottom;
-                    break;
-
-                default:
-                    return;
-            }
-
-            BattleUnit bottomUnit = _grid.GetUnit(true, bottomPosition);
-            if (bottomUnit == null || bottomUnit.IsDead)
-            {
-                return;
-            }
-
-            if (focusedUnits != null && focusedUnits.Contains(bottomUnit))
-            {
-                return;
-            }
-
-            RectTransform activeRect = GetBoardSpriteRect(true, _active.GridPos);
-            RectTransform bottomRect = GetBoardSpriteRect(true, bottomPosition);
-            if (activeRect == null || bottomRect == null)
-            {
-                return;
-            }
-
-            if (!RectTransformsOverlap(activeRect, bottomRect))
-            {
-                return;
-            }
-
-            Image bottomImage = GetBoardSpriteImage(true, bottomPosition);
-            if (bottomImage == null)
-            {
-                return;
-            }
-
-            ApplySkillHoverSilhouette(bottomImage, skillHoverSilhouetteOverlapAlpha);
         }
         private void AddFocusedSpriteRects(bool isAllyBoard, HashSet<BattleUnit> focusedUnits, List<RectTransform> focusedRects)
         {
@@ -1879,38 +1435,6 @@ namespace GameKari.Battle
                 _actedUnits.Add(to);
             }
         }
-
-        private void HandleItemClicked(InventoryItem inventoryItem)
-        {
-            if (!CanAcceptPlayerCommand())
-            {
-                return;
-            }
-
-            if (inventoryItem == null || inventoryItem.Item == null)
-            {
-                return;
-            }
-
-            if (inventoryItem.Count <= 0)
-            {
-                Debug.Log($"[Item] No {inventoryItem.Item.ItemName} left. Item cannot be used.");
-                return;
-            }
-
-            switch (inventoryItem.Item.Kind)
-            {
-                case ItemKind.Pass:
-                    HandlePassItem(inventoryItem);
-                    return;
-
-                case ItemKind.Heal:
-                default:
-                    HandleHealItem(inventoryItem);
-                    return;
-            }
-        }
-
         private void HandlePassItem(InventoryItem inventoryItem)
         {
             ItemData item = inventoryItem.Item;
@@ -2040,46 +1564,6 @@ namespace GameKari.Battle
 
             return targets;
         }
-
-        private List<GridPos> GetSkillAnimationTargetPositions(SkillData skill)
-        {
-            var targets = new List<GridPos>();
-
-            if (skill == null)
-            {
-                return targets;
-            }
-
-            switch (skill.TargetPattern)
-            {
-                case SkillTargetPattern.FrontTopOpponent:
-                    targets.Add(GridPos.FrontTop);
-                    break;
-
-                case SkillTargetPattern.FrontBottomOpponent:
-                    targets.Add(GridPos.FrontBottom);
-                    break;
-
-                case SkillTargetPattern.BothFrontOpponents:
-                    targets.Add(GridPos.FrontTop);
-                    targets.Add(GridPos.FrontBottom);
-                    break;
-
-                case SkillTargetPattern.AllOpponents:
-                    AddAllGridPositions(targets);
-                    break;
-
-                case SkillTargetPattern.Self:
-                    if (_active != null)
-                    {
-                        targets.Add(_active.GridPos);
-                    }
-                    break;
-            }
-
-            return targets;
-        }
-
         private List<GridPos> GetEnemyActionTargetPositions(BattleUnit enemy, EnemyActionState action)
         {
             var targets = new List<GridPos>();
@@ -2250,53 +1734,6 @@ namespace GameKari.Battle
         {
             _pendingActionValuePopups.Clear();
         }
-
-        private void ShowPendingActionValuePopups()
-        {
-            HideActiveActionValuePopups();
-
-            if (_pendingActionValuePopups.Count == 0)
-            {
-                return;
-            }
-
-            for (int i = 0; i < _pendingActionValuePopups.Count; i++)
-            {
-                ActionValuePopup popup = _pendingActionValuePopups[i];
-                if (popup == null)
-                {
-                    continue;
-                }
-
-                TMP_Text cellLabel = GetBoardCellLabel(popup.IsAllyBoard, popup.Position);
-                if (cellLabel == null || cellLabel.transform.parent == null)
-                {
-                    continue;
-                }
-
-                GameObject popupObject = new GameObject("ActionValuePopup");
-                popupObject.transform.SetParent(cellLabel.transform.parent, false);
-
-                RectTransform rect = popupObject.AddComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.5f, 0.5f);
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(120f, 48f);
-
-                BattleUnit popupUnit = _grid.GetUnit(popup.IsAllyBoard, popup.Position);
-                rect.anchoredPosition = GetDamagePopupOffset(popupUnit);
-
-                TMP_Text label = popupObject.AddComponent<TextMeshProUGUI>();
-                label.alignment = TextAlignmentOptions.Center;
-                label.fontSize = 28f;
-                label.raycastTarget = false;
-                label.text = popup.Text;
-                ApplyActionValuePopupColor(label, popup.Text);
-
-                _activeActionValuePopupLabels.Add(label);
-            }
-        }
-
         private void ApplyActionValuePopupColor(TMP_Text label, string text)
         {
             if (label == null)
@@ -2912,115 +2349,6 @@ namespace GameKari.Battle
 
             return null;
         }
-
-        private void ResetEnemyStatusCanvasGroupAlphas()
-        {
-            if (enemyStatusPanel == null)
-            {
-                return;
-            }
-
-            for (int i = 1; i <= 4; i++)
-            {
-                Transform slot = enemyStatusPanel.Find($"EnemyStatus_{i}");
-                if (slot == null)
-                {
-                    continue;
-                }
-
-                CanvasGroup group = slot.GetComponent<CanvasGroup>();
-                if (group != null)
-                {
-                    group.alpha = 1f;
-                }
-            }
-        }
-        private IEnumerator PlayPendingAutoReplacementAnimations()
-        {
-            if (_pendingEnemyKoReplacementPhase)
-            {
-                _pendingEnemyKoReplacementPhase = false;
-
-                CompactEnemyFrontlineIfEmpty();
-                bool replacementOccurred = FillEmptyEnemyCellsFromReserves();
-                SyncBoardUnitGridPositions();
-                _statusSlotUnits.Clear();
-                RedrawBoard();
-                ResetEnemyStatusCanvasGroupAlphas();
-                ReapplySkillHoverPreviewIfNeeded();
-
-                if (replacementOccurred)
-                {
-                    _pendingEnemyAutoReplacementEnterAnimation = true;
-                }
-            }
-
-            if (_pendingEnemyAutoReplacementEnterAnimation)
-            {
-                _pendingEnemyAutoReplacementEnterAnimation = false;
-                yield return PlayAutoReplacementEnterAnimation(false);
-            }
-        }
-        private IEnumerator PlayAutoReplacementEnterAnimation(bool isAllyBoard)
-        {
-            float duration = Mathf.Max(0f, autoReplacementEnterSeconds);
-            float distance = Mathf.Max(0f, autoReplacementEnterDistance);
-            if (duration <= 0f || distance <= 0f)
-            {
-                yield break;
-            }
-
-            var sprites = new List<RectTransform>();
-            var endPositions = new List<Vector2>();
-            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.FrontTop, sprites, endPositions);
-            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.FrontBottom, sprites, endPositions);
-            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.BackTop, sprites, endPositions);
-            AddBoardSpriteRectIfPresent(isAllyBoard, GridPos.BackBottom, sprites, endPositions);
-
-            if (sprites.Count == 0)
-            {
-                yield break;
-            }
-
-            Vector2 enterOffset = new Vector2(isAllyBoard ? -distance : distance, 0f);
-            for (int i = 0; i < sprites.Count && i < endPositions.Count; i++)
-            {
-                if (sprites[i] != null)
-                {
-                    sprites[i].anchoredPosition = endPositions[i] + enterOffset;
-                }
-            }
-
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                float eased = 1f - Mathf.Pow(1f - t, 2f);
-
-                for (int i = 0; i < sprites.Count && i < endPositions.Count; i++)
-                {
-                    RectTransform sprite = sprites[i];
-                    if (sprite == null)
-                    {
-                        continue;
-                    }
-
-                    sprite.anchoredPosition = Vector2.Lerp(endPositions[i] + enterOffset, endPositions[i], eased);
-                }
-
-                yield return null;
-            }
-
-            for (int i = 0; i < sprites.Count && i < endPositions.Count; i++)
-            {
-                if (sprites[i] != null)
-                {
-                    sprites[i].anchoredPosition = endPositions[i];
-                }
-            }
-        }
-
         private void AddBoardSpriteRectIfPresent(bool isAllyBoard, GridPos position, List<RectTransform> sprites, List<Vector2> endPositions)
         {
             if (sprites == null || endPositions == null)
@@ -3241,33 +2569,6 @@ namespace GameKari.Battle
 
             return null;
         }
-
-        private void ApplyEnemyActionSilhouettePreview(List<GridPos> targetPositions)
-        {
-            _enemyActionSilhouettePreviewActive = true;
-            _enemyActionSilhouetteFocusPositions.Clear();
-
-            if (targetPositions != null)
-            {
-                for (int i = 0; i < targetPositions.Count; i++)
-                {
-                    GridPos position = targetPositions[i];
-                    if (!_enemyActionSilhouetteFocusPositions.Contains(position))
-                    {
-                        _enemyActionSilhouetteFocusPositions.Add(position);
-                    }
-                }
-            }
-
-            ReapplyEnemyActionSilhouettePreviewIfNeeded();
-        }
-
-        private void ClearEnemyActionSilhouettePreview()
-        {
-            _enemyActionSilhouettePreviewActive = false;
-            _enemyActionSilhouetteFocusPositions.Clear();
-        }
-
         private void ReapplyEnemyActionSilhouettePreviewIfNeeded()
         {
             if (!_enemyActionSilhouettePreviewActive || _battleEnded)
@@ -3372,55 +2673,6 @@ namespace GameKari.Battle
                 HandleAllyDefeated(target);
             }
         }
-
-        private void HandleAllyDefeated(BattleUnit defeatedAlly)
-        {
-            if (defeatedAlly == null || defeatedAlly.IsDead)
-            {
-                return;
-            }
-
-            defeatedAlly.IsDead = true;
-            Debug.Log($"[KO] {defeatedAlly.Name} is defeated.");
-
-            GridPos position = defeatedAlly.GridPos;
-
-            BattleUnit replacement = GetNextReserve();
-            if (replacement == null)
-            {
-                _grid.SetUnit(true, position, null);
-                RemoveTurnState(defeatedAlly);
-
-                Debug.Log($"[KO] No reserve available for {defeatedAlly.Name}. Ally grid cell is now empty: {position}");
-
-                CheckBattleEnd();
-                RedrawBoard();
-                return;
-            }
-
-            _grid.SetUnit(true, position, replacement);
-
-            int allyIndex = _allies.IndexOf(defeatedAlly);
-            if (allyIndex >= 0)
-            {
-                _allies[allyIndex] = replacement;
-            }
-
-            _reserves.Remove(replacement);
-            RemoveTurnState(defeatedAlly);
-
-            _actedUnits.Add(replacement);
-
-            if (_active == defeatedAlly)
-            {
-                _active = replacement;
-                commandPanel.Setup(_active, _reserves, _allies, _inventoryItems);
-            }
-
-            Debug.Log($"[KO] {replacement.Name} replaced {defeatedAlly.Name} at {position}. Replacement cannot act this turn.");
-            CheckBattleEnd();
-        }
-
         private BattleUnit GetNextReserve()
         {
             for (int i = 0; i < _reserves.Count; i++)
@@ -3708,34 +2960,6 @@ namespace GameKari.Battle
                 _ => null
             };
         }
-
-        private void HandleRotateClicked()
-        {
-            if (!CanAcceptRotateCommand())
-            {
-                return;
-            }
-
-            _formation.RotateAlliesClockwise();
-            SyncBoardUnitGridPositions();
-
-            _formationSettling = true;
-            _lastRotateTime = Time.time;
-
-            if (commandPanel != null)
-            {
-                commandPanel.SetInteractable(false);
-            }
-
-            if (rotateButton != null)
-            {
-                rotateButton.interactable = true;
-            }
-
-            RedrawBoard();
-            ReapplySkillHoverPreviewIfNeeded();
-        }
-
         private void ReapplySkillHoverPreviewDuringActionIfNeeded()
         {
             if (_hoveredSkill == null || _battleEnded)
@@ -3988,12 +3212,6 @@ namespace GameKari.Battle
                 rotateButton.gameObject.SetActive(visible);
             }
         }
-
-        private void EnsureEnemyActionPreviewPanel()
-        {
-            // Enemy action preview is intentionally disabled.
-        }
-
         private void UpdateEnemyActionPreview()
         {
             // Enemy action preview is intentionally disabled.
@@ -4750,21 +3968,6 @@ namespace GameKari.Battle
                 RedrawEnemyActionPreviewHighlights();
             }
         }
-
-        private void RedrawStatusPanels()
-        {
-            List<BattleUnit> enemyStatusUnits = GetEnemyStatusDisplayUnits();
-
-            for (int i = 0; i < 4; i++)
-            {
-                RedrawEnemyStatusSlot(i + 1, GetUnitAt(enemyStatusUnits, i));
-                RedrawAllyStatusSlot(i + 1, GetUnitAt(_allies, i));
-            }
-
-            ResizeEnemyStatusPanel(enemyStatusUnits.Count);
-            LayoutEnemyStatusSlots(enemyStatusUnits.Count);
-        }
-
         private List<BattleUnit> GetEnemyStatusDisplayUnits()
         {
             var result = new List<BattleUnit>();
@@ -4785,29 +3988,6 @@ namespace GameKari.Battle
 
             return result;
         }
-        private void RedrawTurnOrderBar()
-        {
-            if (CanGenerateTurnOrderSlots())
-            {
-                RedrawGeneratedTurnOrderSlots();
-
-                if (turnOrderBarText != null)
-                {
-                    turnOrderBarText.gameObject.SetActive(false);
-                }
-
-                return;
-            }
-
-            if (turnOrderBarText == null)
-            {
-                return;
-            }
-
-            turnOrderBarText.gameObject.SetActive(true);
-            turnOrderBarText.text = BuildTurnOrderBarText();
-        }
-
         private bool CanGenerateTurnOrderSlots()
         {
             return turnOrderSlotTemplate != null
