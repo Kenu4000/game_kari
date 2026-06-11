@@ -16,10 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
-        // READABLE-REFORM: RedrawStatusPanels
-        // Redraws status panels from current battle data.
-        // Status panels are display objects only. They should show HP and KO state, not decide them.
-        // If a bar looks wrong but the BattleUnit HP is correct, debug this area.
+        // 読みやすさメモ: RedrawStatusPanels
+        // 現在の戦闘データをもとにステータス欄を再描画する。
+        // ステータス欄は表示専用で、HPやKO状態を決定する場所ではない。
+        // データ上のHPは正しいのにバー表示だけがおかしい場合は、この周辺を見る。
         private void RedrawStatusPanels()
         {
             List<BattleUnit> enemyStatusUnits = GetEnemyStatusDisplayUnits();

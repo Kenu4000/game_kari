@@ -66,10 +66,10 @@ namespace GameKari.Battle
 
 
         // KO and replacement handling
-        // READABLE-REFORM: ResolveDefeatedEnemies
-        // Handles enemy defeat results after damage has already been applied.
-        // This area is fragile because visual timing matters:
-        // KO fade, enemy compacting, reserve entry, and status panel refresh must not happen in a confusing order.
+        // 読みやすさメモ: ResolveDefeatedEnemies
+        // ダメージ適用後、倒れた敵を処理する。
+        // KOフェード、敵の前詰め、控え敵の登場、ステータス更新の順番が重要。
+        // 敵撃破後の見た目や盤面更新が怪しい場合は、まずここを見る。
         private void ResolveDefeatedEnemies(List<DefeatedEnemyInfo> defeatedEnemies)
         {
             if (defeatedEnemies == null || defeatedEnemies.Count == 0)
@@ -99,10 +99,10 @@ namespace GameKari.Battle
             CheckBattleEnd();
         }
 
-        // READABLE-REFORM: CompactEnemyFrontlineIfEmpty
-        // Moves enemy backline units forward when the frontline becomes empty.
-        // This is enemy formation maintenance, not damage calculation.
-        // After changing this method, check enemy KO and hover silhouette refresh carefully.
+        // 読みやすさメモ: CompactEnemyFrontlineIfEmpty
+        // 敵の前衛が空になったとき、後衛を前へ詰める処理。
+        // これは敵の陣形維持であり、ダメージ計算ではない。
+        // この処理を変えた場合は、敵KO後の表示とhoverシルエットを必ず確認する。
         private void CompactEnemyFrontlineIfEmpty()
         {
             BattleUnit frontTop = _grid.GetUnit(false, GridPos.FrontTop);
@@ -142,10 +142,10 @@ namespace GameKari.Battle
             Debug.Log("[Formation] Compacted enemy frontline.");
         }
 
-        // READABLE-REFORM: FillEmptyEnemyCellsFromReserves
-        // Fills empty enemy cells from reserve enemies.
-        // This method changes battle data by placing reserve units on the grid.
-        // Because it changes visible units, status panels and hover previews may need to be refreshed afterwards.
+        // 読みやすさメモ: FillEmptyEnemyCellsFromReserves
+        // 空いた敵セルへ控え敵を補充する処理。
+        // 控えから盤面へ敵を置くため、戦闘データを変更する。
+        // 見える敵が変わるので、後続でステータス表示やhoverプレビュー更新が必要になる。
         private bool FillEmptyEnemyCellsFromReserves()
         {
             bool changed = false;

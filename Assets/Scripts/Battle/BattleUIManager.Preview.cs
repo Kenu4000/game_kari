@@ -16,10 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
-        // READABLE-REFORM: ClearTargetPreview
-        // Clears visual target preview only.
-        // This should not change HP, turn state, active unit, KO state, or reserves.
-        // Use this when leaving hover/selection states or before redrawing preview highlights.
+        // 読みやすさメモ: ClearTargetPreview
+        // 対象プレビューの見た目だけを消す。
+        // HP、行動順、KO状態、控え状態などの戦闘データは変更しない。
+        // hover終了時や、プレビューを描き直す前に呼ぶ。
         private void ClearTargetPreview()
         {
             _hoveredSkill = null;
@@ -28,10 +28,10 @@ namespace GameKari.Battle
         }
 
 
-        // READABLE-REFORM: RedrawTargetPreview
-        // Redraws the yellow target preview shown while hovering/selecting a skill.
-        // This is a view operation. It should answer only:
-        // "Which cells should look highlighted right now?"
+        // 読みやすさメモ: RedrawTargetPreview
+        // スキルhover中や選択中に、黄色の対象プレビューを描き直す。
+        // ここでは「今どのセルを強調表示すべきか」だけを扱う。
+        // 実際に誰へダメージを与えるかは別の処理が決める。
         private void RedrawTargetPreview()
         {
             ResetEnemyBoardHighlights();
@@ -65,10 +65,10 @@ namespace GameKari.Battle
             }
         }
 
-        // READABLE-REFORM: ApplySkillHoverSpritePreview
-        // Applies the gray silhouette preview while hovering a skill.
-        // The active unit and intended target remain normal; unrelated sprites become gray silhouettes.
-        // If hover visuals look wrong after rotate or enemy replacement, start reading here.
+        // 読みやすさメモ: ApplySkillHoverSpritePreview
+        // スキルhover中の灰色シルエット表示を適用する。
+        // 行動者と対象は通常表示のままにし、それ以外を薄いシルエットにする。
+        // 回転後や敵補充後にhover表示がおかしい場合は、まずここを見る。
         private void ApplySkillHoverSpritePreview()
         {
             ResetBoardSpritePreviewColors();
@@ -118,10 +118,10 @@ namespace GameKari.Battle
             SetSkillHoverSilhouetteOutlineVisible(image, showOutline, resolvedAlpha);
         }
 
-        // READABLE-REFORM: ApplySkillHoverSilhouetteOverlapAlpha
-        // Handles the special overlap case where a top-row active unit overlaps the bottom-row ally.
-        // Only visual alpha should be changed here.
-        // Do not change the real unit data from this method.
+        // 読みやすさメモ: ApplySkillHoverSilhouetteOverlapAlpha
+        // 上段の行動者と下段の味方が見た目上重なる場合の透明度調整。
+        // ここで変更するのは見た目のalphaだけ。
+        // 実際のユニットデータや盤面データは変更しない。
         private void ApplySkillHoverSilhouetteOverlapAlpha(HashSet<BattleUnit> focusedUnits)
         {
             if (_active == null || _active.IsDead || _grid == null)

@@ -16,10 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
-        // READABLE-REFORM: EnterCommandSelect
-        // Enters the phase where the player can choose a command.
-        // This is a phase transition method. It should prepare command UI and clear old action state.
-        // If commands appear at the wrong time, start here.
+        // 読みやすさメモ: EnterCommandSelect
+        // プレイヤーがコマンドを選べるフェーズに入る処理。
+        // コマンドUIを準備し、前の行動状態を整理する。
+        // コマンドが出るタイミングがおかしい場合は、まずここを見る。
         private void EnterCommandSelect(BattleUnit activeUnit)
         {
             if (_battleEnded)
@@ -52,10 +52,10 @@ namespace GameKari.Battle
 
 
         // Phase transitions
-        // READABLE-REFORM: EnterResolvingAction
-        // Enters the phase where an action is being resolved.
-        // During this phase, command input should be blocked.
-        // Some visual previews may intentionally remain until the action animation needs them cleared.
+        // 読みやすさメモ: EnterResolvingAction
+        // 行動解決中フェーズに入る処理。
+        // このフェーズ中は、基本的にコマンド入力を受け付けない。
+        // 演出の都合でプレビューを残す場合もあるが、入力状態とは分けて考える。
         private void EnterResolvingAction()
         {
             if (_battleEnded)
@@ -92,10 +92,10 @@ namespace GameKari.Battle
             }
         }
 
-        // READABLE-REFORM: RedrawTurnOrderBar
-        // Updates the turn order display.
-        // This should not decide actual turn order by itself; it should draw the current turn-order state.
-        // If the display is wrong but actions occur correctly, debug here.
+        // 読みやすさメモ: RedrawTurnOrderBar
+        // 行動順バーの表示を更新する。
+        // 実際の行動順を決める場所ではなく、現在の行動順データを描画する場所。
+        // 実際の行動は正しいのに表示だけ変な場合は、この周辺を見る。
         private void RedrawTurnOrderBar()
         {
             if (CanGenerateTurnOrderSlots())

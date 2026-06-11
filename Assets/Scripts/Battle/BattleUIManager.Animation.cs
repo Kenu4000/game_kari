@@ -16,10 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
-        // READABLE-REFORM: PlaySkillAnimationIfAny
-        // Bridge from battle logic to SkillAnimationPlayer.
-        // This method should only find the caster/target UI objects and pass them to the animation player.
-        // The actual frame animation, projectile movement, and Canvas animation layer are handled elsewhere.
+        // 読みやすさメモ: PlaySkillAnimationIfAny
+        // 戦闘ロジックからスキルアニメーション再生へつなぐ橋渡し。
+        // ここでは使用者と対象のUI位置を探し、SkillAnimationPlayerへ渡す。
+        // 実際のコマ送り、弾の移動、Canvas上の動きはアニメーション側の担当。
         private IEnumerator PlaySkillAnimationIfAny(SkillData skill)
         {
             if (skill == null || skill.Animation == null || _active == null)
@@ -34,10 +34,10 @@ namespace GameKari.Battle
             yield return SkillAnimationPlayer.Play(skill.Animation, casterRect, targetRect, casterImage);
         }
 
-        // READABLE-REFORM: GetPrimarySkillAnimationTargetRect
-        // Finds the main target RectTransform used by a skill animation.
-        // This is visual targeting only. It should not decide damage targets.
-        // If animation flies toward the wrong cell, inspect this method and the SkillAnimationData anchor settings.
+        // 読みやすさメモ: GetPrimarySkillAnimationTargetRect
+        // スキルアニメーションで向かう主対象のRectTransformを探す。
+        // これは見た目の対象であり、ダメージ対象そのものを決める場所ではない。
+        // アニメーションが違うセルへ飛ぶ場合は、ここかSkillAnimationDataのAnchor設定を確認する。
         private RectTransform GetPrimarySkillAnimationTargetRect(SkillData skill)
         {
             if (skill == null)

@@ -8,19 +8,18 @@ namespace GameKari.Battle
     public partial class BattleUIManager
     {
         // ============================================================
-        // ACTIONS AREA
+        // 行動処理エリア
         // ------------------------------------------------------------
-        // Player and enemy action resolution methods live here.
-        // This file should contain the readable flow of actions.
-        // Damage calculation, KO, status panels, preview, and animation can be called from here.
+        // プレイヤーや敵の行動解決に関係するメソッドを置く。
+        // ここでは「行動を選んでから結果が出るまで」の大きな流れを読みやすく保つ。
+        // ダメージ計算、KO処理、ステータス表示、プレビュー、アニメーションの細部は別ファイルへ任せる。
         // ============================================================
 
         // Player actions
-        // READABLE-REFORM: HandleSkillClicked
-        // Called when the player chooses a skill button.
-        // This method is the entrance to player action resolution.
-        // It should validate that commands are currently accepted, then start the action flow.
-        // Do not put low-level damage/KO/status-panel details directly here.
+        // 読みやすさメモ: HandleSkillClicked
+        // プレイヤーがスキルボタンを押したときの入口。
+        // このメソッドでは、今コマンド入力を受け付けてよい状態かを確認し、行動解決の流れへ進める。
+        // ダメージ計算、KO処理、ステータス表示の細部はここに詰め込まず、別の担当メソッドへ渡す。
         private void HandleSkillClicked(SkillData skill)
         {
             if (!CanAcceptPlayerCommand())
@@ -76,10 +75,10 @@ namespace GameKari.Battle
         }
 
 
-        // READABLE-REFORM: HandleRotateClicked
-        // Called when the player rotates the formation.
-        // Rotation affects which character is active and which cells overlap visually.
-        // After rotation, hover preview may need to be reapplied so the gray silhouette follows the current active unit.
+        // 読みやすさメモ: HandleRotateClicked
+        // 陣形回転ボタンが押されたときの処理。
+        // 回転すると行動者や見た目の重なりが変わるため、必要に応じてhoverプレビューも再適用する。
+        // 盤面データと表示のずれが出た場合は、この周辺を確認する。
         private void HandleRotateClicked()
         {
             if (!CanAcceptRotateCommand())
@@ -132,15 +131,10 @@ namespace GameKari.Battle
             }
         }
 
-        // READABLE-REFORM: ResolvePlayerSkillAfterIntroDelay
-        // Coroutine for a player skill after the action title is shown.
-        // The intended order is:
-        // 1. show action name
-        // 2. wait for the intro delay
-        // 3. play skill animation if the skill has one
-        // 4. apply the skill result
-        // 5. continue the battle flow
-        // If damage timing becomes confusing, read this method first.
+        // 読みやすさメモ: ResolvePlayerSkillAfterIntroDelay
+        // プレイヤースキルの行動名表示後に実行されるコルーチン。
+        // 基本順序は「行動名表示 → 少し待つ → アニメーション再生 → 効果適用 → 次の流れへ進む」。
+        // ダメージ発生タイミングや演出タイミングが分かりにくくなったら、まずここを見る。
         private IEnumerator ResolvePlayerSkillAfterIntroDelay(SkillData skill, BattleUnit actor, BattleUnit linkPartner, string userDisplayName)
         {
             float delay = Mathf.Max(0f, actionIntroDelaySeconds);

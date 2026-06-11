@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 # Battle readable refactor phase 4
 # ------------------------------------------------------------
