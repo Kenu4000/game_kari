@@ -43,7 +43,7 @@ MonoBehaviour:
     ProjectileRotationZ: 0
     ShakeDistance: 0
     ShakeCount: 0
-  - StepType: 0
+  - StepType: 1
     Sprite: {fileID: 21300000, guid: 86ca1cd721bff6945ae4562566937a6b, type: 3}
     ProjectileSprite: {fileID: 0}
     Duration: 1
@@ -58,7 +58,7 @@ MonoBehaviour:
     ProjectileRotationZ: 0
     ShakeDistance: 0
     ShakeCount: 0
-  - StepType: 0
+  - StepType: 1
     Sprite: {fileID: 21300000, guid: 8347ff8fe10170a47a5e0ca60376ae19, type: 3}
     ProjectileSprite: {fileID: 0}
     Duration: 2
