@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -66,6 +66,10 @@ namespace GameKari.Battle
 
 
         // KO and replacement handling
+        // READABLE-REFORM: ResolveDefeatedEnemies
+        // Handles enemy defeat results after damage has already been applied.
+        // This area is fragile because visual timing matters:
+        // KO fade, enemy compacting, reserve entry, and status panel refresh must not happen in a confusing order.
         private void ResolveDefeatedEnemies(List<DefeatedEnemyInfo> defeatedEnemies)
         {
             if (defeatedEnemies == null || defeatedEnemies.Count == 0)
@@ -95,6 +99,10 @@ namespace GameKari.Battle
             CheckBattleEnd();
         }
 
+        // READABLE-REFORM: CompactEnemyFrontlineIfEmpty
+        // Moves enemy backline units forward when the frontline becomes empty.
+        // This is enemy formation maintenance, not damage calculation.
+        // After changing this method, check enemy KO and hover silhouette refresh carefully.
         private void CompactEnemyFrontlineIfEmpty()
         {
             BattleUnit frontTop = _grid.GetUnit(false, GridPos.FrontTop);
@@ -134,6 +142,10 @@ namespace GameKari.Battle
             Debug.Log("[Formation] Compacted enemy frontline.");
         }
 
+        // READABLE-REFORM: FillEmptyEnemyCellsFromReserves
+        // Fills empty enemy cells from reserve enemies.
+        // This method changes battle data by placing reserve units on the grid.
+        // Because it changes visible units, status panels and hover previews may need to be refreshed afterwards.
         private bool FillEmptyEnemyCellsFromReserves()
         {
             bool changed = false;

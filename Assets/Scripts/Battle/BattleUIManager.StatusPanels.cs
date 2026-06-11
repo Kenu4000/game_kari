@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -16,6 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
+        // READABLE-REFORM: RedrawStatusPanels
+        // Redraws status panels from current battle data.
+        // Status panels are display objects only. They should show HP and KO state, not decide them.
+        // If a bar looks wrong but the BattleUnit HP is correct, debug this area.
         private void RedrawStatusPanels()
         {
             List<BattleUnit> enemyStatusUnits = GetEnemyStatusDisplayUnits();

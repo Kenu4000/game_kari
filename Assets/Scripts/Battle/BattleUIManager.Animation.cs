@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -16,6 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
+        // READABLE-REFORM: PlaySkillAnimationIfAny
+        // Bridge from battle logic to SkillAnimationPlayer.
+        // This method should only find the caster/target UI objects and pass them to the animation player.
+        // The actual frame animation, projectile movement, and Canvas animation layer are handled elsewhere.
         private IEnumerator PlaySkillAnimationIfAny(SkillData skill)
         {
             if (skill == null || skill.Animation == null || _active == null)
@@ -30,6 +34,10 @@ namespace GameKari.Battle
             yield return SkillAnimationPlayer.Play(skill.Animation, casterRect, targetRect, casterImage);
         }
 
+        // READABLE-REFORM: GetPrimarySkillAnimationTargetRect
+        // Finds the main target RectTransform used by a skill animation.
+        // This is visual targeting only. It should not decide damage targets.
+        // If animation flies toward the wrong cell, inspect this method and the SkillAnimationData anchor settings.
         private RectTransform GetPrimarySkillAnimationTargetRect(SkillData skill)
         {
             if (skill == null)

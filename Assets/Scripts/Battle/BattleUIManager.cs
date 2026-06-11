@@ -52,8 +52,7 @@ namespace GameKari.Battle
         [SerializeField] private Color skillHoverInactiveSpriteColor = new Color(0.5f, 0.5f, 0.5f, 1f);
         [SerializeField] private float skillHoverSilhouetteOutlinePixelOffset = 2f;
         [SerializeField] private Color skillHoverSilhouetteOutlineColor = new Color(0.25f, 0.25f, 0.25f, 1f);
-        [SerializeField] private float skillHoverSilhouetteOutlineSize = 1f;
-        [SerializeField] private float skillHoverSilhouetteOverlapAlpha = 0.45f;
+[SerializeField] private float skillHoverSilhouetteOverlapAlpha = 0.45f;
         [SerializeField] private float skillHoverOverlapTargetAlpha = 0.55f;
         [Header("Turn Order Bar")]
         [SerializeField] private Transform turnOrderSlotContainer;
@@ -250,7 +249,7 @@ namespace GameKari.Battle
 
             if (refs == null)
             {
-                BattleUIReferences[] sceneRefs = FindObjectsByType<BattleUIReferences>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                BattleUIReferences[] sceneRefs = FindObjectsByType<BattleUIReferences>(FindObjectsInactive.Include);
                 if (sceneRefs != null && sceneRefs.Length > 0)
                 {
                     refs = sceneRefs[0];

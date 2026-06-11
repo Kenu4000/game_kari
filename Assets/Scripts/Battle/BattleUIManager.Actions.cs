@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -16,6 +16,11 @@ namespace GameKari.Battle
         // ============================================================
 
         // Player actions
+        // READABLE-REFORM: HandleSkillClicked
+        // Called when the player chooses a skill button.
+        // This method is the entrance to player action resolution.
+        // It should validate that commands are currently accepted, then start the action flow.
+        // Do not put low-level damage/KO/status-panel details directly here.
         private void HandleSkillClicked(SkillData skill)
         {
             if (!CanAcceptPlayerCommand())
@@ -71,6 +76,10 @@ namespace GameKari.Battle
         }
 
 
+        // READABLE-REFORM: HandleRotateClicked
+        // Called when the player rotates the formation.
+        // Rotation affects which character is active and which cells overlap visually.
+        // After rotation, hover preview may need to be reapplied so the gray silhouette follows the current active unit.
         private void HandleRotateClicked()
         {
             if (!CanAcceptRotateCommand())
@@ -123,6 +132,15 @@ namespace GameKari.Battle
             }
         }
 
+        // READABLE-REFORM: ResolvePlayerSkillAfterIntroDelay
+        // Coroutine for a player skill after the action title is shown.
+        // The intended order is:
+        // 1. show action name
+        // 2. wait for the intro delay
+        // 3. play skill animation if the skill has one
+        // 4. apply the skill result
+        // 5. continue the battle flow
+        // If damage timing becomes confusing, read this method first.
         private IEnumerator ResolvePlayerSkillAfterIntroDelay(SkillData skill, BattleUnit actor, BattleUnit linkPartner, string userDisplayName)
         {
             float delay = Mathf.Max(0f, actionIntroDelaySeconds);

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -16,6 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
+        // READABLE-REFORM: EnterCommandSelect
+        // Enters the phase where the player can choose a command.
+        // This is a phase transition method. It should prepare command UI and clear old action state.
+        // If commands appear at the wrong time, start here.
         private void EnterCommandSelect(BattleUnit activeUnit)
         {
             if (_battleEnded)
@@ -48,6 +52,10 @@ namespace GameKari.Battle
 
 
         // Phase transitions
+        // READABLE-REFORM: EnterResolvingAction
+        // Enters the phase where an action is being resolved.
+        // During this phase, command input should be blocked.
+        // Some visual previews may intentionally remain until the action animation needs them cleared.
         private void EnterResolvingAction()
         {
             if (_battleEnded)
@@ -84,6 +92,10 @@ namespace GameKari.Battle
             }
         }
 
+        // READABLE-REFORM: RedrawTurnOrderBar
+        // Updates the turn order display.
+        // This should not decide actual turn order by itself; it should draw the current turn-order state.
+        // If the display is wrong but actions occur correctly, debug here.
         private void RedrawTurnOrderBar()
         {
             if (CanGenerateTurnOrderSlots())

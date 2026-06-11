@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -16,6 +16,10 @@ namespace GameKari.Battle
         // ============================================================
 
 
+        // READABLE-REFORM: ClearTargetPreview
+        // Clears visual target preview only.
+        // This should not change HP, turn state, active unit, KO state, or reserves.
+        // Use this when leaving hover/selection states or before redrawing preview highlights.
         private void ClearTargetPreview()
         {
             _hoveredSkill = null;
@@ -24,6 +28,10 @@ namespace GameKari.Battle
         }
 
 
+        // READABLE-REFORM: RedrawTargetPreview
+        // Redraws the yellow target preview shown while hovering/selecting a skill.
+        // This is a view operation. It should answer only:
+        // "Which cells should look highlighted right now?"
         private void RedrawTargetPreview()
         {
             ResetEnemyBoardHighlights();
@@ -57,6 +65,10 @@ namespace GameKari.Battle
             }
         }
 
+        // READABLE-REFORM: ApplySkillHoverSpritePreview
+        // Applies the gray silhouette preview while hovering a skill.
+        // The active unit and intended target remain normal; unrelated sprites become gray silhouettes.
+        // If hover visuals look wrong after rotate or enemy replacement, start reading here.
         private void ApplySkillHoverSpritePreview()
         {
             ResetBoardSpritePreviewColors();
@@ -106,6 +118,10 @@ namespace GameKari.Battle
             SetSkillHoverSilhouetteOutlineVisible(image, showOutline, resolvedAlpha);
         }
 
+        // READABLE-REFORM: ApplySkillHoverSilhouetteOverlapAlpha
+        // Handles the special overlap case where a top-row active unit overlaps the bottom-row ally.
+        // Only visual alpha should be changed here.
+        // Do not change the real unit data from this method.
         private void ApplySkillHoverSilhouetteOverlapAlpha(HashSet<BattleUnit> focusedUnits)
         {
             if (_active == null || _active.IsDead || _grid == null)
