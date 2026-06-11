@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -6,8 +6,21 @@ using UnityEngine.UI;
 
 namespace GameKari.Battle
 {
-    public class BattleUIManager : MonoBehaviour
+    public partial class BattleUIManager : MonoBehaviour
     {
+        // ============================================================
+        // READING GUIDE: Inspector references
+        // ------------------------------------------------------------
+        // This area contains objects assigned from the Unity Inspector.
+        // These fields are mostly "where is the UI object?" references.
+        // They should not contain battle rules.
+        //
+        // Safe to read as:
+        //   "Which UI parts does BattleUIManager know about?"
+        // Not safe to read as:
+        //   "How does battle logic work?"
+        // ============================================================
+        
         // Serialized references
         [Header("Battle UI References")]
         [SerializeField] private BattleUIReferences uiReferences;
@@ -44,7 +57,8 @@ namespace GameKari.Battle
         [SerializeField] private float skillHoverOverlapTargetAlpha = 0.55f;
         [Header("Turn Order Bar")]
         [SerializeField] private Transform turnOrderSlotContainer;
-        [SerializeField] private Transform[] turnOrderSlotPositions = new Transform[8];        [SerializeField] private TurnOrderSlotView turnOrderSlotTemplate;
+        [SerializeField] private Transform[] turnOrderSlotPositions = new Transform[8];
+        [SerializeField] private TurnOrderSlotView turnOrderSlotTemplate;
         [SerializeField] private bool hideTurnOrderSlotTemplateOnPlay = true;
         [SerializeField] private TMP_Text turnOrderBarText;
         [SerializeField] private string turnOrderSeparator = "  >  ";
@@ -59,6 +73,21 @@ namespace GameKari.Battle
         [Header("Status Panels")]
         [SerializeField] private Transform enemyStatusPanel;
         [SerializeField] private Transform allyStatusPanel;
+        // ============================================================
+        // READING GUIDE: Runtime battle state
+        // ------------------------------------------------------------
+        // These fields are the current battle data held while the battle
+        // screen is open: units, reserves, active actor, turn order, flags.
+        //
+        // Important rule for future refactor:
+        //   - View code may read these fields.
+        //   - Rule code may change these fields.
+        //   - Animation code should avoid changing these fields directly.
+        //
+        // If a bug changes HP, turn order, KO state, or current actor,
+        // start reading from this area and the methods that modify it.
+        // ============================================================
+        
 
         // Runtime state
         private BattleGrid _grid;
@@ -131,13 +160,25 @@ namespace GameKari.Battle
         [SerializeField] private float defeatSinkDistance = 18f;
         [SerializeField] private int targetHitShakeCount = 3;
         [SerializeField] private float actionSpriteLungeSeconds = 0.12f;
-        [SerializeField] private float actionIntroDelaySeconds = 0.5f;        [SerializeField] private float actionResolveDelaySeconds = 0.35f;
+        [SerializeField] private float actionIntroDelaySeconds = 0.5f;
+        [SerializeField] private float actionResolveDelaySeconds = 0.35f;
         [SerializeField] private int actionFlashCount = 3;
         [SerializeField] private Color damagePopupColor = new Color(1f, 0.35f, 0.35f, 1f);
         [SerializeField] private Color healPopupColor = new Color(0.45f, 1f, 0.45f, 1f);
 
         private bool _formationSettling;
         private float _lastRotateTime;
+        // ============================================================
+        // READING GUIDE: Constants and small helper types
+        // ------------------------------------------------------------
+        // Constants define visual sizes, colors, timings, and fixed limits.
+        // Nested helper classes below are local data containers used only
+        // by BattleUIManager.
+        //
+        // Do not put complicated rules here. Put complicated rules into
+        // named methods so the flow can be followed from top to bottom.
+        // ============================================================
+        
 
         // Constants and phase types
         private static readonly Color NormalStatusColor = new Color(0.9f, 0.93f, 0.96f, 1f);
@@ -171,7 +212,8 @@ namespace GameKari.Battle
             public bool HasHpSnapshot;
             public int PreviousHP;
             public int CurrentHP;
-            public int MaxHP;            public string Text;
+            public int MaxHP;
+            public string Text;
         }
 
         private enum BattlePhase
@@ -186,6 +228,17 @@ namespace GameKari.Battle
             public BattleUnit Unit;
             public GridPos Position;
         }
+        // ============================================================
+        // READING GUIDE: Reference binding
+        // ------------------------------------------------------------
+        // ApplyBattleUIReferences connects the serialized fields above to
+        // BattleUIReferences in the scene.
+        //
+        // This method should only decide "which UI object to use".
+        // It should not apply battle rules, damage, KO, turn order, or
+        // animation timing.
+        // ============================================================
+
 
         private void ApplyBattleUIReferences()
         {
